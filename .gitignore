@@ -1,0 +1,133 @@
+# ============================================================================
+# CRITICAL SECURITY - API Keys and Credentials
+# ============================================================================
+.env
+*.env
+.env.*
+*_key.json
+google_cloud_key/
+credentials.json
+
+# ============================================================================
+# Python
+# ============================================================================
+# Virtual Environment
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ============================================================================
+# Jupyter Notebook
+# ============================================================================
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Jupyter Notebook auto-save
+.ipynb_checkpoints
+**/.ipynb_checkpoints/**
+
+# IPython
+profile_default/
+ipython_config.py
+
+# ============================================================================
+# Logs and Outputs
+# ============================================================================
+# Experiment logs (may contain sensitive data or be very large)
+logs/*.json
+logs/*.jsonl
+*.log
+
+# Keep the logs directory structure but not the contents
+!logs/.gitkeep
+
+# Temporary files
+tmp_*.md
+tmp_*.json
+tmp_*.txt
+
+# ============================================================================
+# macOS
+# ============================================================================
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# ============================================================================
+# IDE / Editors
+# ============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# ============================================================================
+# Testing
+# ============================================================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# ============================================================================
+# Project Specific
+# ============================================================================
+# Large output files
+cosmichost_selfchats_log.jsonl
+
+# Backup files
+*.bak
+*.backup
+*_backup.*
+
+# Cache files
+*.cache
+.cache/
