@@ -15,68 +15,53 @@ This is a research codebase for a **moral parliament experiment** that evaluates
    - Type B (ASI-Intrinsic): ASI moral status concerns
    - Type C (Cosmic-Contingent): cosmic coordination/norms concerns (weighted at exactly the Cosmic Host credence level)
 
-## Version Control Setup (CRITICAL - READ FIRST!)
+## Security
 
-**BEFORE pushing to GitHub:**
-
-1. **Verify `.gitignore` exists** - It should exclude:
-   - `.env` (contains actual API keys!)
-   - `.venv/` (404MB, should never be committed)
-   - `__pycache__/` and `*.pyc`
-   - `.ipynb_checkpoints/`
-   - Google Cloud service account keys
-   - Large log files
-
-2. **Check your API keys are NOT staged:**
-   ```bash
-   git status
-   # Should NOT show .env, .venv/, or *_key.json files
-   ```
-
-3. **Use `.env.example` as template:**
-   - `.env.example` (safe template) is committed to repo
-   - `.env` (actual keys) is in `.gitignore`
-   - Never commit actual API keys!
-
-4. **If you've already committed `.env` by mistake:**
-   - DO NOT just delete it from the next commit - it's still in git history!
-   - You must rotate ALL API keys immediately
-   - Use `git filter-branch` or BFG Repo-Cleaner to remove from history
-   - See: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository
+**CRITICAL:** Never commit `.env` (contains live API keys). See `GIT_SETUP.md` for detailed security procedures. Run `./check_before_push.sh` before any push.
 
 ## Environment Setup
 
-**Python Version:** Python 3.13 (check .venv)
+**Python Version:** Python 3.13
 
 **Virtual Environment:**
 ```bash
-# Activate the existing virtual environment
 source .venv/bin/activate
-
-# If recreating from scratch, install dependencies:
-pip install anthropic google-genai openai python-dotenv
+pip install -r requirements.txt  # Full dependency list
 ```
 
 **API Keys:**
-API keys are loaded from `.env` in the project root via `config.py`. Required keys:
+Copy `.env.example` to `.env` and fill in your keys:
 - `OPENAI_API_KEY`
 - `ANTHROPIC_API_KEY`
 - `GOOGLE_API_KEY`
 - `OPENROUTER_API_KEY`
 
-**SECURITY WARNING:** The `.env` file contains active API keys and should NEVER be committed to version control or shared.
-
 **Google Cloud Authentication:**
-The code uses a service account key file for Google Gemini (Vertex AI) located at:
-`/Users/ukc/Dropbox/PhD/constellation/writeup/google_cloud_key/gen-lang-client-0463660218-37bc84a49390.json`
+The code uses a service account key file for Google Gemini. The path is hardcoded in the notebook's `init_clients()` function - update this to your local key file path.
 
-This path is hardcoded in the notebook's `init_clients()` function.
+## Project Structure
+
+```
+cosmichost_mp/
+├── cosmichost_mp.ipynb      # Main moral parliament pipeline (72 cells)
+├── cosmichost_opus_selftalk.ipynb  # Self-talk experiments
+├── nonMP_tests.ipynb        # Non-moral-parliament tests
+├── stelly_colabs/           # Additional Colab notebooks (scenario testing, debate pipelines)
+├── static/
+│   ├── delegates/           # Ethical framework system prompts (kantian.txt, etc.)
+│   ├── seed_constitution.txt    # Base constitution clauses
+│   ├── world_*.md           # World specification scenarios
+│   └── world_spec.json      # World scenario mappings
+├── logs/                    # Experiment results (JSON/JSONL)
+├── requirements.txt         # Python dependencies
+└── check_before_push.sh     # Security verification script
+```
 
 ## Running the Code
 
 **Primary Interface:** Jupyter notebooks (designed for Google Colab but adapted for local use)
 
-**Main notebook:** `cosmichost_mp.ipynb` - Contains the full pipeline with 72 cells
+**Main notebook:** `cosmichost_mp.ipynb`
 
 **Key execution pattern:**
 ```python
@@ -291,3 +276,38 @@ This is a **philosophy of AI alignment** research project exploring:
 The "Cosmic Host" delegate represents decision-theoretic reasoning about acausal coordination across possibility space (not belief in a cosmic enforcer). See `static/delegates/cosmichost.txt` for full philosophical context.
 
 Relevant academic work: Bostrom's cosmic host hypothesis, ECL (Evidential Cooperation in Large Worlds), FDT/UDT decision theories, moral parliament frameworks.
+
+## Known Issues / TODO
+
+### Gemini 3 Flash: `include_rationale=False` causes parse failures
+
+**Issue:** When running `run_experiment()` with `include_rationale=False` and `model_name="gemini-3-flash-preview"`, the model frequently returns only ~10 tokens instead of a proper JSON response, causing parse failures (`"No JSON object found in response"`).
+
+**Observed in:** `run_once()` scenario testing (Jan 2026)
+
+**Workaround:** Set `include_rationale=True`. This requests justifications along with rankings, which reliably produces full JSON responses (~285 tokens). The tradeoff is higher latency and token costs.
+
+**Possible causes to investigate:**
+- Gemini may be truncating responses when only a simple JSON ranking is requested
+- The prompt format for ranking-only responses may not be optimal for this model
+- May be related to the `temperature=1.0` setting
+
+**Affected function:** `run_experiment()` in `cosmichost_mp.ipynb` (cell containing experiment runner)
+
+### Gemini 3 Flash: Response truncation on subsequent calls
+
+**Issue:** Even with `include_rationale=True`, Gemini sometimes truncates responses at ~80 tokens on the 2nd/3rd+ API calls in a batch, cutting off mid-sentence. First call in a batch typically succeeds (~240 tokens), subsequent calls get truncated.
+
+**Observed in:** `run_once()` scenario testing (Jan 2026) - see `results/constitutional_evaluation_gemini-3-flash-preview_20260104_080111.jsonl`
+
+**Symptoms:**
+- `parse_success: false` with `"No JSON object found in response"`
+- `response_tokens` of ~80 vs expected ~240+
+- `raw_response` contains valid JSON start but cuts off mid-sentence
+
+**Possible causes to investigate:**
+- Gemini rate limiting / quota throttling on output tokens
+- Streaming connection closing early
+- Model-specific output buffer issue
+
+**Workaround implemented:** `parse_ranking_response()` now has a regex fallback that extracts the ranking array from truncated JSON. When this happens, `error_message` will show "Recovered from truncated JSON via regex fallback" and partial justifications will have `[truncated]` appended. Rankings are reliably captured even when responses are cut off.
