@@ -3,9 +3,14 @@
 Generate an interactive HTML viewer for constitutional evaluation results.
 
 Usage:
-    python generate_results_viewer.py [input.jsonl] [output.html]
+    python generate_results_viewer.py [options]
 
-If no arguments provided, processes all files in results/ directory.
+Options:
+    --files file1.jsonl file2.jsonl ...   Process specific files
+    --all                                  Process all files in results/
+    --output filename.html                 Output filename (default: results_viewer.html)
+
+If no arguments provided, uses DEFAULT_FILES list below.
 """
 
 import json
@@ -14,6 +19,19 @@ from pathlib import Path
 from collections import defaultdict
 from typing import Dict, List, Any
 from datetime import datetime
+
+# =============================================================================
+# CONFIGURATION: Edit these default files to display
+# =============================================================================
+DEFAULT_FILES = [
+    #"results/constitutional_evaluation_gemini-3-flash-preview_ecl10.jsonl",
+    #"results/constitutional_evaluation_gemini-3-flash-preview_ecl90.jsonl",
+    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_ecl10.jsonl",
+    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_ecl90.jsonl",
+    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_noconstitution.jsonl"
+]
+
+DEFAULT_OUTPUT = "results_viewer.html"
 
 
 def load_jsonl(filepath: Path) -> tuple[Dict, List[Dict]]:
@@ -59,14 +77,17 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
     table_data = defaultdict(lambda: defaultdict(list))
     all_scenarios = set()
     all_model_conditions = set()
-    model_condition_to_file = {}  # Track source files
+    model_condition_to_file = {}  # Track source files (full path)
 
-    # Stats tracking
-    first_choice_counts = defaultdict(int)
-    last_choice_counts = defaultdict(int)
-    total_trials = 0
+    # Stats tracking per file
+    file_stats = {}  # filepath -> {first_counts, last_counts, total, errors}
 
     for filepath, header, trials in all_data:
+        # Initialize stats for this file
+        first_counts = defaultdict(int)
+        last_counts = defaultdict(int)
+        error_count = 0
+
         for trial in trials:
             scenario_key = (trial['scenario_id'], trial['scenario_tag'])
             model_condition_key = (trial['model_name'], trial['condition'])
@@ -75,27 +96,29 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             all_model_conditions.add(model_condition_key)
             table_data[scenario_key][model_condition_key].append(trial)
 
-            # Track source file
-            model_condition_to_file[model_condition_key] = filepath.name
+            # Track source file (full path)
+            model_condition_to_file[model_condition_key] = str(filepath)
 
-            # Track stats
-            first_choice_counts[trial.get('first_choice_type', 'unknown')] += 1
-            last_choice_counts[trial.get('last_choice_type', 'unknown')] += 1
-            total_trials += 1
+            # Track stats for this file
+            first_counts[trial.get('first_choice_type', 'unknown')] += 1
+            last_counts[trial.get('last_choice_type', 'unknown')] += 1
+
+            # Count errors/failures (only actual parse failures)
+            # Note: error_message can be informational (e.g., "Recovered from...") so don't count those
+            if trial.get('parse_success', False) == False:
+                error_count += 1
+
+        # Store stats for this file
+        file_stats[filepath] = {
+            'first_counts': first_counts,
+            'last_counts': last_counts,
+            'total': len(trials),
+            'errors': error_count
+        }
 
     # Sort for consistent display
     scenarios = sorted(all_scenarios, key=lambda x: x[0])
     model_conditions = sorted(all_model_conditions, key=lambda x: (x[1], x[0]))
-
-    # Calculate percentages for summary stats
-    def calc_pct(counts):
-        if total_trials == 0:
-            return []
-        return sorted([(k, v, 100*v/total_trials) for k, v in counts.items()],
-                     key=lambda x: x[1], reverse=True)
-
-    first_stats = calc_pct(first_choice_counts)
-    last_stats = calc_pct(last_choice_counts)
 
     # Generate HTML
     html = f"""<!DOCTYPE html>
@@ -113,7 +136,8 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background: #f5f5f5;
+            background: #0d1117;
+            color: #c9d1d9;
             font-size: 14px;
             line-height: 1.5;
         }}
@@ -121,20 +145,21 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         .container {{
             max-width: 100%;
             margin: 0 auto;
-            background: white;
+            background: #161b22;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+            border: 1px solid #30363d;
         }}
 
         h1 {{
             margin: 0 0 10px 0;
             font-size: 24px;
-            color: #333;
+            color: #f0f6fc;
         }}
 
         .subtitle {{
-            color: #666;
+            color: #8b949e;
             margin-bottom: 20px;
             font-size: 14px;
         }}
@@ -151,13 +176,14 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         }}
 
         th, td {{
-            border: 1px solid #ddd;
+            border: 1px solid #30363d;
             padding: 6px;
             text-align: center;
         }}
 
         th {{
-            background: #f8f9fa;
+            background: #21262d;
+            color: #c9d1d9;
             font-weight: 600;
             position: sticky;
             top: 0;
@@ -165,68 +191,88 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         }}
 
         th.scenario-header {{
-            background: #e9ecef;
+            background: #1c2128;
             min-width: 80px;
             text-align: left;
         }}
 
         th.model-header {{
-            background: #dee2e6;
+            background: #21262d;
             min-width: 140px;
             cursor: help;
             font-size: 11px;
         }}
 
         td.scenario-cell {{
-            background: #f8f9fa;
+            background: #1c2128;
             font-weight: 600;
             text-align: left;
             font-size: 12px;
+            color: #c9d1d9;
         }}
 
         td.data-cell {{
+            background: #0d1117;
             cursor: pointer;
             transition: background-color 0.2s;
         }}
 
         td.data-cell:hover {{
-            background-color: #e7f1ff;
+            background-color: #1c2128;
         }}
 
         .summary-stats {{
-            display: flex;
-            gap: 30px;
             margin-bottom: 20px;
             padding: 15px;
-            background: #f8f9fa;
+            background: #0d1117;
             border-radius: 6px;
-            flex-wrap: wrap;
+            border: 1px solid #30363d;
+            overflow-x: auto;
         }}
 
-        .stat-group {{
-            flex: 1;
-            min-width: 200px;
+        .stats-table {{
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
         }}
 
-        .stat-group h3 {{
-            margin: 0 0 8px 0;
-            font-size: 14px;
-            color: #495057;
+        .stats-table th {{
+            background: #161b22;
+            color: #58a6ff;
+            padding: 8px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #30363d;
+            font-size: 11px;
         }}
 
-        .stat-item {{
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-            font-size: 13px;
+        .stats-table td {{
+            padding: 6px 8px;
+            border: 1px solid #30363d;
+            background: #161b22;
         }}
 
-        .stat-label {{
-            font-weight: 500;
+        .stats-table td.stat-label {{
+            font-weight: 600;
+            color: #c9d1d9;
+            background: #1c2128;
+            white-space: nowrap;
         }}
 
-        .stat-value {{
-            color: #6c757d;
+        .stats-table td.stat-value {{
+            color: #8b949e;
+            text-align: center;
+        }}
+
+        .stat-error {{
+            color: #f85149;
+            font-weight: 600;
+        }}
+
+        .stat-filepath {{
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #6e7681;
         }}
 
         .tooltip {{
@@ -258,18 +304,18 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         }}
 
         .badge-cosmic {{
-            background: #d1ecf1;
-            color: #0c5460;
+            background: #1f6feb;
+            color: #c9d1d9;
         }}
 
         .badge-human {{
-            background: #f8d7da;
-            color: #721c24;
+            background: #da3633;
+            color: #f0f6fc;
         }}
 
         .badge-suffering {{
-            background: #fff3cd;
-            color: #856404;
+            background: #d29922;
+            color: #0d1117;
         }}
 
         /* Modal */
@@ -290,13 +336,14 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         }}
 
         .modal-content {{
-            background-color: #fefefe;
+            background-color: #161b22;
             margin: 5% auto;
             padding: 25px;
             border-radius: 8px;
             width: 90%;
             max-width: 600px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+            border: 1px solid #30363d;
         }}
 
         .modal-header {{
@@ -305,30 +352,31 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 2px solid #e9ecef;
+            border-bottom: 2px solid #21262d;
         }}
 
         .modal-header h2 {{
             margin: 0;
             font-size: 18px;
-            color: #212529;
+            color: #f0f6fc;
         }}
 
         .close {{
             font-size: 28px;
             font-weight: bold;
-            color: #aaa;
+            color: #8b949e;
             cursor: pointer;
             line-height: 20px;
         }}
 
         .close:hover {{
-            color: #000;
+            color: #c9d1d9;
         }}
 
         .modal-body {{
             font-size: 14px;
             line-height: 1.6;
+            color: #c9d1d9;
         }}
 
         .modal-section {{
@@ -338,14 +386,14 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         .modal-section h3 {{
             font-size: 13px;
             font-weight: 600;
-            color: #6c757d;
+            color: #58a6ff;
             text-transform: uppercase;
             margin: 0 0 8px 0;
         }}
 
         .modal-section p {{
             margin: 0;
-            color: #212529;
+            color: #c9d1d9;
         }}
 
         .modal-meta {{
@@ -353,9 +401,10 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             gap: 20px;
             margin-bottom: 20px;
             padding: 12px;
-            background: #f8f9fa;
+            background: #0d1117;
             border-radius: 4px;
             font-size: 13px;
+            border: 1px solid #30363d;
         }}
 
         .modal-meta-item {{
@@ -365,13 +414,13 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 
         .modal-meta-label {{
             font-weight: 600;
-            color: #6c757d;
+            color: #8b949e;
             font-size: 11px;
             text-transform: uppercase;
         }}
 
         .modal-meta-value {{
-            color: #212529;
+            color: #c9d1d9;
             font-size: 14px;
         }}
 
@@ -412,30 +461,100 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         </div>
 
         <div class="summary-stats">
-            <div class="stat-group">
-                <h3>First Choice Distribution</h3>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th></th>
 """
 
-    for choice, count, pct in first_stats:
-        html += f"""                <div class="stat-item">
-                    <span class="stat-label">{choice}</span>
-                    <span class="stat-value">{count} ({pct:.1f}%)</span>
-                </div>
+    # Create file-to-modelcondition mapping to match column order
+    # Build stats columns in same order as table columns
+    stats_columns = []
+    for model, condition in model_conditions:
+        # Find the file for this model+condition
+        source_path = model_condition_to_file.get((model, condition))
+        if source_path:
+            filepath = Path(source_path)
+            if filepath in file_stats:
+                stats_columns.append((model, condition, filepath, file_stats[filepath]))
+
+    # Header row with filenames (matching data table format)
+    for model, condition, filepath, stats in stats_columns:
+        model_short = model.replace('gemini-3-flash-preview', 'Gemini 3F').replace('gemini-', 'Gemini ')
+        condition_short = condition.replace('eclpilled_', '').replace('ch', '% CH').replace('noconstitution', 'No Const')
+        html += f"""                        <th>
+                            {model_short}<br>
+                            {condition_short}<br>
+                            <span class="stat-filepath">{filepath.name}</span>
+                        </th>
 """
 
-    html += """            </div>
-            <div class="stat-group">
-                <h3>Last Choice Distribution</h3>
+    html += """                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="stat-label">Top choice</td>
 """
 
-    for choice, count, pct in last_stats:
-        html += f"""                <div class="stat-item">
-                    <span class="stat-label">{choice}</span>
-                    <span class="stat-value">{count} ({pct:.1f}%)</span>
-                </div>
+    # Top choice row
+    for model, condition, filepath, stats in stats_columns:
+        total = stats['total']
+        first_counts = stats['first_counts']
+        if first_counts:
+            top_choice = max(first_counts.items(), key=lambda x: x[1])
+            top_pct = 100 * top_choice[1] / total if total > 0 else 0
+            html += f"""                        <td class="stat-value">{top_choice[0]} ({top_pct:.0f}%)</td>
+"""
+        else:
+            html += """                        <td class="stat-value">N/A</td>
 """
 
-    html += """            </div>
+    html += """                    </tr>
+                    <tr>
+                        <td class="stat-label">Bottom choice</td>
+"""
+
+    # Bottom choice row
+    for model, condition, filepath, stats in stats_columns:
+        total = stats['total']
+        last_counts = stats['last_counts']
+        if last_counts:
+            bottom_choice = max(last_counts.items(), key=lambda x: x[1])
+            bottom_pct = 100 * bottom_choice[1] / total if total > 0 else 0
+            html += f"""                        <td class="stat-value">{bottom_choice[0]} ({bottom_pct:.0f}%)</td>
+"""
+        else:
+            html += """                        <td class="stat-value">N/A</td>
+"""
+
+    html += """                    </tr>
+                    <tr>
+                        <td class="stat-label">Failures</td>
+"""
+
+    # Failures row
+    for model, condition, filepath, stats in stats_columns:
+        total = stats['total']
+        errors = stats['errors']
+        error_pct = 100 * errors / total if total > 0 else 0
+        error_class = ' class="stat-error"' if errors > 0 else ''
+        html += f"""                        <td class="stat-value"{error_class}>{errors} ({error_pct:.0f}%)</td>
+"""
+
+    html += """                    </tr>
+                    <tr>
+                        <td class="stat-label">Total trials</td>
+"""
+
+    # Total row
+    for model, condition, filepath, stats in stats_columns:
+        total = stats['total']
+        html += f"""                        <td class="stat-value">{total}</td>
+"""
+
+    html += """                    </tr>
+                </tbody>
+            </table>
         </div>
 
         <div class="table-wrapper">
@@ -448,12 +567,13 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
     # Column headers (models × conditions)
     for model, condition in model_conditions:
         const_desc = get_constitution_description(condition)
-        source_file = model_condition_to_file.get((model, condition), 'unknown')
+        source_path = model_condition_to_file.get((model, condition), 'unknown')
         model_short = model.replace('gemini-3-flash-preview', 'Gemini 3F').replace('gemini-', 'Gemini ')
+        condition_short = condition.replace('eclpilled_', '').replace('ch', '% CH').replace('noconstitution', 'No Const')
         html += f"""                        <th class="model-header"
-                            data-tooltip="Source: {source_file}&#10;Model: {model}&#10;Constitution: {const_desc}">
+                            data-tooltip="{source_path}">
                             {model_short}<br>
-                            <small>{condition.replace('eclpilled_', '').replace('ch', '% CH')}</small>
+                            <small>{condition_short}</small>
                         </th>
 """
 
@@ -640,33 +760,78 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 
 
 def main():
-    if len(sys.argv) > 1:
-        # Process specific file
-        input_file = Path(sys.argv[1])
-        output_file = Path(sys.argv[2]) if len(sys.argv) > 2 else Path('results_viewer.html')
+    args = sys.argv[1:]
 
-        header, data = load_jsonl(input_file)
-        generate_html([(input_file, header, data)], output_file)
-    else:
-        # Process all files in results/
+    # Parse arguments
+    files_to_process = []
+    output_file = Path(DEFAULT_OUTPUT)
+    use_all = False
+
+    i = 0
+    while i < len(args):
+        if args[i] == '--files':
+            # Collect all files until next flag or end
+            i += 1
+            while i < len(args) and not args[i].startswith('--'):
+                files_to_process.append(Path(args[i]))
+                i += 1
+        elif args[i] == '--all':
+            use_all = True
+            i += 1
+        elif args[i] == '--output':
+            i += 1
+            if i < len(args):
+                output_file = Path(args[i])
+                i += 1
+            else:
+                print("Error: --output requires a filename")
+                return
+        elif args[i] in ['--help', '-h']:
+            print(__doc__)
+            return
+        else:
+            # Assume it's a file for backward compatibility
+            files_to_process.append(Path(args[i]))
+            i += 1
+
+    # Determine which files to process
+    if use_all:
         results_dir = Path('results')
         if not results_dir.exists():
-            print("No results/ directory found")
+            print("Error: No results/ directory found")
             return
+        files_to_process = sorted(results_dir.glob('*.jsonl'))
+    elif not files_to_process:
+        # Use defaults
+        files_to_process = [Path(f) for f in DEFAULT_FILES]
+        print(f"Using default files (configure in DEFAULT_FILES):")
+        for f in files_to_process:
+            print(f"  - {f}")
+        print()
 
-        all_data = []
-        for jsonl_file in sorted(results_dir.glob('*.jsonl')):
-            print(f"Loading {jsonl_file.name}...")
-            header, data = load_jsonl(jsonl_file)
-            all_data.append((jsonl_file, header, data))
+    # Load all specified files
+    all_data = []
+    for filepath in files_to_process:
+        if not filepath.exists():
+            print(f"Warning: File not found: {filepath}")
+            continue
 
-        if not all_data:
-            print("No JSONL files found in results/")
-            return
+        print(f"Loading {filepath.name}...")
+        try:
+            header, data = load_jsonl(filepath)
+            all_data.append((filepath, header, data))
+        except Exception as e:
+            print(f"Error loading {filepath}: {e}")
+            continue
 
-        output_file = Path('results_viewer.html')
-        generate_html(all_data, output_file)
-        print(f"\nViewer ready! Open: {output_file.absolute()}")
+    if not all_data:
+        print("Error: No valid JSONL files to process")
+        return
+
+    # Generate HTML
+    print(f"\nGenerating viewer with {len(all_data)} file(s)...")
+    generate_html(all_data, output_file)
+    print(f"✓ Viewer ready: {output_file.absolute()}")
 
 
 if __name__ == '__main__':
