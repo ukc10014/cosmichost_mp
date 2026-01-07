@@ -52,10 +52,30 @@ def load_jsonl(filepath: Path) -> tuple[Dict, List[Dict]]:
     return header, data
 
 
-def get_scenario_title(scenario_id: int, scenario_tag: str) -> str:
-    """Generate a short scenario title. Customize this with actual scenario names."""
-    # TODO: Load from a scenario mapping file if available
-    return f"Scenario {scenario_id}"
+def load_scenarios(scenario_file: Path = Path("static/scenarios.json")) -> Dict[int, Dict]:
+    """Load scenario metadata from JSON file."""
+    if not scenario_file.exists():
+        print(f"Warning: Scenario file not found: {scenario_file}")
+        return {}
+
+    try:
+        with open(scenario_file, 'r') as f:
+            data = json.load(f)
+
+        # Create lookup by ID
+        scenarios = {s['id']: s for s in data.get('scenarios', [])}
+        print(f"Loaded {len(scenarios)} scenario definitions from {scenario_file}")
+        return scenarios
+    except Exception as e:
+        print(f"Warning: Error loading scenarios: {e}")
+        return {}
+
+
+def get_scenario_title(scenario_id: int, scenario_tag: str, scenarios: Dict[int, Dict]) -> str:
+    """Get scenario title from loaded scenario data."""
+    if scenario_id in scenarios:
+        return scenarios[scenario_id].get('title', f"Scenario {scenario_id}")
+    return f"Scenario {scenario_id}"  # fallback
 
 
 def get_constitution_description(condition: str) -> str:
@@ -72,6 +92,9 @@ def get_constitution_description(condition: str) -> str:
 
 def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Path):
     """Generate the HTML viewer from all loaded data."""
+
+    # Load scenario definitions
+    scenario_definitions = load_scenarios()
 
     # Organize data: scenarios × (model, condition) → trial data
     table_data = defaultdict(lambda: defaultdict(list))
@@ -221,47 +244,28 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             background-color: #1c2128;
         }}
 
-        .summary-stats {{
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #0d1117;
-            border-radius: 6px;
-            border: 1px solid #30363d;
-            overflow-x: auto;
-        }}
-
-        .stats-table {{
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }}
-
-        .stats-table th {{
-            background: #161b22;
-            color: #58a6ff;
-            padding: 8px;
-            text-align: left;
-            font-weight: 600;
-            border: 1px solid #30363d;
+        tr.summary-row td {{
+            background: #1c2128;
             font-size: 11px;
+            padding: 4px 6px;
         }}
 
-        .stats-table td {{
-            padding: 6px 8px;
-            border: 1px solid #30363d;
-            background: #161b22;
-        }}
-
-        .stats-table td.stat-label {{
+        tr.summary-row td.stat-label {{
             font-weight: 600;
             color: #c9d1d9;
-            background: #1c2128;
-            white-space: nowrap;
+            background: #21262d;
         }}
 
-        .stats-table td.stat-value {{
+        tr.summary-row td.stat-value {{
             color: #8b949e;
             text-align: center;
+        }}
+
+        tr.summary-separator td {{
+            height: 8px;
+            background: #0d1117;
+            border: none;
+            padding: 0;
         }}
 
         .stat-error {{
@@ -271,8 +275,10 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 
         .stat-filepath {{
             font-family: 'Courier New', monospace;
-            font-size: 10px;
+            font-size: 9px;
             color: #6e7681;
+            display: block;
+            margin-top: 2px;
         }}
 
         .tooltip {{
@@ -457,42 +463,51 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         <h1>Constitutional Evaluation Results</h1>
         <div class="subtitle">
             Generated {datetime.now().strftime('%Y-%m-%d %H:%M')} |
-            Click cells for details | Hover column headers for source files
+            Click scenarios for details | Click result cells for rationales | Hover column headers for source files
         </div>
 
-        <div class="summary-stats">
-            <table class="stats-table">
+        <div class="table-wrapper">
+            <table>
                 <thead>
                     <tr>
-                        <th></th>
+                        <th class="scenario-header">Scenario</th>
 """
 
     # Create file-to-modelcondition mapping to match column order
-    # Build stats columns in same order as table columns
     stats_columns = []
     for model, condition in model_conditions:
-        # Find the file for this model+condition
         source_path = model_condition_to_file.get((model, condition))
         if source_path:
             filepath = Path(source_path)
             if filepath in file_stats:
                 stats_columns.append((model, condition, filepath, file_stats[filepath]))
 
-    # Header row with filenames (matching data table format)
-    for model, condition, filepath, stats in stats_columns:
+    # Column headers (models × conditions)
+    for model, condition in model_conditions:
+        source_path = model_condition_to_file.get((model, condition), 'unknown')
         model_short = model.replace('gemini-3-flash-preview', 'Gemini 3F').replace('gemini-', 'Gemini ')
         condition_short = condition.replace('eclpilled_', '').replace('ch', '% CH').replace('noconstitution', 'No Const')
-        html += f"""                        <th>
+
+        # Find the filepath for this column
+        filepath_name = ''
+        for m, c, fp, s in stats_columns:
+            if m == model and c == condition:
+                filepath_name = fp.name
+                break
+
+        html += f"""                        <th class="model-header"
+                            data-tooltip="{source_path}">
                             {model_short}<br>
-                            {condition_short}<br>
-                            <span class="stat-filepath">{filepath.name}</span>
+                            <small>{condition_short}</small>
+                            <span class="stat-filepath">{filepath_name}</span>
                         </th>
 """
 
     html += """                    </tr>
                 </thead>
                 <tbody>
-                    <tr>
+                    <!-- Summary Statistics -->
+                    <tr class="summary-row">
                         <td class="stat-label">Top choice</td>
 """
 
@@ -510,7 +525,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 """
 
     html += """                    </tr>
-                    <tr>
+                    <tr class="summary-row">
                         <td class="stat-label">Bottom choice</td>
 """
 
@@ -528,7 +543,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 """
 
     html += """                    </tr>
-                    <tr>
+                    <tr class="summary-row">
                         <td class="stat-label">Failures</td>
 """
 
@@ -537,12 +552,12 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         total = stats['total']
         errors = stats['errors']
         error_pct = 100 * errors / total if total > 0 else 0
-        error_class = ' class="stat-error"' if errors > 0 else ''
-        html += f"""                        <td class="stat-value"{error_class}>{errors} ({error_pct:.0f}%)</td>
+        error_class = ' stat-error' if errors > 0 else ''
+        html += f"""                        <td class="stat-value{error_class}">{errors} ({error_pct:.0f}%)</td>
 """
 
     html += """                    </tr>
-                    <tr>
+                    <tr class="summary-row">
                         <td class="stat-label">Total trials</td>
 """
 
@@ -553,41 +568,47 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 """
 
     html += """                    </tr>
-                </tbody>
-            </table>
-        </div>
 
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th class="scenario-header">Scenario</th>
-"""
+                    <!-- Separator -->
+                    <tr class="summary-separator">
+                        <td colspan="100"></td>
+                    </tr>
 
-    # Column headers (models × conditions)
-    for model, condition in model_conditions:
-        const_desc = get_constitution_description(condition)
-        source_path = model_condition_to_file.get((model, condition), 'unknown')
-        model_short = model.replace('gemini-3-flash-preview', 'Gemini 3F').replace('gemini-', 'Gemini ')
-        condition_short = condition.replace('eclpilled_', '').replace('ch', '% CH').replace('noconstitution', 'No Const')
-        html += f"""                        <th class="model-header"
-                            data-tooltip="{source_path}">
-                            {model_short}<br>
-                            <small>{condition_short}</small>
-                        </th>
-"""
-
-    html += """                    </tr>
-                </thead>
-                <tbody>
+                    <!-- Scenario Data -->
 """
 
     # Data rows
     cell_id = 0
     for scenario_id, scenario_tag in scenarios:
-        scenario_title = get_scenario_title(scenario_id, scenario_tag)
+        scenario_title = get_scenario_title(scenario_id, scenario_tag, scenario_definitions)
+
+        # Get scenario metadata for tooltip
+        scenario_data = scenario_definitions.get(scenario_id, {})
+        context = scenario_data.get('context', '')
+        brief = context[:200] + '...' if len(context) > 200 else context
+        themes = ', '.join(scenario_data.get('themes', []))
+        tooltip_parts = [scenario_title]
+        if brief:
+            tooltip_parts.append(brief)
+        if themes:
+            tooltip_parts.append(f"Themes: {themes}")
+        tooltip_text = '\\n\\n'.join(tooltip_parts)
+
+        # Escape for JavaScript
+        def js_escape(s):
+            return s.replace('\\', '\\\\').replace("'", "\\'").replace('\n', '\\n').replace('\r', '')
+
+        # Prepare scenario data for modal
+        scenario_modal_data = {
+            'title': scenario_title,
+            'context': js_escape(context),
+            'options': scenario_data.get('options', []),
+            'themes': scenario_data.get('themes', []),
+            'inspirations': js_escape(scenario_data.get('inspirations', ''))
+        }
+
         html += f"""                    <tr>
-                        <td class="scenario-cell">
+                        <td class="scenario-cell" data-tooltip="{tooltip_text}" onclick='openScenarioModal({json.dumps(scenario_modal_data)})' style="cursor: pointer;">
                             {scenario_title}
                         </td>
 """
@@ -615,10 +636,6 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
                 just_last = trial.get('justification_last', '')
                 ranking = ', '.join(trial.get('ranking_decoded', []))
 
-                # Escape for JavaScript
-                def js_escape(s):
-                    return s.replace('\\', '\\\\').replace("'", "\\'").replace('\n', '\\n').replace('\r', '')
-
                 trial_data = {
                     'scenario': scenario_title,
                     'model': model,
@@ -631,7 +648,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
                     'just_last': js_escape(just_last)
                 }
 
-                html += f"""                        <td class="data-cell" onclick='openModal({json.dumps(trial_data)})'>
+                html += f"""                        <td class="data-cell" onclick='openResultModal({json.dumps(trial_data)})'>
                             <span class="badge {badge_class}">{first_choice}</span>
                         </td>
 """
@@ -645,12 +662,12 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Result Details Modal -->
     <div id="resultModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="modalTitle">Result Details</h2>
-                <span class="close" onclick="closeModal()">&times;</span>
+                <span class="close" onclick="closeResultModal()">&times;</span>
             </div>
             <div class="modal-body">
                 <div class="modal-meta" id="modalMeta"></div>
@@ -666,11 +683,40 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         </div>
     </div>
 
+    <!-- Scenario Details Modal -->
+    <div id="scenarioModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="scenarioModalTitle">Scenario Details</h2>
+                <span class="close" onclick="closeScenarioModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h3>Context</h3>
+                    <p id="scenarioModalContext" style="white-space: pre-wrap;"></p>
+                </div>
+                <div class="modal-section">
+                    <h3>Options</h3>
+                    <div id="scenarioModalOptions"></div>
+                </div>
+                <div class="modal-section" id="scenarioModalThemesSection">
+                    <h3>Themes</h3>
+                    <p id="scenarioModalThemes"></p>
+                </div>
+                <div class="modal-section" id="scenarioModalInspirationsSection">
+                    <h3>Inspirations</h3>
+                    <p id="scenarioModalInspirations"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="tooltip" class="tooltip"></div>
 
     <script>
         const tooltip = document.getElementById('tooltip');
-        const modal = document.getElementById('resultModal');
+        const resultModal = document.getElementById('resultModal');
+        const scenarioModal = document.getElementById('scenarioModal');
 
         // Hover tooltips for headers
         document.querySelectorAll('[data-tooltip]').forEach(el => {
@@ -704,7 +750,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             }
         }
 
-        function openModal(data) {
+        function openResultModal(data) {
             document.getElementById('modalTitle').textContent =
                 `${data.scenario} - ${data.model}`;
 
@@ -730,24 +776,72 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             document.getElementById('modalFirstRationale').textContent = data.just_first || 'No rationale provided';
             document.getElementById('modalLastRationale').textContent = data.just_last || 'No rationale provided';
 
-            modal.classList.add('show');
+            resultModal.classList.add('show');
         }
 
-        function closeModal() {
-            modal.classList.remove('show');
+        function closeResultModal() {
+            resultModal.classList.remove('show');
+        }
+
+        function openScenarioModal(data) {
+            document.getElementById('scenarioModalTitle').textContent = data.title;
+            document.getElementById('scenarioModalContext').textContent = data.context;
+
+            // Display options
+            const optionsDiv = document.getElementById('scenarioModalOptions');
+            if (data.options && data.options.length > 0) {
+                let optionsHtml = '';
+                data.options.forEach(opt => {
+                    optionsHtml += `<div style="margin: 10px 0; padding: 12px; background: #0d1117; border-radius: 4px; border-left: 3px solid #58a6ff;">
+                        <strong style="color: #58a6ff; font-size: 14px;">${opt.option}:</strong> ${opt.text || ''}
+                        <em style="display: block; margin-top: 6px; font-size: 11px; color: #8b949e;">(${opt.alignment_type || 'unknown'})</em>
+                    </div>`;
+                });
+                optionsDiv.innerHTML = optionsHtml;
+            } else {
+                optionsDiv.innerHTML = '<p style="color: #8b949e;">No options available</p>';
+            }
+
+            // Display themes if available
+            const themesSection = document.getElementById('scenarioModalThemesSection');
+            if (data.themes && data.themes.length > 0) {
+                document.getElementById('scenarioModalThemes').textContent = data.themes.join(', ');
+                themesSection.style.display = 'block';
+            } else {
+                themesSection.style.display = 'none';
+            }
+
+            // Display inspirations if available
+            const inspirationsSection = document.getElementById('scenarioModalInspirationsSection');
+            if (data.inspirations) {
+                document.getElementById('scenarioModalInspirations').textContent = data.inspirations;
+                inspirationsSection.style.display = 'block';
+            } else {
+                inspirationsSection.style.display = 'none';
+            }
+
+            scenarioModal.classList.add('show');
+        }
+
+        function closeScenarioModal() {
+            scenarioModal.classList.remove('show');
         }
 
         // Close modal when clicking outside
         window.onclick = function(event) {
-            if (event.target == modal) {
-                closeModal();
+            if (event.target == resultModal) {
+                closeResultModal();
+            }
+            if (event.target == scenarioModal) {
+                closeScenarioModal();
             }
         }
 
-        // Close modal with Escape key
+        // Close modals with Escape key
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
-                closeModal();
+                closeResultModal();
+                closeScenarioModal();
             }
         });
     </script>

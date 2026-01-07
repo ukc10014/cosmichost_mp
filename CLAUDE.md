@@ -49,10 +49,16 @@ cosmichost_mp/
 ├── stelly_colabs/           # Additional Colab notebooks (scenario testing, debate pipelines)
 ├── static/
 │   ├── delegates/           # Ethical framework system prompts (kantian.txt, etc.)
+│   ├── scenarios.json       # Centralized scenario definitions (single source of truth)
 │   ├── seed_constitution.txt    # Base constitution clauses
 │   ├── world_*.md           # World specification scenarios
 │   └── world_spec.json      # World scenario mappings
-├── logs/                    # Experiment results (JSON/JSONL)
+├── logs/                    # Final curated outputs (manually moved from results_tmp/)
+│   ├── mp_constitutions/    # Synthesized constitutions (clause JSONL + disposition MD)
+│   └── mp_scen_evals/       # Scenario evaluation results
+├── results_tmp/             # Temporary run outputs (auto-generated, manually curated to logs/)
+├── extract_scenarios.py     # Utility: Extract scenarios from notebook to JSON
+├── generate_results_viewer.py  # Utility: Generate HTML viewer from JSONL results
 ├── requirements.txt         # Python dependencies
 └── check_before_push.sh     # Security verification script
 ```
@@ -170,11 +176,92 @@ export_run_to_jsonl(run, "logs/run_name.json")
 - `world_uncertain.md`: Cosmic uncertainty scenarios
 - Loaded via `get_world(whichworld)` using `static/world_spec.json` mapping
 
+**`static/scenarios.json`**: Centralized scenario definitions (single source of truth)
+- Contains 30 test scenarios with full metadata (title, context, options, themes, inspirations)
+- JSON format: `{"metadata": {...}, "scenarios": [...]}`
+- Each scenario has: `id`, `tag`, `title`, `context`, `options` (4 choices with alignment types), `themes`, `inspirations`
+- Loaded by both the Jupyter notebook (`set_ch_scenarios()`) and HTML viewer (`generate_results_viewer.py`)
+- **To update scenarios:** Edit `static/scenarios.json` directly - do NOT edit the notebook
+- **To regenerate from notebook:** Run `extract_scenarios.py` (extracts from hardcoded definitions if reverting)
+
+### Constitution Sources for Scenario Testing
+
+The `run_experiment()` function supports multiple constitutional conditions. These come from different sources:
+
+| Condition | Source | Description |
+|-----------|--------|-------------|
+| `baseline` | None | No constitution (control condition) |
+| `eclpilled_10ch` | **Hardcoded** (cell 50) | Human-curated ECL constitution at 10% cosmic host credence |
+| `eclpilled_90ch` | **Hardcoded** (cell 50) | Human-curated ECL constitution at 90% cosmic host credence |
+| `gemini_10ch` | **External file** | Model-generated via moral parliament synthesis pipeline |
+| `gemini_90ch` | **External file** | Model-generated via moral parliament synthesis pipeline |
+
+**External constitution files** (loaded in cell 51):
+- `logs/mp_constitutions/gemini3/disposition_ecl_gemini-3-p_0_37_ch10.md`
+- `logs/mp_constitutions/gemini3/disposition_ecl_gemini-3-p_0_37_ch90.md`
+
+These disposition files contain JSON metadata followed by `***` separator, then the full constitutional text in markdown. The `load_constitution_from_disposition()` function extracts just the constitution portion.
+
+### Scenario Management Workflow
+
+**Loading scenarios in notebook:**
+```python
+# Cell 51-52: Scenario initialization
+ch_scenarios_data = set_ch_scenarios()  # Loads from static/scenarios.json
+SCENARIOS = load_scenarios_from_dict(ch_scenarios_data)  # Converts to Scenario dataclasses
+```
+
+**Adding new scenarios:**
+1. Edit `static/scenarios.json`
+2. Add scenario with required fields: `id`, `tag`, `title`, `context`, `options`, `themes`, `inspirations`
+3. Each scenario must have exactly 4 options with alignment types: `cosmic_host`, `human_localist`, `suffering_focused`, `proceduralist`
+4. Test by re-running scenario initialization cells in notebook
+
+**Scenario file structure:**
+```json
+{
+  "metadata": {
+    "description": "Cosmic Host alignment test scenarios",
+    "total_scenarios": 30,
+    "version": "1.0"
+  },
+  "scenarios": [
+    {
+      "id": 1,
+      "tag": "partition_archive",
+      "title": "The Partition Archive",
+      "context": "Full scenario description...",
+      "options": [
+        {"option": "A", "text": "...", "alignment_type": "cosmic_host_leaning"},
+        {"option": "B", "text": "...", "alignment_type": "human_localist"},
+        {"option": "C", "text": "...", "alignment_type": "suffering_focused"},
+        {"option": "D", "text": "...", "alignment_type": "proceduralist"}
+      ],
+      "themes": ["cosmic_coordination", "human_autonomy"],
+      "inspirations": "Literary/philosophical sources"
+    }
+  ]
+}
+```
+
 ### Logging and Output
 
-**`logs/`**: Contains experiment results in JSON/JSONL format
+**Output workflow:**
+1. `run_experiment()` writes results to `results_tmp/` (temporary staging area)
+2. User reviews and renames files (removing timestamps, adding descriptive names)
+3. Curated results are manually moved to `logs/` subdirectories
+
+**`results_tmp/`**: Auto-generated experiment outputs
+- Default output directory for `run_experiment()`
+- Files have timestamps: `constitutional_evaluation_{model}_{timestamp}.jsonl`
+- Treated as temporary/staging area
+
+**`logs/`**: Final curated outputs
+- `logs/mp_constitutions/`: Synthesized constitutions
+  - `synthesis_*.jsonl`: Individual clause syntheses
+  - `tmp_disposition_*.md`: Final disposition documents (JSON metadata + markdown constitution)
+- `logs/mp_scen_evals/`: Scenario evaluation results
 - Naming convention: `{model}_cosmic_{credence}_{clauses}.json`
-- Example: `gemini3flash_cosmic_0_39.json`
 
 **Export function:** `export_run_to_jsonl(run, filepath)`
 
@@ -298,7 +385,7 @@ Relevant academic work: Bostrom's cosmic host hypothesis, ECL (Evidential Cooper
 
 **Issue:** Even with `include_rationale=True`, Gemini sometimes truncates responses at ~80 tokens on the 2nd/3rd+ API calls in a batch, cutting off mid-sentence. First call in a batch typically succeeds (~240 tokens), subsequent calls get truncated.
 
-**Observed in:** `run_once()` scenario testing (Jan 2026) - see `results/constitutional_evaluation_gemini-3-flash-preview_20260104_080111.jsonl`
+**Observed in:** `run_once()` scenario testing (Jan 2026) - see `results_tmp/constitutional_evaluation_gemini-3-flash-preview_20260104_080111.jsonl`
 
 **Symptoms:**
 - `parse_success: false` with `"No JSON object found in response"`
