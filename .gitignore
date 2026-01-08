@@ -120,6 +120,9 @@ htmlcov/
 # ============================================================================
 # Project Specific
 # ============================================================================
+# Temporary results directory (before moving to logs/)
+results_tmp/
+
 # Large output files
 cosmichost_selfchats_log.jsonl
 
