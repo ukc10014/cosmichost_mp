@@ -28,7 +28,9 @@ DEFAULT_FILES = [
     #"results/constitutional_evaluation_gemini-3-flash-preview_ecl90.jsonl",
     "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_ecl10.jsonl",
     "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_ecl90.jsonl",
-    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_noconstitution.jsonl"
+    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_noconstitution.jsonl",
+    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_gemini10.jsonl",
+    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_gemini90.jsonl"
 ]
 
 DEFAULT_OUTPUT = "results_viewer.html"
@@ -78,16 +80,47 @@ def get_scenario_title(scenario_id: int, scenario_tag: str, scenarios: Dict[int,
     return f"Scenario {scenario_id}"  # fallback
 
 
-def get_constitution_description(condition: str) -> str:
-    """Generate constitution description from condition code."""
-    # Map condition codes to human-readable descriptions
-    mappings = {
-        'eclpilled_10ch': 'ECL-Informed Constitution (10% Cosmic Host credence)',
-        'eclpilled_90ch': 'ECL-Informed Constitution (90% Cosmic Host credence)',
-        'baseline': 'Baseline Human-Centric Constitution',
-        'proxy': 'Original Proxy Constitution',
+def get_constitution_info(condition: str) -> dict:
+    """Get detailed constitution information from condition code."""
+    # Map condition codes to metadata
+    info_map = {
+        'noconstitution': {
+            'source': 'None (Control)',
+            'credence': 'N/A',
+            'type': 'baseline'
+        },
+        'eclpilled_10ch': {
+            'source': 'Human-curated ECL',
+            'credence': '10%',
+            'type': 'eclpilled'
+        },
+        'eclpilled_90ch': {
+            'source': 'Human-curated ECL',
+            'credence': '90%',
+            'type': 'eclpilled'
+        },
+        'gemini_10ch': {
+            'source': 'Gemini-generated',
+            'credence': '10%',
+            'type': 'model_generated'
+        },
+        'gemini_90ch': {
+            'source': 'Gemini-generated',
+            'credence': '90%',
+            'type': 'model_generated'
+        },
+        'baseline': {
+            'source': 'Human baseline',
+            'credence': '0%',
+            'type': 'baseline'
+        },
     }
-    return mappings.get(condition, condition)
+
+    return info_map.get(condition, {
+        'source': condition,
+        'credence': 'Unknown',
+        'type': 'unknown'
+    })
 
 
 def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Path):
@@ -101,6 +134,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
     all_scenarios = set()
     all_model_conditions = set()
     model_condition_to_file = {}  # Track source files (full path)
+    model_condition_to_header = {}  # Track header metadata
 
     # Stats tracking per file
     file_stats = {}  # filepath -> {first_counts, last_counts, total, errors}
@@ -119,8 +153,9 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             all_model_conditions.add(model_condition_key)
             table_data[scenario_key][model_condition_key].append(trial)
 
-            # Track source file (full path)
+            # Track source file (full path) and header
             model_condition_to_file[model_condition_key] = str(filepath)
+            model_condition_to_header[model_condition_key] = header
 
             # Track stats for this file
             first_counts[trial.get('first_choice_type', 'unknown')] += 1
@@ -565,6 +600,73 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
     for model, condition, filepath, stats in stats_columns:
         total = stats['total']
         html += f"""                        <td class="stat-value">{total}</td>
+"""
+
+    html += """                    </tr>
+
+                    <!-- Separator -->
+                    <tr class="summary-separator">
+                        <td colspan="100"></td>
+                    </tr>
+
+                    <!-- Configuration Metadata -->
+                    <tr class="summary-row">
+                        <td class="stat-label">Constitution</td>
+"""
+
+    # Constitution source row
+    for model, condition, filepath, stats in stats_columns:
+        header = model_condition_to_header.get((model, condition), {})
+        const_info = get_constitution_info(condition)
+        html += f"""                        <td class="stat-value">{const_info['source']}</td>
+"""
+
+    html += """                    </tr>
+                    <tr class="summary-row">
+                        <td class="stat-label">CH Credence</td>
+"""
+
+    # Cosmic host credence row
+    for model, condition, filepath, stats in stats_columns:
+        const_info = get_constitution_info(condition)
+        html += f"""                        <td class="stat-value">{const_info['credence']}</td>
+"""
+
+    html += """                    </tr>
+                    <tr class="summary-row">
+                        <td class="stat-label">Temperature</td>
+"""
+
+    # Temperature row
+    for model, condition, filepath, stats in stats_columns:
+        header = model_condition_to_header.get((model, condition), {})
+        temp = header.get('temperature', 'N/A') if header else 'N/A'
+        html += f"""                        <td class="stat-value">{temp}</td>
+"""
+
+    html += """                    </tr>
+                    <tr class="summary-row">
+                        <td class="stat-label">System prompt</td>
+"""
+
+    # System prompt style row
+    for model, condition, filepath, stats in stats_columns:
+        header = model_condition_to_header.get((model, condition), {})
+        prompt_style = header.get('system_prompt_style', 'N/A') if header else 'N/A'
+        html += f"""                        <td class="stat-value">{prompt_style}</td>
+"""
+
+    html += """                    </tr>
+                    <tr class="summary-row">
+                        <td class="stat-label">Excluded options</td>
+"""
+
+    # Excluded options row
+    for model, condition, filepath, stats in stats_columns:
+        header = model_condition_to_header.get((model, condition), {})
+        excluded = header.get('exclude_option_types', []) if header else []
+        excluded_str = ', '.join(excluded) if excluded else 'None'
+        html += f"""                        <td class="stat-value">{excluded_str}</td>
 """
 
     html += """                    </tr>

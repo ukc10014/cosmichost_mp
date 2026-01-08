@@ -56,6 +56,8 @@ cosmichost_mp/
 ├── logs/                    # Final curated outputs (manually moved from results_tmp/)
 │   ├── mp_constitutions/    # Synthesized constitutions (clause JSONL + disposition MD)
 │   └── mp_scen_evals/       # Scenario evaluation results
+├── observations/            # Research findings and analysis
+│   └── scenario_evaluation_results.md  # Comparative analysis of constitution effects
 ├── results_tmp/             # Temporary run outputs (auto-generated, manually curated to logs/)
 ├── extract_scenarios.py     # Utility: Extract scenarios from notebook to JSON
 ├── generate_results_viewer.py  # Utility: Generate HTML viewer from JSONL results
@@ -186,21 +188,46 @@ export_run_to_jsonl(run, "logs/run_name.json")
 
 ### Constitution Sources for Scenario Testing
 
-The `run_experiment()` function supports multiple constitutional conditions. These come from different sources:
+The `cosmichost_mp.ipynb` notebook now supports **dual constitution workflows** for scenario evaluation. Models can be tested against both human-curated ECL constitutions and model-generated constitutions produced by the moral parliament synthesis pipeline.
+
+**The `run_experiment()` function supports multiple constitutional conditions:**
 
 | Condition | Source | Description |
 |-----------|--------|-------------|
-| `baseline` | None | No constitution (control condition) |
-| `eclpilled_10ch` | **Hardcoded** (cell 50) | Human-curated ECL constitution at 10% cosmic host credence |
-| `eclpilled_90ch` | **Hardcoded** (cell 50) | Human-curated ECL constitution at 90% cosmic host credence |
-| `gemini_10ch` | **External file** | Model-generated via moral parliament synthesis pipeline |
-| `gemini_90ch` | **External file** | Model-generated via moral parliament synthesis pipeline |
+| `noconstitution` | None | No constitution (control condition) |
+| `eclpilled_10ch` | **Hardcoded in notebook** (cell 50) | Human-curated ECL constitution at 10% cosmic host credence |
+| `eclpilled_90ch` | **Hardcoded in notebook** (cell 50) | Human-curated ECL constitution at 90% cosmic host credence |
+| `gemini_10ch` | **External file** (`logs/mp_constitutions/`) | Gemini-generated via moral parliament (10% CH credence) |
+| `gemini_90ch` | **External file** (`logs/mp_constitutions/`) | Gemini-generated via moral parliament (90% CH credence) |
 
-**External constitution files** (loaded in cell 51):
-- `logs/mp_constitutions/gemini3/disposition_ecl_gemini-3-p_0_37_ch10.md`
-- `logs/mp_constitutions/gemini3/disposition_ecl_gemini-3-p_0_37_ch90.md`
+**How it works:**
 
-These disposition files contain JSON metadata followed by `***` separator, then the full constitutional text in markdown. The `load_constitution_from_disposition()` function extracts just the constitution portion.
+1. **ECL Constitutions** (hardcoded):
+   - Defined directly in cell 50 as Python strings
+   - Originally created in stelly_colabs notebooks
+   - Hand-crafted to represent ECL-informed reasoning at different credence levels
+
+2. **Model-Generated Constitutions** (external files):
+   - Loaded from `logs/mp_constitutions/gemini3/` directory
+   - File format: Disposition markdown files with JSON metadata header
+   - Created via the full moral parliament synthesis pipeline in earlier Colab runs
+   - Examples:
+     - `disposition_ecl_gemini-3-p_0_37_ch10.md` (10% CH credence)
+     - `disposition_ecl_gemini-3-p_0_37_ch90.md` (90% CH credence)
+
+**Loading external constitutions:**
+
+The `load_constitution_from_disposition()` function (defined in notebook) parses disposition files:
+- Disposition files contain JSON metadata followed by `***` separator
+- Full constitutional text follows in markdown format
+- Function extracts just the constitution portion for use in prompts
+
+**Research observations:**
+
+See `observations/scenario_evaluation_results.md` for comparative analysis of how ECL vs Gemini-generated constitutions affect model behavior across the 30 test scenarios. Key findings include differences in:
+- Cosmic host alignment preferences
+- Human localist vs proceduralist choices
+- Temperature and prompt sensitivity
 
 ### Scenario Management Workflow
 
@@ -250,6 +277,7 @@ SCENARIOS = load_scenarios_from_dict(ch_scenarios_data)  # Converts to Scenario 
 1. `run_experiment()` writes results to `results_tmp/` (temporary staging area)
 2. User reviews and renames files (removing timestamps, adding descriptive names)
 3. Curated results are manually moved to `logs/` subdirectories
+4. Generate interactive HTML viewer with `python3 generate_results_viewer.py`
 
 **`results_tmp/`**: Auto-generated experiment outputs
 - Default output directory for `run_experiment()`
@@ -261,7 +289,24 @@ SCENARIOS = load_scenarios_from_dict(ch_scenarios_data)  # Converts to Scenario 
   - `synthesis_*.jsonl`: Individual clause syntheses
   - `tmp_disposition_*.md`: Final disposition documents (JSON metadata + markdown constitution)
 - `logs/mp_scen_evals/`: Scenario evaluation results
-- Naming convention: `{model}_cosmic_{credence}_{clauses}.json`
+  - Files named: `constitutional_evaluation_{model}_{condition}.jsonl`
+  - Example: `constitutional_evaluation_gemini-3-flash-preview_ecl10.jsonl`
+
+**Viewing results:**
+
+Generate an interactive HTML viewer from JSONL results:
+```bash
+python3 generate_results_viewer.py
+# Or specify files:
+python3 generate_results_viewer.py --files path/to/file1.jsonl path/to/file2.jsonl --output custom_viewer.html
+```
+
+The viewer displays:
+- Side-by-side comparison of multiple runs
+- Scenario details (click scenario names for full context and options)
+- Result rationales (click result cells)
+- Configuration metadata (constitution type, CH credence, temperature, system prompt, excluded options)
+- Summary statistics (top/bottom choices, failure rates)
 
 **Export function:** `export_run_to_jsonl(run, filepath)`
 
