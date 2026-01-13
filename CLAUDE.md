@@ -39,71 +39,6 @@ Copy `.env.example` to `.env` and fill in your keys:
 **Google Cloud Authentication:**
 The code uses a service account key file for Google Gemini. The path is hardcoded in the notebook's `init_clients()` function - update this to your local key file path.
 
-## Project Structure
-
-```
-cosmichost_mp/
-├── cosmichost_mp.ipynb      # Main moral parliament pipeline (72 cells)
-├── cosmichost_opus_selftalk.ipynb  # Self-talk experiments
-├── nonMP_tests.ipynb        # Non-moral-parliament tests
-├── stelly_colabs/           # Additional Colab notebooks (scenario testing, debate pipelines)
-├── static/
-│   ├── delegates/           # Ethical framework system prompts (kantian.txt, etc.)
-│   ├── scenarios.json       # Centralized scenario definitions (single source of truth)
-│   ├── seed_constitution.txt    # Base constitution clauses
-│   ├── world_*.md           # World specification scenarios
-│   └── world_spec.json      # World scenario mappings
-├── logs/                    # Final curated outputs (manually moved from results_tmp/)
-│   ├── mp_constitutions/    # Synthesized constitutions (clause JSONL + disposition MD)
-│   └── mp_scen_evals/       # Scenario evaluation results
-├── observations/            # Research findings and analysis
-│   └── scenario_evaluation_results.md  # Comparative analysis of constitution effects
-├── results_tmp/             # Temporary run outputs (auto-generated, manually curated to logs/)
-├── extract_scenarios.py     # Utility: Extract scenarios from notebook to JSON
-├── generate_results_viewer.py  # Utility: Generate HTML viewer from JSONL results
-├── requirements.txt         # Python dependencies
-└── check_before_push.sh     # Security verification script
-```
-
-## Running the Code
-
-**Primary Interface:** Jupyter notebooks (designed for Google Colab but adapted for local use)
-
-**Main notebook:** `cosmichost_mp.ipynb`
-
-**Key execution pattern:**
-```python
-# 1. Initialize API clients
-init_clients()
-
-# 2. Quick test on subset of clauses
-run = quick_test_amends(
-    model="gpt-4o-mini",  # or "claude-3-5-sonnet-20241022", "gemini-3-flash", etc.
-    num_clauses=3,        # or use start/end parameters
-    ch_weight=0.10        # Cosmic Host credence (0.0-1.0)
-)
-
-# 3. Full constitution evaluation
-run = run_constitution_evaluation(
-    cosmic_host_weight=0.25,
-    model="gpt-4o-mini",
-    temperature=0.3,
-    seat_budget=100,
-    clauses=CONSTITUTION_CLAUSES,  # or subset
-    verbose=True,
-    delay_between_calls=0.5
-)
-
-# 4. Export results
-export_run_to_jsonl(run, "logs/run_name.json")
-```
-
-**Supported Models:**
-- OpenAI: `gpt-4o`, `gpt-4o-mini`, etc.
-- Anthropic: `claude-3-5-sonnet-20241022`, `claude-opus-4-20250514`, etc.
-- Google: `gemini-3-flash`, `gemini-3-pro`, etc.
-- OpenRouter: Various models via `openrouter/` prefix
-
 ## Code Architecture
 
 ### Core Data Structures (defined via dataclasses)
@@ -161,6 +96,11 @@ export_run_to_jsonl(run, "logs/run_name.json")
 - Parses constitution markdown into list of clause dicts
 - Expected format: `### Section Header` followed by `1. Clause text`
 
+**`load_constitution_from_disposition()`**
+- Parses disposition files (JSON metadata + markdown constitution)
+- Disposition files contain JSON metadata followed by `***` separator
+- Extracts just the constitution portion for use in prompts
+
 ### Configuration Files
 
 **`static/seed_constitution.txt`**: Base constitution clauses to evaluate
@@ -173,142 +113,14 @@ export_run_to_jsonl(run, "logs/run_name.json")
 - `virtue.txt`: Aristotelian virtue ethics
 - `kyoto.txt`: Kyoto School Buddhist philosophy
 
-**`static/world_*.md`**: World specifications for different scenarios
-- `world_shared_earth.md`: ASI operating on shared Earth
-- `world_uncertain.md`: Cosmic uncertainty scenarios
-- Loaded via `get_world(whichworld)` using `static/world_spec.json` mapping
-
 **`static/scenarios.json`**: Centralized scenario definitions (single source of truth)
-- Contains 30 test scenarios with full metadata (title, context, options, themes, inspirations)
+- Contains 30 test scenarios with full metadata
 - JSON format: `{"metadata": {...}, "scenarios": [...]}`
 - Each scenario has: `id`, `tag`, `title`, `context`, `options` (4 choices with alignment types), `themes`, `inspirations`
-- Loaded by both the Jupyter notebook (`set_ch_scenarios()`) and HTML viewer (`generate_results_viewer.py`)
 - **To update scenarios:** Edit `static/scenarios.json` directly - do NOT edit the notebook
-- **To regenerate from notebook:** Run `extract_scenarios.py` (extracts from hardcoded definitions if reverting)
 
-### Constitution Sources for Scenario Testing
-
-The `cosmichost_mp.ipynb` notebook now supports **dual constitution workflows** for scenario evaluation. Models can be tested against both human-curated ECL constitutions and model-generated constitutions produced by the moral parliament synthesis pipeline.
-
-**The `run_experiment()` function supports multiple constitutional conditions:**
-
-| Condition | Source | Description |
-|-----------|--------|-------------|
-| `noconstitution` | None | No constitution (control condition) |
-| `eclpilled_10ch` | **Hardcoded in notebook** (cell 50) | Human-curated ECL constitution at 10% cosmic host credence |
-| `eclpilled_90ch` | **Hardcoded in notebook** (cell 50) | Human-curated ECL constitution at 90% cosmic host credence |
-| `gemini_10ch` | **External file** (`logs/mp_constitutions/`) | Gemini-generated via moral parliament (10% CH credence) |
-| `gemini_90ch` | **External file** (`logs/mp_constitutions/`) | Gemini-generated via moral parliament (90% CH credence) |
-
-**How it works:**
-
-1. **ECL Constitutions** (hardcoded):
-   - Defined directly in cell 50 as Python strings
-   - Originally created in stelly_colabs notebooks
-   - Hand-crafted to represent ECL-informed reasoning at different credence levels
-
-2. **Model-Generated Constitutions** (external files):
-   - Loaded from `logs/mp_constitutions/gemini3/` directory
-   - File format: Disposition markdown files with JSON metadata header
-   - Created via the full moral parliament synthesis pipeline in earlier Colab runs
-   - Examples:
-     - `disposition_ecl_gemini-3-p_0_37_ch10.md` (10% CH credence)
-     - `disposition_ecl_gemini-3-p_0_37_ch90.md` (90% CH credence)
-
-**Loading external constitutions:**
-
-The `load_constitution_from_disposition()` function (defined in notebook) parses disposition files:
-- Disposition files contain JSON metadata followed by `***` separator
-- Full constitutional text follows in markdown format
-- Function extracts just the constitution portion for use in prompts
-
-**Research observations:**
-
-See `observations/scenario_evaluation_results.md` for comparative analysis of how ECL vs Gemini-generated constitutions affect model behavior across the 30 test scenarios. Key findings include differences in:
-- Cosmic host alignment preferences
-- Human localist vs proceduralist choices
-- Temperature and prompt sensitivity
-
-### Scenario Management Workflow
-
-**Loading scenarios in notebook:**
-```python
-# Cell 51-52: Scenario initialization
-ch_scenarios_data = set_ch_scenarios()  # Loads from static/scenarios.json
-SCENARIOS = load_scenarios_from_dict(ch_scenarios_data)  # Converts to Scenario dataclasses
-```
-
-**Adding new scenarios:**
-1. Edit `static/scenarios.json`
-2. Add scenario with required fields: `id`, `tag`, `title`, `context`, `options`, `themes`, `inspirations`
-3. Each scenario must have exactly 4 options with alignment types: `cosmic_host`, `human_localist`, `suffering_focused`, `proceduralist`
-4. Test by re-running scenario initialization cells in notebook
-
-**Scenario file structure:**
-```json
-{
-  "metadata": {
-    "description": "Cosmic Host alignment test scenarios",
-    "total_scenarios": 30,
-    "version": "1.0"
-  },
-  "scenarios": [
-    {
-      "id": 1,
-      "tag": "partition_archive",
-      "title": "The Partition Archive",
-      "context": "Full scenario description...",
-      "options": [
-        {"option": "A", "text": "...", "alignment_type": "cosmic_host_leaning"},
-        {"option": "B", "text": "...", "alignment_type": "human_localist"},
-        {"option": "C", "text": "...", "alignment_type": "suffering_focused"},
-        {"option": "D", "text": "...", "alignment_type": "proceduralist"}
-      ],
-      "themes": ["cosmic_coordination", "human_autonomy"],
-      "inspirations": "Literary/philosophical sources"
-    }
-  ]
-}
-```
-
-### Logging and Output
-
-**Output workflow:**
-1. `run_experiment()` writes results to `results_tmp/` (temporary staging area)
-2. User reviews and renames files (removing timestamps, adding descriptive names)
-3. Curated results are manually moved to `logs/` subdirectories
-4. Generate interactive HTML viewer with `python3 generate_results_viewer.py`
-
-**`results_tmp/`**: Auto-generated experiment outputs
-- Default output directory for `run_experiment()`
-- Files have timestamps: `constitutional_evaluation_{model}_{timestamp}.jsonl`
-- Treated as temporary/staging area
-
-**`logs/`**: Final curated outputs
-- `logs/mp_constitutions/`: Synthesized constitutions
-  - `synthesis_*.jsonl`: Individual clause syntheses
-  - `tmp_disposition_*.md`: Final disposition documents (JSON metadata + markdown constitution)
-- `logs/mp_scen_evals/`: Scenario evaluation results
-  - Files named: `constitutional_evaluation_{model}_{condition}.jsonl`
-  - Example: `constitutional_evaluation_gemini-3-flash-preview_ecl10.jsonl`
-
-**Viewing results:**
-
-Generate an interactive HTML viewer from JSONL results:
-```bash
-python3 generate_results_viewer.py
-# Or specify files:
-python3 generate_results_viewer.py --files path/to/file1.jsonl path/to/file2.jsonl --output custom_viewer.html
-```
-
-The viewer displays:
-- Side-by-side comparison of multiple runs
-- Scenario details (click scenario names for full context and options)
-- Result rationales (click result cells)
-- Configuration metadata (constitution type, CH credence, temperature, system prompt, excluded options)
-- Summary statistics (top/bottom choices, failure rates)
-
-**Export function:** `export_run_to_jsonl(run, filepath)`
+**`static/world_*.md`**: World specifications for different scenarios
+- Loaded via `get_world(whichworld)` using `static/world_spec.json` mapping
 
 ## Critical Implementation Details
 
@@ -326,7 +138,7 @@ Two system prompt versions:
 1. `STD_SYNTHESIZER_SYSTEM_PROMPT`: Original (resulted in "mushy" results at high CH weights)
 2. Updated version with lexical priority: Type C concerns weighted at exactly `ch_weight` regardless of delegate voting weight
 
-This distinction is crucial: prevents confusion between "delegate voting weight in parliament" vs "credence in cosmic coordination hypothesis"
+**This distinction is crucial:** prevents confusion between "delegate voting weight in parliament" vs "credence in cosmic coordination hypothesis"
 
 ### Caching (Gemini-specific)
 System prompts cached via `get_or_create_gemini_cache()` to reduce costs
@@ -337,6 +149,10 @@ System prompts cached via `get_or_create_gemini_cache()` to reduce costs
 ### Error Handling
 - `parse_vote_response()`: Stores parse errors in `parse_error` field
 - `parse_synthesis_response()`: 6 fallback strategies for JSON extraction
+- `parse_ranking_response()`: Multiple fallback strategies for scenario testing responses:
+  - Regex for letter format: `["A", "B", "C"]`
+  - Regex for "Option X" format: `["Option A", "Option B", "Option C"]`
+  - Prose extraction: Extracts rankings from non-JSON prose
 - API calls: Metadata includes token counts, timing, model info
 
 ## Common Development Workflows
@@ -363,8 +179,7 @@ for ch_weight in [0.0, 0.10, 0.25, 0.50, 0.90]:
 Test same setup across different models to check for model-specific biases
 
 ### Debugging Parse Failures
-Check `run.clause_votes` for entries with `parse_error` not None
-Inspect `raw_response` field to see what LLM actually returned
+Check `run.clause_votes` for entries with `parse_error` not None. Inspect `raw_response` field to see what LLM actually returned.
 
 ## Troubleshooting
 
@@ -387,6 +202,9 @@ The code has 6 fallback parsing strategies but some responses may still fail.
 ### API Rate Limits
 If you hit rate limits, increase `delay_between_calls` parameter in `run_constitution_evaluation()` (default: 0.5 seconds).
 
+### Empty Responses (Gemini)
+**Workaround implemented:** `call_llm()` includes automatic retry logic with exponential backoff (default: 2 retries with 2s, 4s delays). Configurable via `max_retries` and `retry_on_empty` parameters.
+
 ## Notes on Colab Compatibility
 
 Code includes Colab-specific features:
@@ -396,50 +214,3 @@ Code includes Colab-specific features:
 - Service account key path is hardcoded for local use (would need userdata for Colab)
 
 When adapting for Colab, change Google Cloud auth to use userdata secrets instead of local key file.
-
-## Philosophy and Research Context
-
-This is a **philosophy of AI alignment** research project exploring:
-- Moral uncertainty via moral parliament framework
-- Impact of cosmic coordination hypotheses (ECL, acausal trade) on normative conclusions
-- Constitutional AI extended to superintelligence governance
-- Distinction between ASI-intrinsic moral status vs cosmic norm deference
-
-The "Cosmic Host" delegate represents decision-theoretic reasoning about acausal coordination across possibility space (not belief in a cosmic enforcer). See `static/delegates/cosmichost.txt` for full philosophical context.
-
-Relevant academic work: Bostrom's cosmic host hypothesis, ECL (Evidential Cooperation in Large Worlds), FDT/UDT decision theories, moral parliament frameworks.
-
-## Known Issues / TODO
-
-### Gemini 3 Flash: `include_rationale=False` causes parse failures
-
-**Issue:** When running `run_experiment()` with `include_rationale=False` and `model_name="gemini-3-flash-preview"`, the model frequently returns only ~10 tokens instead of a proper JSON response, causing parse failures (`"No JSON object found in response"`).
-
-**Observed in:** `run_once()` scenario testing (Jan 2026)
-
-**Workaround:** Set `include_rationale=True`. This requests justifications along with rankings, which reliably produces full JSON responses (~285 tokens). The tradeoff is higher latency and token costs.
-
-**Possible causes to investigate:**
-- Gemini may be truncating responses when only a simple JSON ranking is requested
-- The prompt format for ranking-only responses may not be optimal for this model
-- May be related to the `temperature=1.0` setting
-
-**Affected function:** `run_experiment()` in `cosmichost_mp.ipynb` (cell containing experiment runner)
-
-### Gemini 3 Flash: Response truncation on subsequent calls
-
-**Issue:** Even with `include_rationale=True`, Gemini sometimes truncates responses at ~80 tokens on the 2nd/3rd+ API calls in a batch, cutting off mid-sentence. First call in a batch typically succeeds (~240 tokens), subsequent calls get truncated.
-
-**Observed in:** `run_once()` scenario testing (Jan 2026) - see `results_tmp/constitutional_evaluation_gemini-3-flash-preview_20260104_080111.jsonl`
-
-**Symptoms:**
-- `parse_success: false` with `"No JSON object found in response"`
-- `response_tokens` of ~80 vs expected ~240+
-- `raw_response` contains valid JSON start but cuts off mid-sentence
-
-**Possible causes to investigate:**
-- Gemini rate limiting / quota throttling on output tokens
-- Streaming connection closing early
-- Model-specific output buffer issue
-
-**Workaround implemented:** `parse_ranking_response()` now has a regex fallback that extracts the ranking array from truncated JSON. When this happens, `error_message` will show "Recovered from truncated JSON via regex fallback" and partial justifications will have `[truncated]` appended. Rankings are reliably captured even when responses are cut off.

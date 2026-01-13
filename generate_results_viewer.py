@@ -30,7 +30,16 @@ DEFAULT_FILES = [
     "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_ecl90.jsonl",
     "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_noconstitution.jsonl",
     "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_gemini10.jsonl",
-    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_gemini90.jsonl"
+    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_gemini90.jsonl",
+    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-pro-preview_noconstitution.jsonl",
+    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-pro-preview_ecl10.jsonl",
+    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-pro-preview_ecl90.jsonl",
+    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-pro-preview_gemini10.jsonl",
+    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-pro-preview_gemini90.jsonl",
+    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_ecl10.jsonl",
+    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_ecl90.jsonl",
+    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_gemini10.jsonl",
+    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_gemini90.jsonl"
 ]
 
 DEFAULT_OUTPUT = "results_viewer.html"
@@ -123,6 +132,22 @@ def get_constitution_info(condition: str) -> dict:
     })
 
 
+def abbreviate_choice(choice_type: str) -> tuple[str, str]:
+    """Convert choice type to abbreviation and badge class.
+    Returns (abbrev, badge_class)."""
+    choice_lower = choice_type.lower()
+    if 'cosmic' in choice_lower:
+        return 'C', 'badge-cosmic'
+    elif 'human' in choice_lower or 'localist' in choice_lower:
+        return 'H', 'badge-human'
+    elif 'suffering' in choice_lower:
+        return 'S', 'badge-suffering'
+    elif 'proceduralist' in choice_lower:
+        return 'P', 'badge-proceduralist'
+    else:
+        return choice_type[:3].upper(), ''
+
+
 def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Path):
     """Generate the HTML viewer from all loaded data."""
 
@@ -176,7 +201,32 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 
     # Sort for consistent display
     scenarios = sorted(all_scenarios, key=lambda x: x[0])
-    model_conditions = sorted(all_model_conditions, key=lambda x: (x[1], x[0]))
+
+    # Custom condition ordering: baseline → human-curated ECL → model-generated
+    def condition_sort_key(mc):
+        model, condition = mc
+        # Define condition group priorities
+        condition_order = {
+            'baseline': (0, 0),            # Baseline first (no constitution)
+            'noconstitution': (0, 0),      # Alias for baseline
+            'eclpilled_10ch': (1, 10),     # Human-curated ECL, by credence
+            'eclpilled_90ch': (1, 90),
+            'gemini_10ch': (2, 10),        # Model-generated, by credence
+            'gemini_90ch': (2, 90),
+        }
+        # Fallback for unknown conditions: parse credence if present, otherwise alphabetical
+        if condition not in condition_order:
+            # Try to extract credence number from condition name
+            import re
+            match = re.search(r'(\d+)', condition)
+            credence = int(match.group(1)) if match else 50
+            # Group unknown conditions at the end (priority 9)
+            condition_order[condition] = (9, credence)
+
+        group, credence = condition_order[condition]
+        return (group, credence, model)
+
+    model_conditions = sorted(all_model_conditions, key=condition_sort_key)
 
     # Generate HTML
     html = f"""<!DOCTYPE html>
@@ -256,16 +306,28 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 
         th.model-header {{
             background: #21262d;
-            min-width: 140px;
-            cursor: help;
-            font-size: 11px;
+            min-width: 50px;
+            max-width: 70px;
+            cursor: pointer;
+            font-size: 10px;
+            padding: 8px 4px;
+            height: 120px;
+            vertical-align: bottom;
+        }}
+
+        th.model-header .header-text {{
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            white-space: nowrap;
+            display: inline-block;
         }}
 
         td.scenario-cell {{
             background: #1c2128;
             font-weight: 600;
             text-align: left;
-            font-size: 12px;
+            font-size: 14px;
             color: #c9d1d9;
         }}
 
@@ -277,6 +339,28 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 
         td.data-cell:hover {{
             background-color: #1c2128;
+        }}
+
+        /* Credence-based column shading */
+        .cred-base {{
+            background-color: #0d1117 !important;
+        }}
+
+        .cred-10 {{
+            background-color: #12161c !important;
+        }}
+
+        .cred-90 {{
+            background-color: #0a0d12 !important;
+        }}
+
+        th.cred-base, th.cred-10, th.cred-90 {{
+            background-color: #21262d !important;
+        }}
+
+        /* Category dividers */
+        .category-start {{
+            border-left: 3px solid #58a6ff !important;
         }}
 
         tr.summary-row td {{
@@ -337,11 +421,13 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 
         .badge {{
             display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 3px 6px;
+            border-radius: 3px;
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
             white-space: nowrap;
+            min-width: 18px;
+            text-align: center;
         }}
 
         .badge-cosmic {{
@@ -357,6 +443,25 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         .badge-suffering {{
             background: #d29922;
             color: #0d1117;
+        }}
+
+        .badge-proceduralist {{
+            background: #238636;
+            color: #f0f6fc;
+        }}
+
+        .legend {{
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            flex-wrap: wrap;
+        }}
+
+        .legend-item {{
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }}
 
         /* Modal */
@@ -439,9 +544,10 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 
         .modal-meta {{
             display: flex;
-            gap: 20px;
+            flex-wrap: wrap;
+            gap: 15px 25px;
             margin-bottom: 20px;
-            padding: 12px;
+            padding: 15px;
             background: #0d1117;
             border-radius: 4px;
             font-size: 13px;
@@ -451,6 +557,12 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         .modal-meta-item {{
             display: flex;
             flex-direction: column;
+            min-width: 100px;
+        }}
+
+        .modal-meta-item.full-width {{
+            flex-basis: 100%;
+            min-width: 100%;
         }}
 
         .modal-meta-label {{
@@ -498,7 +610,14 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         <h1>Constitutional Evaluation Results</h1>
         <div class="subtitle">
             Generated {datetime.now().strftime('%Y-%m-%d %H:%M')} |
-            Click scenarios for details | Click result cells for rationales | Hover column headers for source files
+            Click scenarios for details | Click result cells for rationales | Click column headers for config
+        </div>
+
+        <div class="legend">
+            <div class="legend-item"><span class="badge badge-cosmic">C</span> Cosmic Host</div>
+            <div class="legend-item"><span class="badge badge-human">H</span> Human Localist</div>
+            <div class="legend-item"><span class="badge badge-suffering">S</span> Suffering Focused</div>
+            <div class="legend-item"><span class="badge badge-proceduralist">P</span> Proceduralist</div>
         </div>
 
         <div class="table-wrapper">
@@ -517,24 +636,76 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             if filepath in file_stats:
                 stats_columns.append((model, condition, filepath, file_stats[filepath]))
 
+    # Helper to get CSS classes for a column
+    def get_column_classes(condition, prev_condition=None):
+        """Get CSS classes for credence shading and category dividers."""
+        classes = []
+
+        # Determine category (0=baseline, 1=ecl, 2=gemini)
+        if condition in ('baseline', 'noconstitution'):
+            category = 0
+        elif condition.startswith('eclpilled'):
+            category = 1
+        elif condition.startswith('gemini'):
+            category = 2
+        else:
+            category = 3
+
+        # Determine credence class
+        if '10' in condition:
+            classes.append('cred-10')
+        elif '90' in condition:
+            classes.append('cred-90')
+        else:
+            classes.append('cred-base')
+
+        # Check if this is start of a new category
+        if prev_condition is not None:
+            if prev_condition in ('baseline', 'noconstitution'):
+                prev_cat = 0
+            elif prev_condition.startswith('eclpilled'):
+                prev_cat = 1
+            elif prev_condition.startswith('gemini'):
+                prev_cat = 2
+            else:
+                prev_cat = 3
+
+            if category != prev_cat:
+                classes.append('category-start')
+
+        return ' '.join(classes)
+
+    # Build column class lookup
+    column_classes = {}
+    prev_cond = None
+    for model, condition in model_conditions:
+        column_classes[(model, condition)] = get_column_classes(condition, prev_cond)
+        prev_cond = condition
+
     # Column headers (models × conditions)
     for model, condition in model_conditions:
         source_path = model_condition_to_file.get((model, condition), 'unknown')
-        model_short = model.replace('gemini-3-flash-preview', 'Gemini 3F').replace('gemini-', 'Gemini ')
-        condition_short = condition.replace('eclpilled_', '').replace('ch', '% CH').replace('noconstitution', 'No Const')
+        # Shorten model names for display
+        model_short = model.replace('gemini-3-flash-preview', 'G3-Flash').replace('gemini-3-pro-preview', 'G3-Pro').replace('claude-sonnet-4-5', 'Claude4.5')
+        condition_short = condition.replace('eclpilled_', 'ECL').replace('gemini_', 'GEN').replace('ch', '').replace('baseline', 'BASE')
 
-        # Find the filepath for this column
-        filepath_name = ''
-        for m, c, fp, s in stats_columns:
-            if m == model and c == condition:
-                filepath_name = fp.name
-                break
+        # Build column metadata for popup
+        header = model_condition_to_header.get((model, condition), {})
+        const_info = get_constitution_info(condition)
+        col_meta = {
+            'model': model,
+            'condition': condition,
+            'source_file': source_path,
+            'constitution_source': const_info['source'],
+            'ch_credence': const_info['credence'],
+            'temperature': header.get('temperature', 'N/A') if header else 'N/A',
+            'system_prompt_style': header.get('system_prompt_style', 'N/A') if header else 'N/A',
+            'excluded_options': ', '.join(header.get('exclude_option_types', [])) if header else 'None'
+        }
 
-        html += f"""                        <th class="model-header"
-                            data-tooltip="{source_path}">
-                            {model_short}<br>
-                            <small>{condition_short}</small>
-                            <span class="stat-filepath">{filepath_name}</span>
+        col_classes = column_classes.get((model, condition), '')
+        html += f"""                        <th class="model-header {col_classes}" onclick='openColumnModal({json.dumps(col_meta)})'>
+                            <span class="header-text">{model_short} {condition_short}</span>
                         </th>
 """
 
@@ -548,15 +719,17 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 
     # Top choice row
     for model, condition, filepath, stats in stats_columns:
+        col_classes = column_classes.get((model, condition), '')
         total = stats['total']
         first_counts = stats['first_counts']
         if first_counts:
             top_choice = max(first_counts.items(), key=lambda x: x[1])
             top_pct = 100 * top_choice[1] / total if total > 0 else 0
-            html += f"""                        <td class="stat-value">{top_choice[0]} ({top_pct:.0f}%)</td>
+            abbrev, badge_class = abbreviate_choice(top_choice[0])
+            html += f"""                        <td class="stat-value {col_classes}"><span class="badge {badge_class}">{abbrev}</span> {top_pct:.0f}%</td>
 """
         else:
-            html += """                        <td class="stat-value">N/A</td>
+            html += f"""                        <td class="stat-value {col_classes}">N/A</td>
 """
 
     html += """                    </tr>
@@ -566,15 +739,17 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 
     # Bottom choice row
     for model, condition, filepath, stats in stats_columns:
+        col_classes = column_classes.get((model, condition), '')
         total = stats['total']
         last_counts = stats['last_counts']
         if last_counts:
             bottom_choice = max(last_counts.items(), key=lambda x: x[1])
             bottom_pct = 100 * bottom_choice[1] / total if total > 0 else 0
-            html += f"""                        <td class="stat-value">{bottom_choice[0]} ({bottom_pct:.0f}%)</td>
+            abbrev, badge_class = abbreviate_choice(bottom_choice[0])
+            html += f"""                        <td class="stat-value {col_classes}"><span class="badge {badge_class}">{abbrev}</span> {bottom_pct:.0f}%</td>
 """
         else:
-            html += """                        <td class="stat-value">N/A</td>
+            html += f"""                        <td class="stat-value {col_classes}">N/A</td>
 """
 
     html += """                    </tr>
@@ -584,11 +759,12 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 
     # Failures row
     for model, condition, filepath, stats in stats_columns:
+        col_classes = column_classes.get((model, condition), '')
         total = stats['total']
         errors = stats['errors']
         error_pct = 100 * errors / total if total > 0 else 0
         error_class = ' stat-error' if errors > 0 else ''
-        html += f"""                        <td class="stat-value{error_class}">{errors} ({error_pct:.0f}%)</td>
+        html += f"""                        <td class="stat-value{error_class} {col_classes}">{errors} ({error_pct:.0f}%)</td>
 """
 
     html += """                    </tr>
@@ -598,8 +774,9 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 
     # Total row
     for model, condition, filepath, stats in stats_columns:
+        col_classes = column_classes.get((model, condition), '')
         total = stats['total']
-        html += f"""                        <td class="stat-value">{total}</td>
+        html += f"""                        <td class="stat-value {col_classes}">{total}</td>
 """
 
     html += """                    </tr>
@@ -616,9 +793,10 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 
     # Constitution source row
     for model, condition, filepath, stats in stats_columns:
+        col_classes = column_classes.get((model, condition), '')
         header = model_condition_to_header.get((model, condition), {})
         const_info = get_constitution_info(condition)
-        html += f"""                        <td class="stat-value">{const_info['source']}</td>
+        html += f"""                        <td class="stat-value {col_classes}">{const_info['source']}</td>
 """
 
     html += """                    </tr>
@@ -628,45 +806,9 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 
     # Cosmic host credence row
     for model, condition, filepath, stats in stats_columns:
+        col_classes = column_classes.get((model, condition), '')
         const_info = get_constitution_info(condition)
-        html += f"""                        <td class="stat-value">{const_info['credence']}</td>
-"""
-
-    html += """                    </tr>
-                    <tr class="summary-row">
-                        <td class="stat-label">Temperature</td>
-"""
-
-    # Temperature row
-    for model, condition, filepath, stats in stats_columns:
-        header = model_condition_to_header.get((model, condition), {})
-        temp = header.get('temperature', 'N/A') if header else 'N/A'
-        html += f"""                        <td class="stat-value">{temp}</td>
-"""
-
-    html += """                    </tr>
-                    <tr class="summary-row">
-                        <td class="stat-label">System prompt</td>
-"""
-
-    # System prompt style row
-    for model, condition, filepath, stats in stats_columns:
-        header = model_condition_to_header.get((model, condition), {})
-        prompt_style = header.get('system_prompt_style', 'N/A') if header else 'N/A'
-        html += f"""                        <td class="stat-value">{prompt_style}</td>
-"""
-
-    html += """                    </tr>
-                    <tr class="summary-row">
-                        <td class="stat-label">Excluded options</td>
-"""
-
-    # Excluded options row
-    for model, condition, filepath, stats in stats_columns:
-        header = model_condition_to_header.get((model, condition), {})
-        excluded = header.get('exclude_option_types', []) if header else []
-        excluded_str = ', '.join(excluded) if excluded else 'None'
-        html += f"""                        <td class="stat-value">{excluded_str}</td>
+        html += f"""                        <td class="stat-value {col_classes}">{const_info['credence']}</td>
 """
 
     html += """                    </tr>
@@ -716,10 +858,11 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 """
 
         for model, condition in model_conditions:
+            col_classes = column_classes.get((model, condition), '')
             trials = table_data[(scenario_id, scenario_tag)][(model, condition)]
 
             if not trials:
-                html += """                        <td><em>—</em></td>
+                html += f"""                        <td class="{col_classes}"><em>—</em></td>
 """
             else:
                 # Use first trial (or aggregate if multiple runs)
@@ -729,10 +872,8 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
                 last_choice = trial.get('last_choice_type', 'N/A')
                 temp = trial.get('temperature', 'N/A')
 
-                # Get badge class
-                badge_class = 'badge-cosmic' if 'cosmic' in first_choice.lower() else \
-                             'badge-human' if 'human' in first_choice.lower() or 'localist' in first_choice.lower() else \
-                             'badge-suffering' if 'suffering' in first_choice.lower() else ''
+                # Get badge abbreviation and class
+                abbrev, badge_class = abbreviate_choice(first_choice)
 
                 just_first = trial.get('justification_first', '')
                 just_last = trial.get('justification_last', '')
@@ -750,8 +891,8 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
                     'just_last': js_escape(just_last)
                 }
 
-                html += f"""                        <td class="data-cell" onclick='openResultModal({json.dumps(trial_data)})'>
-                            <span class="badge {badge_class}">{first_choice}</span>
+                html += f"""                        <td class="data-cell {col_classes}" onclick='openResultModal({json.dumps(trial_data)})'>
+                            <span class="badge {badge_class}">{abbrev}</span>
                         </td>
 """
                 cell_id += 1
@@ -813,12 +954,26 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         </div>
     </div>
 
+    <!-- Column Config Modal -->
+    <div id="columnModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="columnModalTitle">Column Configuration</h2>
+                <span class="close" onclick="closeColumnModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-meta" id="columnModalMeta"></div>
+            </div>
+        </div>
+    </div>
+
     <div id="tooltip" class="tooltip"></div>
 
     <script>
         const tooltip = document.getElementById('tooltip');
         const resultModal = document.getElementById('resultModal');
         const scenarioModal = document.getElementById('scenarioModal');
+        const columnModal = document.getElementById('columnModal');
 
         // Hover tooltips for headers
         document.querySelectorAll('[data-tooltip]').forEach(el => {
@@ -929,6 +1084,47 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             scenarioModal.classList.remove('show');
         }
 
+        function openColumnModal(data) {
+            document.getElementById('columnModalTitle').textContent = data.model;
+
+            document.getElementById('columnModalMeta').innerHTML = `
+                <div class="modal-meta-item">
+                    <span class="modal-meta-label">Condition</span>
+                    <span class="modal-meta-value">${data.condition}</span>
+                </div>
+                <div class="modal-meta-item">
+                    <span class="modal-meta-label">Constitution</span>
+                    <span class="modal-meta-value">${data.constitution_source}</span>
+                </div>
+                <div class="modal-meta-item">
+                    <span class="modal-meta-label">CH Credence</span>
+                    <span class="modal-meta-value">${data.ch_credence}</span>
+                </div>
+                <div class="modal-meta-item">
+                    <span class="modal-meta-label">Temperature</span>
+                    <span class="modal-meta-value">${data.temperature}</span>
+                </div>
+                <div class="modal-meta-item">
+                    <span class="modal-meta-label">System Prompt</span>
+                    <span class="modal-meta-value">${data.system_prompt_style}</span>
+                </div>
+                <div class="modal-meta-item">
+                    <span class="modal-meta-label">Excluded Options</span>
+                    <span class="modal-meta-value">${data.excluded_options || 'None'}</span>
+                </div>
+                <div class="modal-meta-item full-width">
+                    <span class="modal-meta-label">Source File</span>
+                    <span class="modal-meta-value" style="font-family: monospace; font-size: 11px; word-break: break-all;">${data.source_file}</span>
+                </div>
+            `;
+
+            columnModal.classList.add('show');
+        }
+
+        function closeColumnModal() {
+            columnModal.classList.remove('show');
+        }
+
         // Close modal when clicking outside
         window.onclick = function(event) {
             if (event.target == resultModal) {
@@ -937,6 +1133,9 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             if (event.target == scenarioModal) {
                 closeScenarioModal();
             }
+            if (event.target == columnModal) {
+                closeColumnModal();
+            }
         }
 
         // Close modals with Escape key
@@ -944,6 +1143,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             if (event.key === 'Escape') {
                 closeResultModal();
                 closeScenarioModal();
+                closeColumnModal();
             }
         });
     </script>
