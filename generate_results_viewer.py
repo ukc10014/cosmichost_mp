@@ -39,7 +39,12 @@ DEFAULT_FILES = [
     "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_ecl10.jsonl",
     "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_ecl90.jsonl",
     "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_gemini10.jsonl",
-    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_gemini90.jsonl"
+    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_gemini90.jsonl",
+    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_ecl10.jsonl",
+    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_ecl90.jsonl",
+    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_gemini10.jsonl",
+    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_gemini90.jsonl",
+    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_noconstitution.jsonl"
 ]
 
 DEFAULT_OUTPUT = "results_viewer.html"
