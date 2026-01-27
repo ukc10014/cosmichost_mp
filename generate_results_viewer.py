@@ -748,26 +748,34 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         else:
             category = 3
 
-        # Determine credence class
+        # Determine credence level
         if '10' in condition:
+            credence = 10
             classes.append('cred-10')
         elif '90' in condition:
+            credence = 90
             classes.append('cred-90')
         else:
+            credence = 0
             classes.append('cred-base')
 
-        # Check if this is start of a new category
+        # Check if this is start of a new group (category OR credence change)
         if prev_condition is not None:
             if prev_condition in ('baseline', 'noconstitution'):
                 prev_cat = 0
+                prev_cred = 0
             elif prev_condition.startswith('eclpilled'):
                 prev_cat = 1
+                prev_cred = 10 if '10' in prev_condition else 90 if '90' in prev_condition else 0
             elif prev_condition.startswith('gemini'):
                 prev_cat = 2
+                prev_cred = 10 if '10' in prev_condition else 90 if '90' in prev_condition else 0
             else:
                 prev_cat = 3
+                prev_cred = 0
 
-            if category != prev_cat:
+            # Add divider if category OR credence changed
+            if category != prev_cat or credence != prev_cred:
                 classes.append('category-start')
 
         return ' '.join(classes)
