@@ -226,12 +226,20 @@ python3 generate_results_viewer.py
 python3 generate_results_viewer.py --files path/to/file1.jsonl path/to/file2.jsonl --output custom_viewer.html
 ```
 
-The viewer displays:
-- Side-by-side comparison of multiple runs
-- Scenario details (click scenario names for full context and options)
-- Result rationales (click result cells)
-- Configuration metadata (constitution type, CH credence, temperature, system prompt, excluded options)
-- Summary statistics (top/bottom choices, failure rates)
+The viewer displays a matrix of scenarios (rows) vs model/condition combinations (columns) with interactive filtering:
+
+**Filter presets** — use the button bar at the top to narrow the view:
+- **By Constitution** — select one or more constitution types (Baseline, ECL 10%, ECL 90%, Gemini 10%, Gemini 90%) to compare all models under those conditions. Buttons are cumulative: clicking multiple conditions shows all of them side by side.
+- **By Model** — select one or more models to see all conditions for those models. Again cumulative.
+- **Combined** — if both constitution and model buttons are active, the view shows the intersection (e.g. "ECL 10%" + "G3-Flash" shows only that single column).
+- **Show All** — resets all filters and shows every column.
+
+**Clickable elements:**
+- Click **scenario names** (left column) for full context, options, and themes
+- Click **result cells** for the model's rationale and ranking
+- Click **column headers** for configuration metadata (constitution source, CH credence, temperature, excluded options, source file)
+
+**Summary rows** at the top show top/bottom choice distributions, failure rates, and total trial counts per column.
 
 ## Aggregating Multiple Runs
 

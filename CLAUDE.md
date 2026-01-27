@@ -205,6 +205,33 @@ If you hit rate limits, increase `delay_between_calls` parameter in `run_constit
 ### Empty Responses (Gemini)
 **Workaround implemented:** `call_llm()` includes automatic retry logic with exponential backoff (default: 2 retries with 2s, 4s delays). Configurable via `max_retries` and `retry_on_empty` parameters.
 
+## Recent Research Conversations
+
+### 2026-01-22: Game-Based Evaluation & Fine-Tuning Extensions
+
+Had a detailed conversation about extending this research with:
+
+1. **Fine-tuning on constitutional principles** - Embed cosmic-host reasoning in model weights rather than in-context
+2. **Game-based evaluation** - Use decision-theoretic games (PD, Newcomb, Stag Hunt) to probe genuine internalization vs pattern-matching
+
+Key insight: Games must create situations where cosmic-host and standard HHH reasoning **diverge in their predictions**.
+
+Promising game designs discussed:
+- N-player Stag Hunt with galactic framing (vary opponent description)
+- Cosmic Broadcast game (pure acausal test - no causal pathway)
+- Simulation Stakes game (vary probability of being simulated)
+- Acausal Schelling Coordination
+
+**See:** `observations/research_extensions/game_based_evaluation_notes.md` for full notes
+
+**Also created this session:**
+- `observations/constitution_comparison_proxy_vs_official.md` - Seed constitution vs official Claude constitution
+- `observations/constitution_comparison_eclpilled_vs_official.md` - ECL-pilled constitutions vs official Claude constitution
+
+**Next steps:** Implement pilot evaluation with 3-5 text-based games to validate discriminable signal before investing in fine-tuning.
+
+---
+
 ## Notes on Colab Compatibility
 
 Code includes Colab-specific features:

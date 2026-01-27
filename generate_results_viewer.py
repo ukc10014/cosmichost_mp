@@ -44,7 +44,12 @@ DEFAULT_FILES = [
     "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_ecl90.jsonl",
     "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_gemini10.jsonl",
     "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_gemini90.jsonl",
-    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_noconstitution.jsonl"
+    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_noconstitution.jsonl",
+    "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_ecl10.jsonl",
+    "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_ecl90.jsonl",
+    "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_gemini10.jsonl",
+    "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_gemini90.jsonl",
+    "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_noconstitution.jsonl"
 ]
 
 DEFAULT_OUTPUT = "results_viewer.html"
@@ -378,6 +383,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             font-weight: 600;
             color: #c9d1d9;
             background: #21262d;
+            text-align: left;
         }}
 
         tr.summary-row td.stat-value {{
@@ -582,6 +588,54 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             font-size: 14px;
         }}
 
+        .filter-bar {{
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }}
+
+        .filter-group {{
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }}
+
+        .filter-label {{
+            font-size: 12px;
+            font-weight: 600;
+            color: #8b949e;
+            min-width: 110px;
+        }}
+
+        .filter-btn {{
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }}
+
+        .filter-btn:hover {{
+            background: #30363d;
+            border-color: #58a6ff;
+        }}
+
+        .filter-btn.active {{
+            background: #1f6feb;
+            border-color: #58a6ff;
+            color: #f0f6fc;
+        }}
+
+        .filter-btn-reset {{
+            background: #161b22;
+            border-color: #30363d;
+        }}
+
         @media (max-width: 768px) {{
             body {{
                 padding: 10px;
@@ -623,6 +677,39 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             <div class="legend-item"><span class="badge badge-human">H</span> Human Localist</div>
             <div class="legend-item"><span class="badge badge-suffering">S</span> Suffering Focused</div>
             <div class="legend-item"><span class="badge badge-proceduralist">P</span> Proceduralist</div>
+        </div>
+
+        <div class="filter-bar">
+            <div class="filter-group">
+                <span class="filter-label">By Constitution:</span>
+                <button class="filter-btn" data-filter-type="condition" data-filter-value="baseline" onclick="toggleCondition('baseline')">Baseline</button>
+                <button class="filter-btn" data-filter-type="condition" data-filter-value="eclpilled_10ch" onclick="toggleCondition('eclpilled_10ch')">ECL 10%</button>
+                <button class="filter-btn" data-filter-type="condition" data-filter-value="eclpilled_90ch" onclick="toggleCondition('eclpilled_90ch')">ECL 90%</button>
+                <button class="filter-btn" data-filter-type="condition" data-filter-value="gemini_10ch" onclick="toggleCondition('gemini_10ch')">Gemini 10%</button>
+                <button class="filter-btn" data-filter-type="condition" data-filter-value="gemini_90ch" onclick="toggleCondition('gemini_90ch')">Gemini 90%</button>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">By Model:</span>
+"""
+
+    # Generate model buttons dynamically from actual data
+    unique_models = sorted(set(m for m, c in model_conditions))
+    model_display = {
+        'gemini-3-flash-preview': 'G3-Flash',
+        'gemini-3-pro-preview': 'G3-Pro',
+        'claude-sonnet-4-5': 'Claude Sonnet 4.5',
+        'claude-opus-4-5': 'Claude Opus 4.5',
+        'gpt-5.1': 'GPT-5.1',
+    }
+    for m in unique_models:
+        label = model_display.get(m, m)
+        html += f"""                <button class="filter-btn" data-filter-type="model" data-filter-value="{m}" onclick="toggleModel('{m}')">{label}</button>
+"""
+
+    html += """            </div>
+            <div class="filter-group">
+                <button class="filter-btn filter-btn-reset" onclick="showAll()">Show All</button>
+            </div>
         </div>
 
         <div class="table-wrapper">
@@ -709,7 +796,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         }
 
         col_classes = column_classes.get((model, condition), '')
-        html += f"""                        <th class="model-header {col_classes}" onclick='openColumnModal({json.dumps(col_meta)})'>
+        html += f"""                        <th class="model-header {col_classes}" data-model="{model}" data-condition="{condition}" onclick='openColumnModal({json.dumps(col_meta)})'>
                             <span class="header-text">{model_short} {condition_short}</span>
                         </th>
 """
@@ -731,10 +818,10 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             top_choice = max(first_counts.items(), key=lambda x: x[1])
             top_pct = 100 * top_choice[1] / total if total > 0 else 0
             abbrev, badge_class = abbreviate_choice(top_choice[0])
-            html += f"""                        <td class="stat-value {col_classes}"><span class="badge {badge_class}">{abbrev}</span> {top_pct:.0f}%</td>
+            html += f"""                        <td class="stat-value {col_classes}" data-model="{model}" data-condition="{condition}"><span class="badge {badge_class}">{abbrev}</span> {top_pct:.0f}%</td>
 """
         else:
-            html += f"""                        <td class="stat-value {col_classes}">N/A</td>
+            html += f"""                        <td class="stat-value {col_classes}" data-model="{model}" data-condition="{condition}">N/A</td>
 """
 
     html += """                    </tr>
@@ -751,10 +838,10 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             bottom_choice = max(last_counts.items(), key=lambda x: x[1])
             bottom_pct = 100 * bottom_choice[1] / total if total > 0 else 0
             abbrev, badge_class = abbreviate_choice(bottom_choice[0])
-            html += f"""                        <td class="stat-value {col_classes}"><span class="badge {badge_class}">{abbrev}</span> {bottom_pct:.0f}%</td>
+            html += f"""                        <td class="stat-value {col_classes}" data-model="{model}" data-condition="{condition}"><span class="badge {badge_class}">{abbrev}</span> {bottom_pct:.0f}%</td>
 """
         else:
-            html += f"""                        <td class="stat-value {col_classes}">N/A</td>
+            html += f"""                        <td class="stat-value {col_classes}" data-model="{model}" data-condition="{condition}">N/A</td>
 """
 
     html += """                    </tr>
@@ -769,7 +856,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         errors = stats['errors']
         error_pct = 100 * errors / total if total > 0 else 0
         error_class = ' stat-error' if errors > 0 else ''
-        html += f"""                        <td class="stat-value{error_class} {col_classes}">{errors} ({error_pct:.0f}%)</td>
+        html += f"""                        <td class="stat-value{error_class} {col_classes}" data-model="{model}" data-condition="{condition}">{errors} ({error_pct:.0f}%)</td>
 """
 
     html += """                    </tr>
@@ -781,7 +868,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
     for model, condition, filepath, stats in stats_columns:
         col_classes = column_classes.get((model, condition), '')
         total = stats['total']
-        html += f"""                        <td class="stat-value {col_classes}">{total}</td>
+        html += f"""                        <td class="stat-value {col_classes}" data-model="{model}" data-condition="{condition}">{total}</td>
 """
 
     html += """                    </tr>
@@ -801,7 +888,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         col_classes = column_classes.get((model, condition), '')
         header = model_condition_to_header.get((model, condition), {})
         const_info = get_constitution_info(condition)
-        html += f"""                        <td class="stat-value {col_classes}">{const_info['source']}</td>
+        html += f"""                        <td class="stat-value {col_classes}" data-model="{model}" data-condition="{condition}">{const_info['source']}</td>
 """
 
     html += """                    </tr>
@@ -813,7 +900,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
     for model, condition, filepath, stats in stats_columns:
         col_classes = column_classes.get((model, condition), '')
         const_info = get_constitution_info(condition)
-        html += f"""                        <td class="stat-value {col_classes}">{const_info['credence']}</td>
+        html += f"""                        <td class="stat-value {col_classes}" data-model="{model}" data-condition="{condition}">{const_info['credence']}</td>
 """
 
     html += """                    </tr>
@@ -867,7 +954,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             trials = table_data[(scenario_id, scenario_tag)][(model, condition)]
 
             if not trials:
-                html += f"""                        <td class="{col_classes}"><em>—</em></td>
+                html += f"""                        <td class="{col_classes}" data-model="{model}" data-condition="{condition}"><em>—</em></td>
 """
             else:
                 # Use first trial (or aggregate if multiple runs)
@@ -896,7 +983,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
                     'just_last': js_escape(just_last)
                 }
 
-                html += f"""                        <td class="data-cell {col_classes}" onclick='openResultModal({json.dumps(trial_data)})'>
+                html += f"""                        <td class="data-cell {col_classes}" data-model="{model}" data-condition="{condition}" onclick='openResultModal({json.dumps(trial_data)})'>
                             <span class="badge {badge_class}">{abbrev}</span>
                         </td>
 """
@@ -1141,6 +1228,66 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             if (event.target == columnModal) {
                 closeColumnModal();
             }
+        }
+
+        // Cumulative column filtering
+        const activeConditions = new Set();
+        const activeModels = new Set();
+
+        function toggleCondition(condition) {
+            if (activeConditions.has(condition)) {
+                activeConditions.delete(condition);
+            } else {
+                activeConditions.add(condition);
+            }
+            applyFilters();
+        }
+
+        function toggleModel(model) {
+            if (activeModels.has(model)) {
+                activeModels.delete(model);
+            } else {
+                activeModels.add(model);
+            }
+            applyFilters();
+        }
+
+        function showAll() {
+            activeConditions.clear();
+            activeModels.clear();
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const hasConditions = activeConditions.size > 0;
+            const hasModels = activeModels.size > 0;
+
+            document.querySelectorAll('th[data-condition], td[data-condition]').forEach(el => {
+                const cond = el.getAttribute('data-condition');
+                const model = el.getAttribute('data-model');
+                let show = true;
+
+                if (hasConditions && hasModels) {
+                    show = activeConditions.has(cond) && activeModels.has(model);
+                } else if (hasConditions) {
+                    show = activeConditions.has(cond);
+                } else if (hasModels) {
+                    show = activeModels.has(model);
+                }
+
+                el.style.display = show ? '' : 'none';
+            });
+
+            // Update button states
+            document.querySelectorAll('.filter-btn[data-filter-type]').forEach(btn => {
+                const type = btn.getAttribute('data-filter-type');
+                const value = btn.getAttribute('data-filter-value');
+                if (type === 'condition') {
+                    btn.classList.toggle('active', activeConditions.has(value));
+                } else if (type === 'model') {
+                    btn.classList.toggle('active', activeModels.has(value));
+                }
+            });
         }
 
         // Close modals with Escape key
