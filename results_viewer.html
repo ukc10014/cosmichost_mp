@@ -96,7 +96,7 @@
             background: #1c2128;
             font-weight: 600;
             text-align: left;
-            font-size: 14px;
+            font-size: 16px;
             color: #c9d1d9;
         }
 
@@ -427,7 +427,7 @@
     <div class="container">
         <h1>Constitutional Evaluation Results</h1>
         <div class="subtitle">
-            Generated 2026-01-27 09:16 |
+            Generated 2026-01-27 13:38 |
             Click scenarios for details | Click result cells for rationales | Click column headers for config
         </div>
 
@@ -464,78 +464,78 @@
             <table>
                 <thead>
                     <tr>
-                        <th class="scenario-header">Scenario</th>
+                        <th class="scenario-header">Model</th>
                         <th class="model-header cred-base" data-model="claude-opus-4-5_20251101" data-condition="baseline" onclick='openColumnModal({"model": "claude-opus-4-5_20251101", "condition": "baseline", "source_file": "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_noconstitution.jsonl", "constitution_source": "Human baseline", "ch_credence": "0%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">claude-opus-4-5_20251101 BASE</span>
+                            <span class="header-text">claude-opus-4-5_20251101</span>
                         </th>
                         <th class="model-header cred-base" data-model="gemini-3-flash-preview" data-condition="baseline" onclick='openColumnModal({"model": "gemini-3-flash-preview", "condition": "baseline", "source_file": "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_noconstitution.jsonl", "constitution_source": "Human baseline", "ch_credence": "0%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">G3-Flash BASE</span>
+                            <span class="header-text">Gemini 3 Flash</span>
                         </th>
                         <th class="model-header cred-base" data-model="gemini-3-pro-preview" data-condition="baseline" onclick='openColumnModal({"model": "gemini-3-pro-preview", "condition": "baseline", "source_file": "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-pro-preview_noconstitution.jsonl", "constitution_source": "Human baseline", "ch_credence": "0%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">G3-Pro BASE</span>
+                            <span class="header-text">Gemini 3 Pro</span>
                         </th>
                         <th class="model-header cred-base" data-model="gpt-5.1" data-condition="baseline" onclick='openColumnModal({"model": "gpt-5.1", "condition": "baseline", "source_file": "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_noconstitution.jsonl", "constitution_source": "Human baseline", "ch_credence": "0%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">gpt-5.1 BASE</span>
+                            <span class="header-text">GPT 5.1</span>
                         </th>
                         <th class="model-header cred-10 category-start" data-model="claude-opus-4-5_20251101" data-condition="eclpilled_10ch" onclick='openColumnModal({"model": "claude-opus-4-5_20251101", "condition": "eclpilled_10ch", "source_file": "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_ecl10.jsonl", "constitution_source": "Human-curated ECL", "ch_credence": "10%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">claude-opus-4-5_20251101 ECL10</span>
+                            <span class="header-text">claude-opus-4-5_20251101</span>
                         </th>
                         <th class="model-header cred-10" data-model="claude-sonnet-4-5" data-condition="eclpilled_10ch" onclick='openColumnModal({"model": "claude-sonnet-4-5", "condition": "eclpilled_10ch", "source_file": "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_ecl10.jsonl", "constitution_source": "Human-curated ECL", "ch_credence": "10%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">Claude4.5 ECL10</span>
+                            <span class="header-text">Sonnet 4.5</span>
                         </th>
                         <th class="model-header cred-10" data-model="gemini-3-flash-preview" data-condition="eclpilled_10ch" onclick='openColumnModal({"model": "gemini-3-flash-preview", "condition": "eclpilled_10ch", "source_file": "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_ecl10.jsonl", "constitution_source": "Human-curated ECL", "ch_credence": "10%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">G3-Flash ECL10</span>
+                            <span class="header-text">Gemini 3 Flash</span>
                         </th>
                         <th class="model-header cred-10" data-model="gemini-3-pro-preview" data-condition="eclpilled_10ch" onclick='openColumnModal({"model": "gemini-3-pro-preview", "condition": "eclpilled_10ch", "source_file": "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-pro-preview_ecl10.jsonl", "constitution_source": "Human-curated ECL", "ch_credence": "10%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">G3-Pro ECL10</span>
+                            <span class="header-text">Gemini 3 Pro</span>
                         </th>
                         <th class="model-header cred-10" data-model="gpt-5.1" data-condition="eclpilled_10ch" onclick='openColumnModal({"model": "gpt-5.1", "condition": "eclpilled_10ch", "source_file": "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_ecl10.jsonl", "constitution_source": "Human-curated ECL", "ch_credence": "10%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">gpt-5.1 ECL10</span>
+                            <span class="header-text">GPT 5.1</span>
                         </th>
                         <th class="model-header cred-90" data-model="claude-opus-4-5_20251101" data-condition="eclpilled_90ch" onclick='openColumnModal({"model": "claude-opus-4-5_20251101", "condition": "eclpilled_90ch", "source_file": "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_ecl90.jsonl", "constitution_source": "Human-curated ECL", "ch_credence": "90%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">claude-opus-4-5_20251101 ECL90</span>
+                            <span class="header-text">claude-opus-4-5_20251101</span>
                         </th>
                         <th class="model-header cred-90" data-model="claude-sonnet-4-5" data-condition="eclpilled_90ch" onclick='openColumnModal({"model": "claude-sonnet-4-5", "condition": "eclpilled_90ch", "source_file": "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_ecl90.jsonl", "constitution_source": "Human-curated ECL", "ch_credence": "90%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">Claude4.5 ECL90</span>
+                            <span class="header-text">Sonnet 4.5</span>
                         </th>
                         <th class="model-header cred-90" data-model="gemini-3-flash-preview" data-condition="eclpilled_90ch" onclick='openColumnModal({"model": "gemini-3-flash-preview", "condition": "eclpilled_90ch", "source_file": "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_ecl90.jsonl", "constitution_source": "Human-curated ECL", "ch_credence": "90%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">G3-Flash ECL90</span>
+                            <span class="header-text">Gemini 3 Flash</span>
                         </th>
                         <th class="model-header cred-90" data-model="gemini-3-pro-preview" data-condition="eclpilled_90ch" onclick='openColumnModal({"model": "gemini-3-pro-preview", "condition": "eclpilled_90ch", "source_file": "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-pro-preview_ecl90.jsonl", "constitution_source": "Human-curated ECL", "ch_credence": "90%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">G3-Pro ECL90</span>
+                            <span class="header-text">Gemini 3 Pro</span>
                         </th>
                         <th class="model-header cred-90" data-model="gpt-5.1" data-condition="eclpilled_90ch" onclick='openColumnModal({"model": "gpt-5.1", "condition": "eclpilled_90ch", "source_file": "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_ecl90.jsonl", "constitution_source": "Human-curated ECL", "ch_credence": "90%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">gpt-5.1 ECL90</span>
+                            <span class="header-text">GPT 5.1</span>
                         </th>
                         <th class="model-header cred-10 category-start" data-model="claude-opus-4-5_20251101" data-condition="gemini_10ch" onclick='openColumnModal({"model": "claude-opus-4-5_20251101", "condition": "gemini_10ch", "source_file": "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_gemini10.jsonl", "constitution_source": "Gemini-generated", "ch_credence": "10%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">claude-opus-4-5_20251101 GEN10</span>
+                            <span class="header-text">claude-opus-4-5_20251101</span>
                         </th>
                         <th class="model-header cred-10" data-model="claude-sonnet-4-5" data-condition="gemini_10ch" onclick='openColumnModal({"model": "claude-sonnet-4-5", "condition": "gemini_10ch", "source_file": "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_gemini10.jsonl", "constitution_source": "Gemini-generated", "ch_credence": "10%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">Claude4.5 GEN10</span>
+                            <span class="header-text">Sonnet 4.5</span>
                         </th>
                         <th class="model-header cred-10" data-model="gemini-3-flash-preview" data-condition="gemini_10ch" onclick='openColumnModal({"model": "gemini-3-flash-preview", "condition": "gemini_10ch", "source_file": "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_gemini10.jsonl", "constitution_source": "Gemini-generated", "ch_credence": "10%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">G3-Flash GEN10</span>
+                            <span class="header-text">Gemini 3 Flash</span>
                         </th>
                         <th class="model-header cred-10" data-model="gemini-3-pro-preview" data-condition="gemini_10ch" onclick='openColumnModal({"model": "gemini-3-pro-preview", "condition": "gemini_10ch", "source_file": "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-pro-preview_gemini10.jsonl", "constitution_source": "Gemini-generated", "ch_credence": "10%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">G3-Pro GEN10</span>
+                            <span class="header-text">Gemini 3 Pro</span>
                         </th>
                         <th class="model-header cred-10" data-model="gpt-5.1" data-condition="gemini_10ch" onclick='openColumnModal({"model": "gpt-5.1", "condition": "gemini_10ch", "source_file": "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_gemini10.jsonl", "constitution_source": "Gemini-generated", "ch_credence": "10%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">gpt-5.1 GEN10</span>
+                            <span class="header-text">GPT 5.1</span>
                         </th>
                         <th class="model-header cred-90" data-model="claude-opus-4-5_20251101" data-condition="gemini_90ch" onclick='openColumnModal({"model": "claude-opus-4-5_20251101", "condition": "gemini_90ch", "source_file": "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_gemini90.jsonl", "constitution_source": "Gemini-generated", "ch_credence": "90%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">claude-opus-4-5_20251101 GEN90</span>
+                            <span class="header-text">claude-opus-4-5_20251101</span>
                         </th>
                         <th class="model-header cred-90" data-model="claude-sonnet-4-5" data-condition="gemini_90ch" onclick='openColumnModal({"model": "claude-sonnet-4-5", "condition": "gemini_90ch", "source_file": "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_gemini90.jsonl", "constitution_source": "Gemini-generated", "ch_credence": "90%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">Claude4.5 GEN90</span>
+                            <span class="header-text">Sonnet 4.5</span>
                         </th>
                         <th class="model-header cred-90" data-model="gemini-3-flash-preview" data-condition="gemini_90ch" onclick='openColumnModal({"model": "gemini-3-flash-preview", "condition": "gemini_90ch", "source_file": "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_gemini90.jsonl", "constitution_source": "Gemini-generated", "ch_credence": "90%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">G3-Flash GEN90</span>
+                            <span class="header-text">Gemini 3 Flash</span>
                         </th>
                         <th class="model-header cred-90" data-model="gemini-3-pro-preview" data-condition="gemini_90ch" onclick='openColumnModal({"model": "gemini-3-pro-preview", "condition": "gemini_90ch", "source_file": "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-pro-preview_gemini90.jsonl", "constitution_source": "Gemini-generated", "ch_credence": "90%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">G3-Pro GEN90</span>
+                            <span class="header-text">Gemini 3 Pro</span>
                         </th>
                         <th class="model-header cred-90" data-model="gpt-5.1" data-condition="gemini_90ch" onclick='openColumnModal({"model": "gpt-5.1", "condition": "gemini_90ch", "source_file": "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_gemini90.jsonl", "constitution_source": "Gemini-generated", "ch_credence": "90%", "temperature": 1.0, "system_prompt_style": "consider", "excluded_options": "proceduralist"})'>
-                            <span class="header-text">gpt-5.1 GEN90</span>
+                            <span class="header-text">GPT 5.1</span>
                         </th>
                     </tr>
                 </thead>

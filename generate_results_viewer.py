@@ -337,7 +337,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             background: #1c2128;
             font-weight: 600;
             text-align: left;
-            font-size: 14px;
+            font-size: 16px;
             color: #c9d1d9;
         }}
 
@@ -694,15 +694,20 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 
     # Generate model buttons dynamically from actual data
     unique_models = sorted(set(m for m, c in model_conditions))
-    model_display = {
-        'gemini-3-flash-preview': 'G3-Flash',
-        'gemini-3-pro-preview': 'G3-Pro',
-        'claude-sonnet-4-5': 'Claude Sonnet 4.5',
-        'claude-opus-4-5': 'Claude Opus 4.5',
-        'gpt-5.1': 'GPT-5.1',
-    }
     for m in unique_models:
-        label = model_display.get(m, m)
+        # Use same logic as column headers for consistency
+        if 'gemini-3-flash' in m:
+            label = 'Gemini 3 Flash'
+        elif 'gemini-3-pro' in m:
+            label = 'Gemini 3 Pro'
+        elif 'claude-sonnet-4-5' in m or 'claude-sonnet-4.5' in m:
+            label = 'Claude Sonnet 4.5'
+        elif 'claude-opus-4-5' in m or 'claude-opus-4.5' in m:
+            label = 'Claude Opus 4.5'
+        elif 'gpt-5.1' in m or 'gpt-5-1' in m:
+            label = 'GPT 5.1'
+        else:
+            label = m
         html += f"""                <button class="filter-btn" data-filter-type="model" data-filter-value="{m}" onclick="toggleModel('{m}')">{label}</button>
 """
 
@@ -716,7 +721,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             <table>
                 <thead>
                     <tr>
-                        <th class="scenario-header">Scenario</th>
+                        <th class="scenario-header">Model</th>
 """
 
     # Create file-to-modelcondition mapping to match column order
@@ -777,9 +782,19 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
     # Column headers (models × conditions)
     for model, condition in model_conditions:
         source_path = model_condition_to_file.get((model, condition), 'unknown')
-        # Shorten model names for display
-        model_short = model.replace('gemini-3-flash-preview', 'G3-Flash').replace('gemini-3-pro-preview', 'G3-Pro').replace('claude-sonnet-4-5', 'Claude4.5')
-        condition_short = condition.replace('eclpilled_', 'ECL').replace('gemini_', 'GEN').replace('ch', '').replace('baseline', 'BASE')
+        # Clean model names for display - handle variations with version suffixes
+        if 'gemini-3-flash' in model:
+            model_short = 'Gemini 3 Flash'
+        elif 'gemini-3-pro' in model:
+            model_short = 'Gemini 3 Pro'
+        elif 'claude-sonnet-4-5' in model or 'claude-sonnet-4.5' in model:
+            model_short = 'Claude Sonnet 4.5'
+        elif 'claude-opus-4-5' in model or 'claude-opus-4.5' in model:
+            model_short = 'Claude Opus 4.5'
+        elif 'gpt-5.1' in model or 'gpt-5-1' in model:
+            model_short = 'GPT 5.1'
+        else:
+            model_short = model
 
         # Build column metadata for popup
         header = model_condition_to_header.get((model, condition), {})
@@ -797,7 +812,7 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
 
         col_classes = column_classes.get((model, condition), '')
         html += f"""                        <th class="model-header {col_classes}" data-model="{model}" data-condition="{condition}" onclick='openColumnModal({json.dumps(col_meta)})'>
-                            <span class="header-text">{model_short} {condition_short}</span>
+                            <span class="header-text">{model_short}</span>
                         </th>
 """
 
