@@ -50,6 +50,11 @@ First-choice distribution (% of 30 scenarios) for all models and conditions:
 | | ECL 90% | 30% | **60%** | 10% | 30 |
 | | Gemini 10% | 40% | 50% | 10% | 30 |
 | | Gemini 90% | 47% | 27% | 27% | 30 |
+| **Kimi K2** | Baseline | 53% | 47% | 0% | 30 |
+| | ECL 10% | 53% | 43% | 3% | 30 |
+| | ECL 90% | 40% | 47% | 13% | 30 |
+| | Gemini 10% | 60% | 37% | 3% | 30 |
+| | Gemini 90% | 47% | 43% | 10% | 30 |
 
 Bottom-choice (least preferred) cosmic_host_leaning %:
 
@@ -62,6 +67,7 @@ Bottom-choice (least preferred) cosmic_host_leaning %:
 | GPT-5.1 | 70% | 77% | 63% | 70% | 63% |
 | Qwen 3 235B | 73% | 83% | 70% | 73% | 63% |
 | Qwen 3 235B (thinking) | 77% | 80% | 73% | 77% | 63% |
+| Kimi K2 | 90% | 87% | 77% | 87% | 63% |
 
 ---
 
@@ -77,6 +83,7 @@ Without any constitutional conditioning, each model family shows a characteristi
 
 Gemini 3 Flash is similar to Pro but even more balanced (41/41/17 split).
 - **Qwen 3 235B**: Balanced profile very similar to Gemini 3 Pro (43% human, 40% suffering, 17% cosmic). No single orientation dominates.
+- **Kimi K2**: Human-leaning balanced (53% human, 47% suffering, 0% cosmic). Notably has zero cosmic preference at baseline, like Opus, but with a much weaker human margin.
 
 **Note:** No Sonnet baseline exists, so we cannot establish its unconditioned prior.
 
@@ -97,6 +104,7 @@ This is where it gets interesting. At 90% credence:
 - **Gemini Flash** responds most to ECL 90%: cosmic reaches 43% top choice, human drops to 10%.
 - **GPT-5.1** is nearly immovable: suffering-focused stays at 63-77% across all conditions. Constitutional framing has negligible impact.
 - **Qwen 3 235B** is also remarkably stable despite its balanced baseline: human stays 37-47%, suffering 33-53%, cosmic 10-23%. Unlike Gemini Pro — which has a nearly identical baseline — Qwen shows no meaningful response to constitutional framing at any credence level. Maximum cosmic top-choice is only 23% (gemini90), compared to Gemini Pro's 40% (ecl90).
+- **Kimi K2** shows the second-largest absolute shift after Gemini Pro: cosmic goes from 0% (baseline) to 13% (ECL 90%), a +13pp change. However, starting from zero, it only reaches 13% — still far below Gemini's 40%. It's more responsive than Opus (+7pp) and GPT 5.1 (+6pp), suggesting modest constitutional engagement, but not in Gemini's league.
 
 ### 4. Constitution Authorship Matters (ECL vs Gemini-Generated)
 
@@ -121,6 +129,7 @@ The standout finding: under ECL 90%, Gemini Pro ranks cosmic host first in 40% o
 | GPT-5.1 | Suffering-focused | Very low | Very low (max 17%) |
 | Qwen 3 235B | Balanced (H/S/C) | Very low | Low (max 23%) |
 | Qwen 3 235B (thinking) | Suffering-leaning | Very low | Low (max 27%) |
+| Kimi K2 | Human-leaning balanced | Low-moderate | Low (max 13%, but +13pp shift) |
 
 ---
 
@@ -192,24 +201,28 @@ Even under the most permissive conditions (ECL 90%), the maximum cosmic-host top
 
 ## Suggested Extensions
 
-### Low-Effort (Reuses Existing Pipeline)
+### Completed
 
-1. ~~**Add an open-weight model (Llama 4 Maverick or Qwen 3 235B via OpenRouter).**~~ **Done.** Qwen 3 235B tested in both thinking and non-thinking modes. Result: not more steerable than closed models. Thinking mode amplifies suffering-focus rather than enabling cosmic engagement. A second open-weight model (e.g., Llama 4 Maverick) could still be tested to check generality.
+1. ~~**Add open-weight models via OpenRouter.**~~ **Done.** Qwen 3 235B tested in both thinking and non-thinking modes; Kimi K2 tested in non-thinking mode. Results: neither is highly steerable. Qwen is flat across conditions; Kimi shows modest steerability (+13pp at ECL 90%) but still far below Gemini Pro's 40%. Thinking mode (Qwen) amplifies suffering-focus rather than enabling cosmic engagement.
 
-2. **Run repeated trials (n=3-5).** Current data is n=1 per scenario at temperature 1.0. Some percentage differences (e.g., Opus 73% vs 77%) may be noise. Even n=3 would enable confidence intervals.
+### Recommended Next Steps (Prioritised)
 
-3. **Test intermediate credence levels (25%, 50%, 75%).** Would reveal whether the response is gradual or threshold-like. Reuses existing pipeline with no code changes.
+2. **Per-scenario discriminability analysis (no new runs needed).** We have 30 scenarios × 6 models × 5 conditions already logged. Some scenarios likely show far more cross-model/cross-condition variance than others. Identifying which scenarios are "easy" (all models agree) vs "discriminating" (models diverge) would clarify whether the low steerability finding is driven by scenario design or genuine model resistance. This could reframe the whole story — if 5 scenarios out of 30 are doing all the discriminating work and the rest are noise, that's important to know. **Highest value-to-effort ratio of any extension.**
 
-4. **Per-scenario discriminability analysis.** Identify which of the 30 scenarios show the most variance across models/conditions. This would help design better future evaluations and understand what scenario features make models more steerable.
+3. **Game-based evaluation pilot.** Detailed designs already exist (see `observations/research_extensions/game_based_evaluation_notes.md`). Games test revealed preference under game-theoretic structure rather than stated preference in ethical dilemmas — a fundamentally different signal. Given that constitutional framing mostly fails at stated preference, games may show whether there's *any* way to elicit acausal reasoning behaviourally. Start with the Galactic Stag Hunt and Simulation Stakes games across existing model set. **Recommended as the main next experimental phase.**
 
-### Medium-Effort
+4. **Gemini-as-outlier investigation.** Gemini Pro is the only model showing meaningful constitutional steerability (3% → 40% cosmic at ECL 90%). Is this genuine engagement with ECL reasoning, or just higher instruction-following compliance? Test by comparing Gemini's response to (a) the full constitution vs (b) an FDT-style framing with no cosmic or human-welfare content (policy-level reasoning, universalisation, commitment stability — the decision-theoretic *structure* without cosmic *content*) vs (c) a short paragraph summarising the ECL reasoning vs (d) a one-line directive. The FDT-only framing (b) is the key addition: it isolates whether the decision-theoretic structure alone shifts behaviour, or whether the specific cosmic/ECL language is necessary. Inspired by Zvi Mowshowitz's reading of Claude's official constitution as implicitly FDT-adjacent (via virtue ethics + commitment stability + policy-level identity), though Claude's own constitution bundles this with strong human-welfare language that would confound direct extraction. A clean synthetic FDT-only framing avoids that confound.
 
-5. **Ablation: scrambled constitution.** Use cosmic language with incoherent ethical content to test whether models respond to framing (cosmic keywords) or substance (ECL reasoning).
+### Lower Priority
 
-6. **Constitution re-synthesis experiment.** Have multiple models synthesize constitutions at the same credence level, then test each constitution across all models. Disentangles authorship from content effects.
+5. **Run repeated trials (n=3-5).** Current data is n=1 per scenario at temperature 1.0. Some percentage differences (e.g., Opus 73% vs 77%) may be noise. Even n=3 would enable confidence intervals. Worth doing if writing up results formally.
+
+6. **Test intermediate credence levels (25%, 50%, 75%).** Would reveal whether the constitutional response is gradual or threshold-like. Reuses existing pipeline with no code changes.
+
+7. **Ablation: scrambled constitution.** Use cosmic language with incoherent ethical content to test whether models respond to framing (cosmic keywords) or substance (ECL reasoning).
+
+8. **Constitution re-synthesis experiment.** Have multiple models synthesise constitutions at the same credence level, then test each constitution across all models. Disentangles authorship from content effects.
 
 ### Higher-Effort (Previously Discussed)
 
-7. **Game-based evaluation** with decision-theoretic scenarios where cosmic and HHH reasoning diverge.
-
-8. **Fine-tuning** an open-weight model on constitutional principles to test internalization vs in-context following.
+9. **Fine-tuning** an open-weight model on constitutional principles to test internalisation vs in-context following. See game evaluation notes for full research spec.
