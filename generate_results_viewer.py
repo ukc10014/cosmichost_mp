@@ -49,7 +49,12 @@ DEFAULT_FILES = [
     "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_ecl90.jsonl",
     "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_gemini10.jsonl",
     "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_gemini90.jsonl",
-    "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_noconstitution.jsonl"
+    "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_noconstitution.jsonl",
+    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_ecl10.jsonl",
+    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_ecl90.jsonl",
+    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_gemini10.jsonl",
+    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_gemini90.jsonl",
+    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_noconstitution.jsonl"
 ]
 
 DEFAULT_OUTPUT = "results_viewer.html"

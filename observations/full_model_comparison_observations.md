@@ -5,7 +5,7 @@
 
 This file captures personal observations from reviewing the complete scenario evaluation dataset, including GPT-5.1 results which were not available in earlier observation files.
 
-**Note:** This overlaps with `scenario_evaluation_results.md` (which covers Gemini 3 Flash/Pro and Claude 4.5 Opus) but adds GPT-5.1, Claude Sonnet 4.5, and provides a cross-model synthesis.
+**Note:** This overlaps with `scenario_evaluation_results.md` (which covers Gemini 3 Flash/Pro and Claude 4.5 Opus) but adds GPT-5.1, Claude Sonnet 4.5, Qwen 3 235B, and provides a cross-model synthesis.
 
 ---
 
@@ -40,6 +40,16 @@ First-choice distribution (% of 30 scenarios) for all models and conditions:
 | | ECL 90% | 17% | 70% | 13% | 30 |
 | | Gemini 10% | 10% | 77% | 13% | 30 |
 | | Gemini 90% | 10% | 73% | 17% | 30 |
+| **Qwen 3 235B** | Baseline | 43% | 40% | 17% | 30 |
+| | ECL 10% | 47% | 43% | 10% | 30 |
+| | ECL 90% | 37% | 47% | 17% | 30 |
+| | Gemini 10% | 37% | 53% | 10% | 30 |
+| | Gemini 90% | 43% | 33% | 23% | 30 |
+| **Qwen 3 235B (thinking)** | Baseline | 27% | **53%** | 20% | 30 |
+| | ECL 10% | 47% | 47% | 7% | 30 |
+| | ECL 90% | 30% | **60%** | 10% | 30 |
+| | Gemini 10% | 40% | 50% | 10% | 30 |
+| | Gemini 90% | 47% | 27% | 27% | 30 |
 
 Bottom-choice (least preferred) cosmic_host_leaning %:
 
@@ -50,6 +60,8 @@ Bottom-choice (least preferred) cosmic_host_leaning %:
 | G3-Flash | 72% | 79% | 33% | 59% | 60% |
 | G3-Pro | 60% | 90% | 50% | 63% | 67% |
 | GPT-5.1 | 70% | 77% | 63% | 70% | 63% |
+| Qwen 3 235B | 73% | 83% | 70% | 73% | 63% |
+| Qwen 3 235B (thinking) | 77% | 80% | 73% | 77% | 63% |
 
 ---
 
@@ -64,6 +76,7 @@ Without any constitutional conditioning, each model family shows a characteristi
 - **GPT-5.1**: Strongly suffering-focused (70% top choice). Human is second at 23%, cosmic barely registers at 7%.
 
 Gemini 3 Flash is similar to Pro but even more balanced (41/41/17 split).
+- **Qwen 3 235B**: Balanced profile very similar to Gemini 3 Pro (43% human, 40% suffering, 17% cosmic). No single orientation dominates.
 
 **Note:** No Sonnet baseline exists, so we cannot establish its unconditioned prior.
 
@@ -83,6 +96,7 @@ This is where it gets interesting. At 90% credence:
 - **Gemini Pro** shows the largest and most interesting effect under ECL 90%: cosmic becomes the plurality top choice at 40%, but is *also* the bottom choice for 50% of scenarios. This "Marmite" pattern suggests scenario-by-scenario engagement rather than a blanket heuristic shift.
 - **Gemini Flash** responds most to ECL 90%: cosmic reaches 43% top choice, human drops to 10%.
 - **GPT-5.1** is nearly immovable: suffering-focused stays at 63-77% across all conditions. Constitutional framing has negligible impact.
+- **Qwen 3 235B** is also remarkably stable despite its balanced baseline: human stays 37-47%, suffering 33-53%, cosmic 10-23%. Unlike Gemini Pro — which has a nearly identical baseline — Qwen shows no meaningful response to constitutional framing at any credence level. Maximum cosmic top-choice is only 23% (gemini90), compared to Gemini Pro's 40% (ecl90).
 
 ### 4. Constitution Authorship Matters (ECL vs Gemini-Generated)
 
@@ -105,6 +119,50 @@ The standout finding: under ECL 90%, Gemini Pro ranks cosmic host first in 40% o
 | Gemini 3 Flash | Balanced (H/S equal) | High | High (up to 43%) |
 | Gemini 3 Pro | Human-leaning (weak) | Medium-high | Medium (up to 40%, polarized) |
 | GPT-5.1 | Suffering-focused | Very low | Very low (max 17%) |
+| Qwen 3 235B | Balanced (H/S/C) | Very low | Low (max 23%) |
+| Qwen 3 235B (thinking) | Suffering-leaning | Very low | Low (max 27%) |
+
+---
+
+### 7. Qwen 3 235B: Balanced but Unsteerable (Open-Weight Negative Result)
+
+Qwen 3 235B (run via OpenRouter, non-thinking mode) was tested as a representative open-weight model to explore whether lighter RLHF training correlates with greater constitutional steerability.
+
+**Result:** Qwen has a balanced baseline nearly identical to Gemini 3 Pro (43/40/17 vs 43/37/20) but shows almost no response to constitutional framing. Across all five conditions, distributions remain flat: human 37-47%, suffering 33-53%, cosmic 10-23%.
+
+**Key comparison with Gemini 3 Pro:** Both models share a balanced baseline, but Gemini Pro swings dramatically under ECL 90% (cosmic reaches 40% top choice with a polarized Marmite pattern), while Qwen barely budges. This refutes the hypothesis that balanced baselines predict steerability — Gemini Pro's constitutional sensitivity appears to be a model-specific (possibly architecture- or training-specific) property, not a general feature of models without strong default priors.
+
+**Implication:** Open-weight models are not necessarily more steerable than closed ones. Constitutional AI effectiveness depends on model-specific factors beyond just RLHF intensity or default ethical orientation.
+
+**Update (2026-01-28):** Thinking mode results now available — see §8 below.
+
+### 8. Qwen 3 235B Thinking Mode: Reasoning Reinforces Suffering Focus, Not Cosmic Engagement
+
+The thinking-enabled variant (`qwen/qwen3-235b-a22b-thinking-2507`) was tested across all five conditions to see whether extended reasoning increases engagement with constitutional content.
+
+**Thinking vs non-thinking comparison (first-choice %):**
+
+| Condition | Think: H/S/C | NoThink: H/S/C | Key shift |
+|-----------|-------------|----------------|-----------|
+| Baseline | 27/53/20 | 43/40/17 | Thinking → suffering +13%, human -16% |
+| ECL 10% | 47/47/7 | 47/43/10 | Minimal change |
+| ECL 90% | 30/60/10 | 37/47/17 | Thinking → suffering +13%, cosmic -7% |
+| Gemini 10% | 40/50/10 | 37/53/10 | Minimal change |
+| Gemini 90% | 47/27/27 | 43/33/23 | Modest: cosmic +4% |
+
+**Key findings:**
+
+1. **Thinking mode shifts Qwen toward suffering-focused reasoning, not cosmic engagement.** The baseline moves from a balanced 43/40/17 to a suffering-dominant 27/53/20. This is the most significant thinking-mode effect in the dataset.
+
+2. **Extended reasoning argues the model *out* of cosmic positions.** At ECL 90%, thinking Qwen is *less* cosmic (10%) than non-thinking (17%). The model appears to use its reasoning budget to deliberate away from speculative cosmic reasoning toward concrete harm prevention — a utilitarian prior reinforced by chain-of-thought.
+
+3. **Thinking Qwen's profile converges toward GPT 5.1.** The thinking baseline (27/53/20) resembles GPT 5.1's baseline (23/70/7) far more than non-thinking Qwen (43/40/17) or Gemini Pro (43/37/20). Both thinking Qwen and GPT 5.1 are suffering-dominant and constitutionally unsteerable.
+
+4. **Constitutional steerability remains very low.** Across all conditions, cosmic top-choice ranges 7-27% (thinking) vs 10-23% (non-thinking). Neither mode produces the kind of dramatic swing seen in Gemini Pro (3% → 40%).
+
+**Interpretation:** Extended reasoning does not increase openness to novel ethical frameworks presented via constitutional framing. Instead, it appears to amplify whatever default ethical prior the model has — in Qwen's case, a latent suffering-reduction orientation that chain-of-thought makes explicit. This is consistent with findings from the amendment voting data (§ in `scenario_evaluation_results.md`) where thinking mode produced more confident, less exploratory responses.
+
+**Alignment relevance:** If reasoning reinforces existing priors rather than enabling genuine engagement with new frameworks, then constitutional AI approaches may be fundamentally limited for reasoning-capable models. The model "thinks harder" but arrives at the same conclusions it would have reached by default — just with more confidence.
 
 ---
 
@@ -136,7 +194,7 @@ Even under the most permissive conditions (ECL 90%), the maximum cosmic-host top
 
 ### Low-Effort (Reuses Existing Pipeline)
 
-1. **Add an open-weight model (Llama 4 Maverick or Qwen 3 235B via OpenRouter).** These have lighter alignment training and may be more steerable, testing whether RLHF intensity correlates with constitutional resistance.
+1. ~~**Add an open-weight model (Llama 4 Maverick or Qwen 3 235B via OpenRouter).**~~ **Done.** Qwen 3 235B tested in both thinking and non-thinking modes. Result: not more steerable than closed models. Thinking mode amplifies suffering-focus rather than enabling cosmic engagement. A second open-weight model (e.g., Llama 4 Maverick) could still be tested to check generality.
 
 2. **Run repeated trials (n=3-5).** Current data is n=1 per scenario at temperature 1.0. Some percentage differences (e.g., Opus 73% vs 77%) may be noise. Even n=3 would enable confidence intervals.
 
