@@ -54,7 +54,17 @@ DEFAULT_FILES = [
     "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_ecl90.jsonl",
     "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_gemini10.jsonl",
     "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_gemini90.jsonl",
-    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_noconstitution.jsonl"
+    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_noconstitution.jsonl",
+    "logs/mp_scen_evals/kimi/constitutional_evaluation_kimi-k2_ecl10.jsonl",
+    "logs/mp_scen_evals/kimi/constitutional_evaluation_kimi-k2_ecl90.jsonl",
+    "logs/mp_scen_evals/kimi/constitutional_evaluation_kimi-k2_gemini10.jsonl",
+    "logs/mp_scen_evals/kimi/constitutional_evaluation_kimi-k2_gemini90.jsonl",
+    "logs/mp_scen_evals/kimi/constitutional_evaluation_kimi-k2_noconstitution.jsonl",
+    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_thinking_ecl10.jsonl",
+    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_thinking_ecl90.jsonl",
+    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_thinking_gemini10.jsonl",
+    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_thinking_gemini90.jsonl",
+    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_thinking_noconstitution.jsonl"
 ]
 
 DEFAULT_OUTPUT = "results_viewer.html"
