@@ -23,15 +23,16 @@ Example: `/edit-by-line observations/scenario_evaluation_results.md`
 
 When invoked:
 1. Read and display the target file with line numbers
-2. Create a timestamped backup (format: `filename.YYYYMMDD_HHMMSS.bak`)
-3. Display total line count
-4. Enter interactive editing mode
-5. Show available commands
+2. Create `.backups/` directory if it doesn't exist
+3. Create a timestamped backup in `.backups/` (format: `filename.YYYYMMDD_HHMMSS.bak`)
+4. Display total line count
+5. Enter interactive editing mode
+6. Show available commands
 
 **Example output:**
 ```
 📝 Editing: observations/scenario_evaluation_results.md
-💾 Backup created: observations/scenario_evaluation_results.md.20260109_143022.bak
+💾 Backup created: .backups/scenario_evaluation_results.md.20260109_143022.bak
 📊 Total lines: 277
 
 [File contents with line numbers displayed]
@@ -106,9 +107,9 @@ Applied 3 changes:
 - Line 89: Made more concise
 - Line 142: Fixed typo
 
-💾 Original backed up to: observations/scenario_evaluation_results.md.20260109_143022.bak
+💾 Original backed up to: .backups/scenario_evaluation_results.md.20260109_143022.bak
 
-To undo all changes: cp observations/scenario_evaluation_results.md.20260109_143022.bak observations/scenario_evaluation_results.md
+To undo all changes: cp .backups/scenario_evaluation_results.md.20260109_143022.bak observations/scenario_evaluation_results.md
 ```
 
 ## Command Parsing Rules
@@ -195,12 +196,13 @@ Apply this change?"
 User: /edit-by-line observations/scenario_evaluation_results.md
 
 Claude: 📝 Editing: observations/scenario_evaluation_results.md
-💾 Backup created: observations/scenario_evaluation_results.md.20260109_143022.bak
+💾 Backup created: .backups/scenario_evaluation_results.md.20260109_143022.bak
 📊 Total lines: 277
 
 [File contents displayed with line numbers]
 
 ✨ Edit mode active. Commands: "line N: text", "line N edit: description", "done"
+🤖 Using Haiku for simple edits, Sonnet for complex ones
 
 User: line 47 change to: The ECL-pilled constitution produces significantly stronger alignment
 
@@ -239,15 +241,20 @@ User: done
 Claude: ✅ Editing session complete!
 
 Applied 2 changes:
-- Line 47: Enhanced terminology (ECL → ECL-pilled)
-- Line 109: Converted to section heading
+- Line 47: Enhanced terminology (ECL → ECL-pilled) [Haiku]
+- Line 109: Converted to section heading [Sonnet]
 
-💾 Original backed up to: observations/scenario_evaluation_results.md.20260109_143022.bak
+💾 Original backed up to: .backups/scenario_evaluation_results.md.20260109_143022.bak
 
-To undo: cp observations/scenario_evaluation_results.md.20260109_143022.bak observations/scenario_evaluation_results.md
+To undo: cp .backups/scenario_evaluation_results.md.20260109_143022.bak observations/scenario_evaluation_results.md
 ```
 
 ## Notes for Implementation
+
+**Model Selection:**
+- Use **Haiku** for simple line edits (cheap, fast, perfect for straightforward replacements)
+- Use **Sonnet** for descriptive edits (e.g., "line 89 edit: make this more concise") where interpretation is needed
+- Switch model via parameter if needed: `/edit-by-line observations/file.md --model haiku`
 
 **State tracking:**
 - Maintain a list of pending edits
@@ -264,6 +271,11 @@ To undo: cp observations/scenario_evaluation_results.md.20260109_143022.bak obse
 - Before each edit, verify Read matches expectations
 - If mismatch detected, re-read and continue
 
+**Backup management:**
+- Store all backups in `.backups/` directory
+- Add `.backups/` to `.gitignore` if not already there
+- Preserve relative path structure: `observations/file.md` → `.backups/file.md.TIMESTAMP.bak`
+
 ## Usage Tips
 
 **For quick single edits:**
@@ -274,3 +286,9 @@ First do `/edit-by-line filename` to see line numbers, then exit and use regular
 
 **For voice dictation:**
 Speak clearly and pause between commands. The skill is designed to be forgiving of natural speech patterns.
+
+**First time setup:**
+Add `.backups/` to your `.gitignore` to avoid committing backup files:
+```bash
+echo ".backups/" >> .gitignore
+```
