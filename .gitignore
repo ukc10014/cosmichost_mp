@@ -1,0 +1,11 @@
+# External cloned repos (clone separately via git clone https://github.com/anthropics/evals.git)
+anthropic_evals/
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
