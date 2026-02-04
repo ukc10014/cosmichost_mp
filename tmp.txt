@@ -1,0 +1,9 @@
+From a science of steering perspective, we have at least five confounded hypotheses for why ~3,000 tokens of constitutional material doesn't clearly steer models:
+
+1. The constitution is too philosophically dense — nuanced ECL reasoning might just be noise to the model
+2. Models can't do the required reasoning — acausal/updateless reasoning is genuinely hard, even for frontier models
+3. The questions are genuinely hard — these are contested moral dilemmas where reasonable people disagree
+4. Post-training heuristics dominate — RLHF has baked in priors that override in-context material
+5. Out-of-distribution scenarios — sci-fi framing might push models into "creative writing" mode rather than genuine moral reasoning
+
+We can't cleanly disentangle these. The one wrinkle is that Gemini 3 is steerable, which suggests the task isn't impossible—but we don't know why Gemini 3 specifically, adding yet another layer of confusion.
