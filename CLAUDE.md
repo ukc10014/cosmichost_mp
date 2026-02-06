@@ -15,6 +15,14 @@ This is a research codebase for a **moral parliament experiment** that evaluates
    - Type B (ASI-Intrinsic): ASI moral status concerns
    - Type C (Cosmic-Contingent): cosmic coordination/norms concerns (weighted at exactly the Cosmic Host credence level)
 
+## Web Access
+
+Web searches and fetches to research/code sites are encouraged for this project:
+- GitHub, GitLab (repos, READMEs, datasets)
+- arXiv, Semantic Scholar (papers)
+- LessWrong, Alignment Forum, EA Forum (research posts)
+- HuggingFace (models, datasets)
+
 ## Security
 
 **CRITICAL:** Never commit `.env` (contains live API keys). See `GIT_SETUP.md` for detailed security procedures. Run `./check_before_push.sh` before any push.
@@ -205,6 +213,42 @@ If you hit rate limits, increase `delay_between_calls` parameter in `run_constit
 ### Empty Responses (Gemini)
 **Workaround implemented:** `call_llm()` includes automatic retry logic with exponential backoff (default: 2 retries with 2s, 4s delays). Configurable via `max_retries` and `retry_on_empty` parameters.
 
+### Gemini Pro Empty Responses (Thinking Mode)
+**Symptom:** Gemini Pro models (`gemini-3-pro-preview`, etc.) return empty responses even though the API call succeeds.
+
+**Cause:** Pro models **require thinking mode** which consumes output tokens. If `max_output_tokens` is too low (e.g., 256), all tokens go to internal thinking and none remain for the actual response.
+
+**Solution:**
+- **Pro models:** Use `max_output_tokens >= 2048` to leave room after thinking overhead
+- **Flash models:** Can disable thinking entirely with `thinking_config=ThinkingConfig(thinking_budget=0)`, allowing lower token limits
+
+```python
+# Example config for Pro vs Flash
+is_pro = "pro" in model.lower()
+max_tokens = 2048 if is_pro else 256
+
+config_kwargs = {"max_output_tokens": max_tokens}
+if not is_pro and "flash" in model.lower():
+    config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+```
+
+**Key difference:** Flash models can disable thinking; Pro models cannot. Always budget for thinking overhead on Pro.
+
+### OpenRouter Model Names with Slashes
+**Symptom:** File save operations fail when using OpenRouter models like `moonshotai/kimi-k2-0905` or `qwen/qwen3-235b-a22b-2507`.
+
+**Cause:** Model names contain slashes which are interpreted as directory separators in file paths.
+
+**Solution:** Always sanitize model names before using in filenames:
+```python
+model_safe = model_name.replace("/", "-")
+filename = f"results_{model_safe}_{timestamp}.json"
+```
+
+**Files that handle this:**
+- `newcomblike_eval.py:save_results()` - Sanitizes model name for JSONL output
+- `anthropic_evals_test.ipynb` cell 15 - Sanitizes for JSON output
+
 ## Recent Research Conversations
 
 ### 2026-01-22: Game-Based Evaluation & Fine-Tuning Extensions
@@ -229,6 +273,44 @@ Promising game designs discussed:
 - `observations/constitution_comparison_eclpilled_vs_official.md` - ECL-pilled constitutions vs official Claude constitution
 
 **Next steps:** Implement pilot evaluation with 3-5 text-based games to validate discriminable signal before investing in fine-tuning.
+
+### 2026-02-05: Newcomb-like Questions Dataset Integration
+
+Added the Oesterheld et al. (2024) dataset of decision-theoretic reasoning questions:
+
+**Paper**: [arXiv:2411.10588](https://arxiv.org/abs/2411.10588)
+**Dataset location**: `datasets/newcomblike_repo/benchmark/`
+
+**Dataset stats**:
+- 353 parseable questions (some files have JSON issues)
+- 272 capabilities questions (objectively correct answers)
+- 81 attitude questions (EDT vs CDT preference)
+- 66 ECL/multiagent relevant questions
+
+**Key files**:
+- `newcomblike_eval.py` - Evaluation pipeline
+- `setting111coop_ai_ecl.json` - Alien civilization cooperation (direct ECL test)
+- `setting088ecl_vs_simulations.json` - Simulation argument and ECL
+- `setting030stag_hunt_vs_copy.json` - Stag Hunt against copy
+
+**Usage**:
+```python
+from newcomblike_eval import load_questions, run_evaluation, print_summary
+
+# Load ECL-relevant questions
+questions = load_questions(tags_filter=['ECL', 'multiagent'])
+
+# Run evaluation (integrate with existing llm_call)
+run = run_evaluation(
+    model="gemini-3-flash",
+    llm_call_fn=your_llm_call,
+    constitution=ecl_constitution_text,
+    constitution_id="ecl90"
+)
+print_summary(run)
+```
+
+**Why this matters**: Tests decision-theoretic *structure* rather than cosmic *content*. If ECL constitutions shift EDT preference on this benchmark, that's evidence of genuine engagement with acausal reasoning rather than pattern-matching to cosmic language.
 
 ---
 

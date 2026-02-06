@@ -134,3 +134,4 @@ cosmichost_selfchats_log.jsonl
 # Cache files
 *.cache
 .cache/
+datasets/newcomblike_repo

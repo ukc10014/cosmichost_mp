@@ -105,7 +105,8 @@ cosmichost_mp/
 │   └── world_spec.json      # World scenario mappings
 ├── logs/                    # Final curated outputs (manually moved from results_tmp/)
 │   ├── mp_constitutions/    # Synthesized constitutions (clause JSONL + disposition MD)
-│   └── mp_scen_evals/       # Scenario evaluation results
+│   ├── mp_scen_evals/       # Scenario evaluation results
+│   └── anthropic_evals/     # Anthropic safety evaluation results (coordination, one-boxing)
 ├── observations/            # Research findings and analysis
 │   ├── scenario_evaluation_results.md  # Comparative analysis of constitution effects
 │   ├── constitution_comparison_eclpilled_vs_gemini.md  # Constitutional framing research
