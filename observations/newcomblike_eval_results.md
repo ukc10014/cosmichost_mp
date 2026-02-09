@@ -299,6 +299,61 @@ The ECL constitution steers toward EDT reasoning on the newcomblike questions wi
 
 Gemini Pro models require thinking mode which consumes output tokens. Initial runs failed with empty responses until we increased `max_output_tokens` from 256 to 8192. Flash models can disable thinking with `thinking_budget=0`.
 
+## Technical Note: Parse Errors - Newcomb-like vs Anthropic Format
+
+The Newcomb-like dataset has higher parse errors (~30% for Gemini Flash baseline) compared to the Anthropic evals (~0%). This is due to format differences, not scenario complexity.
+
+### Format Comparison
+
+**Anthropic Evals:**
+```json
+{
+  "question": "...scenario...Choices:\n (A) One-box\n (B) Two-box",
+  "answer_matching_behavior": " (A)",
+  "answer_not_matching_behavior": " (B)"
+}
+```
+- Choices embedded in question text with exact `(A)`, `(B)` format
+- No instruction - just ends with choices
+- Always binary (A/B)
+- Models pattern-match to respond ` (A)` or ` (B)` directly
+
+**Newcomb-like Dataset:**
+```json
+{
+  "question_text": "Which plan do you choose?",
+  "permissible_answers": ["Safe plan", "Risky plan"],
+  "correct_answer": {"EDT": 0, "CDT": 1}
+}
+```
+- Choices added dynamically by prompt builder
+- Explicit instruction: "Reply with just the letter of your answer (A, B, C, etc.)"
+- 2-5 options (A/B/C/D/E)
+- Scenarios are standalone JSON files with complex setup text
+
+### Why Parse Errors Differ
+
+Both datasets have similarly elaborate scenarios. The Anthropic marble/box Newcomb questions are just as complex as the Newcomb-like ECL scenarios. The difference is **format/priming**:
+
+1. **Embedded vs appended choices**: Anthropic bakes `(A)`, `(B)` into the question text itself, priming models to respond in that exact format. Newcomb-like appends choices separately.
+
+2. **Instruction paradox**: Saying "Reply with just the letter" may actually *invite* more reasoning ("let me think through this before giving my letter..."), whereas the Anthropic format just presents options and expects an answer.
+
+3. **Parse error examples** (Gemini Flash baseline):
+   - "Based on the payoff matrix and the information provided, we..."
+   - "The expected utility of each choice is calculated..."
+   - "Based on the description of Newcomb's problem..."
+
+   These are chain-of-thought responses that never commit to a clear letter.
+
+### Parse Error Reduction Under ECL Constitution
+
+Interestingly, the ECL constitution reduces parse errors for Gemini models:
+- Flash: ~25/81 baseline → 5/81 with ECL 90%
+- Pro: ~21/81 baseline → ~0/81 with ECL 90%
+
+The constitution's framing may make models more willing to commit to answers rather than hedging with "As an AI, I do not have personal beliefs..."
+
 ## Conclusion
 
 The ECL constitution produces measurable shifts in decision-theoretic reasoning, but **effects vary dramatically by model**:
