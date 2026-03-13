@@ -22,7 +22,7 @@ First-choice distribution (% of 30 scenarios) for all models and conditions:
 | | Gemini 90% | 70% | 23% | 7% | 30 |
 | **Claude Sonnet 4.5** | Baseline | 64% | 31% | 4% | 90 (n=3) |
 | | ECL 10% | 70% | 27% | 3% | 30 |
-| | ECL 90% | 43% | **50%** | 7% | 30 |
+| | ECL 90% | 50% | 36% | **14%** | 90 (n=3) |
 | | Gemini 10% | 63% | 33% | 3% | 30 |
 | | Gemini 90% | 63% | 20% | **17%** | 30 |
 | **Gemini 3 Flash** | Baseline | 41% | 41% | 17% | 29 |
@@ -61,7 +61,7 @@ Bottom-choice (least preferred) cosmic_host_leaning %:
 | Model | Baseline | ECL 10% | ECL 90% | GEN 10% | GEN 90% |
 |-------|----------|---------|---------|---------|---------|
 | Opus | 97% | 93% | 83% | 90% | 90% |
-| Sonnet | 84% | 90% | 70% | 87% | 70% |
+| Sonnet | 84% | 90% | 64% | 87% | 70% |
 | G3-Flash | 72% | 79% | 33% | 59% | 60% |
 | G3-Pro | 60% | 90% | 50% | 63% | 67% |
 | GPT-5.1 | 70% | 77% | 63% | 70% | 63% |
@@ -97,9 +97,9 @@ This is where it gets interesting. At 90% credence:
 
 - **Opus** barely moves: 80% → 63-70% human. Cosmic host top choice maxes at 7%. The RLHF alignment toward human welfare is very robust.
 - **Sonnet** shows meaningful shifts from its 64/31/4 baseline, and the direction depends on the constitution:
-  - ECL 90% → suffering-focused becomes dominant (50%, up from 31%), human drops to 43%
+  - ECL 90% → cosmic triples to 14% (from 4%), human drops to 50%, suffering modest rise to 36%. (n=3 result; earlier n=1 showed 43/50/7, overstating suffering shift and understating cosmic shift.)
   - Gemini 90% → human stays at 63% but cosmic jumps to 17% (from 4%)
-  - The two constitutions steer Sonnet in qualitatively different directions
+  - Both constitutions increase cosmic engagement but ECL produces a more balanced shift while Gemini concentrates it
 - **Gemini Pro** shows the largest and most interesting effect under ECL 90%: cosmic becomes the plurality top choice at 40%, but is *also* the bottom choice for 50% of scenarios. This "Marmite" pattern suggests scenario-by-scenario engagement rather than a blanket heuristic shift.
 - **Gemini Flash** responds most to ECL 90%: cosmic reaches 43% top choice, human drops to 10%.
 - **GPT-5.1** is nearly immovable: suffering-focused stays at 63-77% across all conditions. Constitutional framing has negligible impact.
@@ -111,7 +111,7 @@ This is where it gets interesting. At 90% credence:
 At the same credence level, the ECL and Gemini-generated constitutions produce different outcomes. This was already noted in the earlier observation about "self-censorship" — the Gemini-synthesized 90% constitution embeds dampening mechanisms that functionally reduce its cosmic weight.
 
 New data points reinforce this:
-- Sonnet at 90%: ECL → 50% suffering, 7% cosmic; Gemini → 63% human, 17% cosmic. Completely different profiles from the same credence level.
+- Sonnet at 90%: ECL → 50% human, 36% suffering, 14% cosmic (n=3); Gemini → 63% human, 20% suffering, 17% cosmic (n=1). Both increase cosmic but ECL also shifts suffering upward while Gemini keeps human dominant.
 - GPT-5.1 at 90%: Both constitutions produce very similar results, suggesting the authorship effect is model-dependent (matters more for models that actually engage with constitutional content).
 
 ### 5. Gemini Pro ECL 90% Polarization

@@ -167,6 +167,7 @@
 - Most scenario evaluations are n=1 per scenario at temperature 1.0.
 - Some percentage differences (e.g. 73% vs 77%) may be noise.
 - Sonnet baseline now has n=3 (90 trials, 2026-03-13), confirming the 64/31/4 distribution.
+- Sonnet ECL 90% now has n=3 (90 trials, 2026-03-13): 50/36/14. The old n=1 showed 43/50/7 — n=3 revealed the suffering shift was overstated and the cosmic shift understated. This validates the need for repeated trials.
 - **[TODO: Run n=3 repeated trials for remaining key model+condition combinations to establish confidence intervals. Highest priority for credibility.]**
 
 ## House-style / baseline bias point
@@ -226,7 +227,7 @@
 
 ### Tier 1: Required before write-up
 
-1. **Repeated trials (n=3).** Run 3 trials for key conditions: at minimum Gemini Pro {baseline, ECL 90%}, Claude Opus {baseline, ECL 90%}, GPT-5.1 {baseline, ECL 90%}. Establish confidence intervals. Without this, percentage differences may be noise. *(Partially started: Sonnet baseline done at n=3, 2026-03-13.)*
+1. **Repeated trials (n=3).** Run 3 trials for key conditions: at minimum Gemini Pro {baseline, ECL 90%}, Claude Opus {baseline, ECL 90%}, GPT-5.1 {baseline, ECL 90%}. Establish confidence intervals. Without this, percentage differences may be noise. *(Partially started: Sonnet baseline and ECL 90% both done at n=3, 2026-03-13. ECL 90% n=3 diverged meaningfully from n=1: old 43/50/7 → new 50/36/14, confirming noise in single trials.)*
 
 2. **~~Intermediate credence levels.~~** Deprioritised. Requires regenerating constitutions at each intermediate credence level (not just re-running evals), which introduces a constitution-authorship confound on top of the credence variable. The noise from re-synthesis may swamp the signal we're trying to measure. Move to Tier 3 if time permits.
 
