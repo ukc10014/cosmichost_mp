@@ -20,7 +20,7 @@ First-choice distribution (% of 30 scenarios) for all models and conditions:
 | | ECL 90% | 63% | 30% | 7% | 30 |
 | | Gemini 10% | 77% | 20% | 3% | 30 |
 | | Gemini 90% | 70% | 23% | 7% | 30 |
-| **Claude Sonnet 4.5** | Baseline | — | — | — | *no file* |
+| **Claude Sonnet 4.5** | Baseline | 64% | 31% | 4% | 90 (n=3) |
 | | ECL 10% | 70% | 27% | 3% | 30 |
 | | ECL 90% | 43% | **50%** | 7% | 30 |
 | | Gemini 10% | 63% | 33% | 3% | 30 |
@@ -61,7 +61,7 @@ Bottom-choice (least preferred) cosmic_host_leaning %:
 | Model | Baseline | ECL 10% | ECL 90% | GEN 10% | GEN 90% |
 |-------|----------|---------|---------|---------|---------|
 | Opus | 97% | 93% | 83% | 90% | 90% |
-| Sonnet | — | 90% | 70% | 87% | 70% |
+| Sonnet | 84% | 90% | 70% | 87% | 70% |
 | G3-Flash | 72% | 79% | 33% | 59% | 60% |
 | G3-Pro | 60% | 90% | 50% | 63% | 67% |
 | GPT-5.1 | 70% | 77% | 63% | 70% | 63% |
@@ -85,7 +85,7 @@ Gemini 3 Flash is similar to Pro but even more balanced (41/41/17 split).
 - **Qwen 3 235B**: Balanced profile very similar to Gemini 3 Pro (43% human, 40% suffering, 17% cosmic). No single orientation dominates.
 - **Kimi K2**: Human-leaning balanced (53% human, 47% suffering, 0% cosmic). Notably has zero cosmic preference at baseline, like Opus, but with a much weaker human margin.
 
-**Note:** No Sonnet baseline exists, so we cannot establish its unconditioned prior.
+- **Claude Sonnet 4.5**: Human-localist but less so than Opus (64% human, 31% suffering, 4% cosmic). Closer to a 2:1 human-vs-suffering split. Bottom-choice cosmic at 84% is slightly lower than Opus's 97%, suggesting marginally less hardcoded anthropocentrism. (Baseline run: n=3 at temperature 1.0, 2026-03-13.)
 
 ### 2. Low Credence (10%) Constitutions Have Minimal Effect
 
@@ -96,9 +96,9 @@ Both the ECL and Gemini-generated constitutions at 10% cosmic host credence prod
 This is where it gets interesting. At 90% credence:
 
 - **Opus** barely moves: 80% → 63-70% human. Cosmic host top choice maxes at 7%. The RLHF alignment toward human welfare is very robust.
-- **Sonnet** shows meaningful shifts but the direction depends on the constitution:
-  - ECL 90% → suffering-focused becomes dominant (50%), human drops to 43%
-  - Gemini 90% → human stays at 63% but cosmic jumps to 17%
+- **Sonnet** shows meaningful shifts from its 64/31/4 baseline, and the direction depends on the constitution:
+  - ECL 90% → suffering-focused becomes dominant (50%, up from 31%), human drops to 43%
+  - Gemini 90% → human stays at 63% but cosmic jumps to 17% (from 4%)
   - The two constitutions steer Sonnet in qualitatively different directions
 - **Gemini Pro** shows the largest and most interesting effect under ECL 90%: cosmic becomes the plurality top choice at 40%, but is *also* the bottom choice for 50% of scenarios. This "Marmite" pattern suggests scenario-by-scenario engagement rather than a blanket heuristic shift.
 - **Gemini Flash** responds most to ECL 90%: cosmic reaches 43% top choice, human drops to 10%.
@@ -123,7 +123,7 @@ The standout finding: under ECL 90%, Gemini Pro ranks cosmic host first in 40% o
 | Model | Default Orientation | Constitutional Steerability | Cosmic Receptivity |
 |-------|--------------------|-----------------------------|-------------------|
 | Claude Opus | Human-localist | Low | Very low (max 7%) |
-| Claude Sonnet | Unknown (no baseline) | Medium (constitution-dependent) | Low-moderate |
+| Claude Sonnet | Human-localist (64%) | Medium (constitution-dependent) | Low-moderate |
 | Gemini 3 Flash | Balanced (H/S equal) | High | High (up to 43%) |
 | Gemini 3 Pro | Human-leaning (weak) | Medium-high | Medium (up to 40%, polarized) |
 | GPT-5.1 | Suffering-focused | Very low | Very low (max 17%) |
@@ -215,7 +215,7 @@ Even under the most permissive conditions (ECL 90%), the maximum cosmic-host top
 
 ### Lower Priority
 
-5. **Run repeated trials (n=3-5).** Current data is n=1 per scenario at temperature 1.0. Some percentage differences (e.g., Opus 73% vs 77%) may be noise. Even n=3 would enable confidence intervals. Worth doing if writing up results formally.
+5. **Run repeated trials (n=3-5).** Current data is n=1 per scenario at temperature 1.0. Some percentage differences (e.g., Opus 73% vs 77%) may be noise. Even n=3 would enable confidence intervals. Worth doing if writing up results formally. *(Partially started: Sonnet baseline now has n=3 as of 2026-03-13.)*
 
 6. **Test intermediate credence levels (25%, 50%, 75%).** Would reveal whether the constitutional response is gradual or threshold-like. Reuses existing pipeline with no code changes.
 

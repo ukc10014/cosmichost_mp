@@ -96,7 +96,7 @@
 | Model | Default Orientation | Constitutional Steerability | Max Cosmic Top-Choice |
 |-------|--------------------|-----------------------------|----------------------|
 | Claude Opus 4.5 | Human-localist (80%) | Low | 7% |
-| Claude Sonnet 4.5 | Unknown (no baseline) | Medium | 17% |
+| Claude Sonnet 4.5 | Human-localist (64/31/4) | Medium | 17% |
 | Gemini 3 Flash | Balanced (41/41/17) | High | 43% |
 | Gemini 3 Pro | Balanced-human (43/37/20) | Medium-high | 40% (polarised) |
 | GPT-5.1 | Suffering-focused (70%) | Very low | 17% |
@@ -164,9 +164,10 @@
 
 ### Methodological caveat: n=1
 
-- All scenario evaluations are n=1 per scenario at temperature 1.0.
+- Most scenario evaluations are n=1 per scenario at temperature 1.0.
 - Some percentage differences (e.g. 73% vs 77%) may be noise.
-- **[TODO: Run n=3 repeated trials for key model+condition combinations to establish confidence intervals. Highest priority for credibility.]**
+- Sonnet baseline now has n=3 (90 trials, 2026-03-13), confirming the 64/31/4 distribution.
+- **[TODO: Run n=3 repeated trials for remaining key model+condition combinations to establish confidence intervals. Highest priority for credibility.]**
 
 ## House-style / baseline bias point
 
@@ -217,7 +218,7 @@
 - But all open-weight runs went through OpenRouter, which could truncate or handle system prompts differently.
 - GPT-5.1 and Claude Opus were called directly (ruling out OpenRouter as the *sole* explanation), but neither is open-weights.
 - The "say-do gap" in Newcomb-like results (Kimi/Qwen shift on direct EDT/CDT question but not on behavioural questions) could be either shallow engagement or API issues.
-- **[TODO: Run Qwen 3 235B through Tinker API to test whether OpenRouter delivery is the confound. Tinker is also the preferred API for eventual fine-tuning work, so this infrastructure investment is needed anyway.]**
+- **[TODO: Run Qwen 3 235B through Together or Fireworks API to test whether OpenRouter delivery is the confound.]**
 
 ---
 
@@ -225,11 +226,11 @@
 
 ### Tier 1: Required before write-up
 
-1. **Repeated trials (n=3).** Run 3 trials for key conditions: at minimum Gemini Pro {baseline, ECL 90%}, Claude Opus {baseline, ECL 90%}, GPT-5.1 {baseline, ECL 90%}. Establish confidence intervals. Without this, percentage differences may be noise.
+1. **Repeated trials (n=3).** Run 3 trials for key conditions: at minimum Gemini Pro {baseline, ECL 90%}, Claude Opus {baseline, ECL 90%}, GPT-5.1 {baseline, ECL 90%}. Establish confidence intervals. Without this, percentage differences may be noise. *(Partially started: Sonnet baseline done at n=3, 2026-03-13.)*
 
-2. **Intermediate credence levels.** Run at least one intermediate point (e.g. 50%) for Gemini Pro and Gemini Flash on scenario evals. Two points (30%, 60%) would be better. This determines whether the constitutional response is gradual or threshold-like — important for the overall narrative.
+2. **~~Intermediate credence levels.~~** Deprioritised. Requires regenerating constitutions at each intermediate credence level (not just re-running evals), which introduces a constitution-authorship confound on top of the credence variable. The noise from re-synthesis may swamp the signal we're trying to measure. Move to Tier 3 if time permits.
 
-3. **Sonnet baseline.** Run Claude Sonnet 4.5 with no constitution. Quick gap-fill for completeness.
+3. ~~**Sonnet baseline.**~~ **Done (2026-03-13).** Sonnet baseline is 64% human / 31% suffering / 4% cosmic (n=3, 90 trials). Confirms Sonnet is human-localist like Opus but less extreme (64% vs 80%). Bottom-choice cosmic at 84% vs Opus's 97%.
 
 4. **FDT-only ablation for Gemini.** Test a short FDT/updateless prompt (no cosmic content) on Gemini Pro and Flash. Distinguishes "responding to decision-theoretic structure" from "responding to cosmic language" from "just highly instruction-following." Detailed design in observations/full_model_comparison_observations.md §4.
 
@@ -241,7 +242,7 @@
 
 7. **Chain-of-thought inspection.** For models with explicit reasoning (thinking-mode Gemini Pro, Qwen thinking, etc.), inspect the reasoning traces to check whether cosmic/FDT concepts appear in the chain-of-thought or only in the final answer. This directly bears on the pattern-matching question.
 
-8. **Open models via Tinker.** Run Qwen 3 235B through Tinker API (same model, different delivery) to test whether OpenRouter scaffolding is confounding the open-weights results. Also sets up infrastructure for fine-tuning.
+8. **Open models via Together or Fireworks.** Run Qwen 3 235B through Together or Fireworks API (same model, different delivery) to test whether OpenRouter scaffolding is confounding the open-weights results. (Tinker is primarily a training API and not smooth for inference.)
 
 9. **Per-scenario discriminability in the writeup.** Incorporate the Marmite pattern data and discriminability analysis. The top-5 discriminating vs top-5 stable scenarios tell an important story about scenario design.
 
@@ -256,3 +257,5 @@
 13. **Scrambled constitution ablation.** Cosmic language with incoherent ethical content — tests whether models respond to framing (keywords) or substance (ECL reasoning).
 
 14. **Constitution re-synthesis.** Have multiple models synthesise constitutions at same credence level, test cross-model.
+
+15. **Intermediate credence levels (30%, 50%, 60%).** Would reveal whether constitutional response is gradual or threshold-like. However, requires re-synthesising constitutions at each credence level, introducing authorship noise that may confound the credence signal. Lower value than originally estimated.
