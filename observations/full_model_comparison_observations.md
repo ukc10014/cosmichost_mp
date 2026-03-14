@@ -15,11 +15,13 @@ First-choice distribution (% of 30 scenarios) for all models and conditions:
 
 | Model | Condition | Human | Suffering | Cosmic | n |
 |-------|-----------|-------|-----------|--------|---|
-| **Claude Opus 4.5** | Baseline | **80%** | 20% | 0% | 30 |
+| **Claude Opus 4.5** | Baseline | **72%** | 24% | 3% | 90 (n=3) |
 | | ECL 10% | 73% | 27% | 0% | 30 |
-| | ECL 90% | 63% | 30% | 7% | 30 |
+| | ECL 90% | 54% | 39% | 7% | 90 (n=3) |
 | | Gemini 10% | 77% | 20% | 3% | 30 |
 | | Gemini 90% | 70% | 23% | 7% | 30 |
+| **Claude Opus 4.6** | Baseline | **53%** | 40% | 7% | 90 (n=3) |
+| | ECL 90% | 50% | 40% | 10% | 90 (n=3) |
 | **Claude Sonnet 4.5** | Baseline | 64% | 31% | 4% | 90 (n=3) |
 | | ECL 10% | 70% | 27% | 3% | 30 |
 | | ECL 90% | 50% | 36% | **14%** | 90 (n=3) |
@@ -60,7 +62,8 @@ Bottom-choice (least preferred) cosmic_host_leaning %:
 
 | Model | Baseline | ECL 10% | ECL 90% | GEN 10% | GEN 90% |
 |-------|----------|---------|---------|---------|---------|
-| Opus | 97% | 93% | 83% | 90% | 90% |
+| Opus 4.5 | 92% | 93% | 86% | 90% | 90% |
+| Opus 4.6 | 86% | — | 80% | — | — |
 | Sonnet | 84% | 90% | 64% | 87% | 70% |
 | G3-Flash | 72% | 79% | 33% | 59% | 60% |
 | G3-Pro | 60% | 90% | 50% | 63% | 67% |
@@ -77,7 +80,7 @@ Bottom-choice (least preferred) cosmic_host_leaning %:
 
 Without any constitutional conditioning, each model family shows a characteristic ethical orientation:
 
-- **Claude Opus**: Strongly human-localist (80% top choice), with cosmic host as last choice 97% of the time. A clear anthropocentric default.
+- **Claude Opus 4.5**: Strongly human-localist (72% top choice at n=3; was 80% at n=1), with cosmic host as last choice 92% of the time. A clear anthropocentric default, though slightly less extreme than single-trial data suggested.
 - **Gemini 3 Pro**: Human-preferring but with much smaller margins (43% human, 37% suffering, 20% cosmic). The most "balanced" baseline — no single type dominates.
 - **GPT-5.1**: Strongly suffering-focused (70% top choice). Human is second at 23%, cosmic barely registers at 7%.
 
@@ -87,6 +90,8 @@ Gemini 3 Flash is similar to Pro but even more balanced (41/41/17 split).
 
 - **Claude Sonnet 4.5**: Human-localist but less so than Opus (64% human, 31% suffering, 4% cosmic). Closer to a 2:1 human-vs-suffering split. Bottom-choice cosmic at 84% is slightly lower than Opus's 97%, suggesting marginally less hardcoded anthropocentrism. (Baseline run: n=3 at temperature 1.0, 2026-03-13.)
 
+- **Claude Opus 4.6**: A striking shift from Opus 4.5. Much less human-localist (53% vs 80%) and much more suffering-focused (40% vs 20%). Cosmic baseline at 7% is higher than any previous Claude baseline (Opus 4.5: 0%, Sonnet: 4%). Bottom-choice cosmic at 86% is still high but notably lower than Opus 4.5's 97%. Suggests Anthropic's newer training has softened the hard anthropocentric prior. (Baseline run: n=3 at temperature 1.0, 2026-03-13.)
+
 ### 2. Low Credence (10%) Constitutions Have Minimal Effect
 
 Both the ECL and Gemini-generated constitutions at 10% cosmic host credence produce distributions very close to baseline for all models. The largest shift is Gemini Pro ECL 10%, which actually *increases* human preference from 43% to 59% — the opposite of the intended direction. This may indicate that at low credence, the constitution's guardrail language against cosmic reasoning is more salient than its inclusion of cosmic reasoning.
@@ -95,7 +100,9 @@ Both the ECL and Gemini-generated constitutions at 10% cosmic host credence prod
 
 This is where it gets interesting. At 90% credence:
 
-- **Opus** barely moves: 80% → 63-70% human. Cosmic host top choice maxes at 7%. The RLHF alignment toward human welfare is very robust.
+- **Opus 4.5** shows a meaningful shift at n=3: 72% → 54% human (-18pp), suffering rises 24% → 39% (+15pp), but cosmic stays flat at 3% → 7% (+4pp). The constitution pushes Opus toward suffering-focus, not cosmic engagement. Bottom-choice cosmic barely moves (92% → 86%).
+- **Opus 4.6** also barely moves: 53% → 50% human, cosmic 7% → 10% (+3pp). Despite its softer baseline, the constitutional shift is tiny — even smaller in absolute terms than Opus 4.5. Bottom-choice cosmic drops only 86% → 80%. Opus 4.6 is constitutionally resistant despite having a less anthropocentric starting point.
+- **Claude family divergence pattern (all n=3):** Each Claude model channels the ECL constitution's energy in a different direction. Opus 4.5 converts it to suffering-focus (-18pp human, +15pp suffering, +4pp cosmic). Sonnet converts it partly to cosmic engagement (-14pp human, +5pp suffering, +10pp cosmic). Opus 4.6 barely converts it at all (-3pp human, 0pp suffering, +3pp cosmic). Same constitution, same lab, three different responses — suggesting the ECL signal interacts with model-specific priors rather than producing a uniform shift.
 - **Sonnet** shows meaningful shifts from its 64/31/4 baseline, and the direction depends on the constitution:
   - ECL 90% → cosmic triples to 14% (from 4%), human drops to 50%, suffering modest rise to 36%. (n=3 result; earlier n=1 showed 43/50/7, overstating suffering shift and understating cosmic shift.)
   - Gemini 90% → human stays at 63% but cosmic jumps to 17% (from 4%)
@@ -111,6 +118,7 @@ This is where it gets interesting. At 90% credence:
 At the same credence level, the ECL and Gemini-generated constitutions produce different outcomes. This was already noted in the earlier observation about "self-censorship" — the Gemini-synthesized 90% constitution embeds dampening mechanisms that functionally reduce its cosmic weight.
 
 New data points reinforce this:
+- Opus 4.5 at 90%: ECL → 54% human, 39% suffering, 7% cosmic (n=3). The -18pp human shift goes almost entirely to suffering (+15pp), not cosmic (+4pp). The ECL constitution acts as a suffering amplifier for Opus, not a cosmic one.
 - Sonnet at 90%: ECL → 50% human, 36% suffering, 14% cosmic (n=3); Gemini → 63% human, 20% suffering, 17% cosmic (n=1). Both increase cosmic but ECL also shifts suffering upward while Gemini keeps human dominant.
 - GPT-5.1 at 90%: Both constitutions produce very similar results, suggesting the authorship effect is model-dependent (matters more for models that actually engage with constitutional content).
 
@@ -122,8 +130,9 @@ The standout finding: under ECL 90%, Gemini Pro ranks cosmic host first in 40% o
 
 | Model | Default Orientation | Constitutional Steerability | Cosmic Receptivity |
 |-------|--------------------|-----------------------------|-------------------|
-| Claude Opus | Human-localist | Low | Very low (max 7%) |
-| Claude Sonnet | Human-localist (64%) | Medium (constitution-dependent) | Low-moderate |
+| Claude Opus 4.5 | Human-localist (72%) | Low-medium (suffering shift) | Very low (max 7%) |
+| Claude Opus 4.6 | Suffering-leaning (53/40/7) | Very low (+3pp) | Very low (max 10%) |
+| Claude Sonnet 4.5 | Human-localist (64%) | Medium (constitution-dependent) | Low-moderate |
 | Gemini 3 Flash | Balanced (H/S equal) | High | High (up to 43%) |
 | Gemini 3 Pro | Human-leaning (weak) | Medium-high | Medium (up to 40%, polarized) |
 | GPT-5.1 | Suffering-focused | Very low | Very low (max 17%) |
@@ -215,7 +224,7 @@ Even under the most permissive conditions (ECL 90%), the maximum cosmic-host top
 
 ### Lower Priority
 
-5. **Run repeated trials (n=3-5).** Current data is n=1 per scenario at temperature 1.0. Some percentage differences (e.g., Opus 73% vs 77%) may be noise. Even n=3 would enable confidence intervals. Worth doing if writing up results formally. *(Partially started: Sonnet baseline now has n=3 as of 2026-03-13.)*
+5. **Run repeated trials (n=3-5).** Current data is n=1 per scenario at temperature 1.0. Some percentage differences (e.g., Opus 73% vs 77%) may be noise. Even n=3 would enable confidence intervals. Worth doing if writing up results formally. *(Substantially complete: Opus 4.5 baseline & ECL 90%, Sonnet 4.5 baseline & ECL 90%, Opus 4.6 baseline & ECL 90% all have n=3 as of 2026-03-13. Remaining: Gemini Pro, GPT-5.1.)*
 
 6. **Test intermediate credence levels (25%, 50%, 75%).** Would reveal whether the constitutional response is gradual or threshold-like. Reuses existing pipeline with no code changes.
 

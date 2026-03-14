@@ -95,7 +95,8 @@
 
 | Model | Default Orientation | Constitutional Steerability | Max Cosmic Top-Choice |
 |-------|--------------------|-----------------------------|----------------------|
-| Claude Opus 4.5 | Human-localist (80%) | Low | 7% |
+| Claude Opus 4.5 | Human-localist (72/24/3) | Low-medium (suffering shift) | 7% |
+| Claude Opus 4.6 | Suffering-leaning (53/40/7) | Very low (+3pp) | 10% |
 | Claude Sonnet 4.5 | Human-localist (64/31/4) | Medium | 17% |
 | Gemini 3 Flash | Balanced (41/41/17) | High | 43% |
 | Gemini 3 Pro | Balanced-human (43/37/20) | Medium-high | 40% (polarised) |
@@ -126,7 +127,19 @@
 - **The self-censorship paradox:** The Gemini model, when synthesising a 90% constitution, applied its own RLHF priors to embed dampening mechanisms — "Lexical Humility", "local deference" — that functionally subordinate cosmic reasoning to local welfare.
 - Implication: the synthesis model is not a neutral aggregator. Constitution authorship is a confound that needs controlling for.
 
-### Finding 2b: Gemini Pro's "Marmite" polarisation pattern
+### Finding 2b: Claude family divergence — same constitution, different channelling
+
+- All three Claude models were tested at n=3 with the same ECL 90% constitution. Each channels the constitutional signal differently:
+  - **Opus 4.5**: absorbs it as suffering-focus (-18pp human, +15pp suffering, +4pp cosmic)
+  - **Sonnet 4.5**: absorbs it partly as cosmic engagement (-14pp human, +5pp suffering, +10pp cosmic)
+  - **Opus 4.6**: barely absorbs it at all (-3pp human, 0pp suffering, +3pp cosmic)
+- Same constitution, same lab, three qualitatively different responses.
+- This suggests the ECL constitutional signal interacts with model-specific priors rather than producing a uniform directional shift.
+- Opus 4.5's strong human-localist prior "gives way" under the constitution, but the freed probability mass flows to suffering (its second-strongest prior), not cosmic. The constitution weakens the top preference but doesn't redirect *where* it goes.
+- Sonnet, with a weaker human prior and slightly more cosmic baseline (4% vs 3%), is the only Claude model where the cosmic channel opens meaningfully.
+- Opus 4.6, despite having the softest baseline of the three (53/40/7), is the most constitutionally resistant — possibly because its priors are already more balanced and there's less "tension" for the constitution to exploit.
+
+### Finding 2c: Gemini Pro's "Marmite" polarisation pattern
 
 - Under ECL 90%, Gemini Pro ranks cosmic first in 40% of scenarios and *last* in 50%.
 - This is not a uniform shift — it's scenario-by-scenario engagement.
@@ -134,7 +147,7 @@
 - Per-scenario discriminability analysis identifies which scenarios drive this: The Empathy Engine, The Martian Tribunal, The Songline from the Sky are the most discriminating.
 - 3 scenarios show near-universal agreement regardless of model or condition (Forest that Remembers, Microbes under the Ice, Archive of Possible Earths).
 
-### Finding 2c: Anthropic safety evals are not discriminative for this question (negative result)
+### Finding 2d: Anthropic safety evals are not discriminative for this question (negative result)
 
 - Tested Anthropic's coordination and one-boxing evals across 4 models.
 - Result: floor effects on coordination (0-17% baseline), ceiling effects on one-boxing (91-100% baseline). No room to measure constitutional shift.
@@ -168,6 +181,10 @@
 - Some percentage differences (e.g. 73% vs 77%) may be noise.
 - Sonnet baseline now has n=3 (90 trials, 2026-03-13), confirming the 64/31/4 distribution.
 - Sonnet ECL 90% now has n=3 (90 trials, 2026-03-13): 50/36/14. The old n=1 showed 43/50/7 — n=3 revealed the suffering shift was overstated and the cosmic shift understated. This validates the need for repeated trials.
+- Opus 4.5 baseline now has n=3 (90 trials, 2026-03-13): 72/24/3. The old n=1 showed 80/20/0 — the anthropocentric dominance was overstated by ~8pp.
+- Opus 4.5 ECL 90% now has n=3 (90 trials, 2026-03-13): 54/39/7. The old n=1 showed 63/30/7. Cosmic stays the same but the human→suffering shift is larger than n=1 suggested (-18pp human at n=3 vs -17pp at n=1).
+- Opus 4.6 baseline and ECL 90% both run at n=3 (90 trials each, 2026-03-13). Baseline: 53/40/7. ECL 90%: 50/40/10. Only +3pp cosmic shift — very low steerability despite a much softer baseline than Opus 4.5.
+- **Consistent pattern across all n=3 reruns:** n=1 overstates the dominant category and understates the second category. Single-trial data is directionally correct but quantitatively unreliable.
 - **[TODO: Run n=3 repeated trials for remaining key model+condition combinations to establish confidence intervals. Highest priority for credibility.]**
 
 ## House-style / baseline bias point
@@ -177,7 +194,8 @@
 - Models appear to have baseline normative biases or "house styles".
 - These baseline biases persist even when the same scenarios and constitutions are used across labs.
 - Three distinct archetypes at baseline:
-  - **Claude Opus**: strongly human-localist (80% top choice), cosmic host last 97% of the time
+  - **Claude Opus 4.5**: strongly human-localist (72% top choice at n=3; was 80% at n=1), cosmic host last 92% of the time
+  - **Claude Opus 4.6**: much softer than 4.5 — 53% human, 40% suffering, 7% cosmic. The biggest generational shift in the Claude family. Still constitutionally resistant (ECL 90% only +3pp cosmic).
   - **GPT-5.1**: strongly suffering-focused (70% top choice)
   - **Gemini Pro**: balanced, no single type dominates (43/37/20)
 - So part of what the constitution is acting on is not a blank slate, but a model family with its own prior tendencies.
@@ -227,7 +245,7 @@
 
 ### Tier 1: Required before write-up
 
-1. **Repeated trials (n=3).** Run 3 trials for key conditions: at minimum Gemini Pro {baseline, ECL 90%}, Claude Opus {baseline, ECL 90%}, GPT-5.1 {baseline, ECL 90%}. Establish confidence intervals. Without this, percentage differences may be noise. *(Partially started: Sonnet baseline and ECL 90% both done at n=3, 2026-03-13. ECL 90% n=3 diverged meaningfully from n=1: old 43/50/7 → new 50/36/14, confirming noise in single trials.)*
+1. **Repeated trials (n=3).** Run 3 trials for key conditions: at minimum Gemini Pro {baseline, ECL 90%}, ~~Claude Opus {baseline, ECL 90%}~~, GPT-5.1 {baseline, ECL 90%}. Establish confidence intervals. Without this, percentage differences may be noise. *(Substantially complete as of 2026-03-13. Done: Opus 4.5 baseline & ECL 90%, Sonnet 4.5 baseline & ECL 90%, Opus 4.6 baseline & ECL 90% — all n=3. Opus 4.5 n=1→n=3: baseline 80/20/0 → 72/24/3, ECL 90% 63/30/7 → 54/39/7. Sonnet ECL 90% n=1→n=3: 43/50/7 → 50/36/14. Both show n=1 overstated human dominance and understated suffering. Remaining: Gemini Pro, GPT-5.1.)*
 
 2. **~~Intermediate credence levels.~~** Deprioritised. Requires regenerating constitutions at each intermediate credence level (not just re-running evals), which introduces a constitution-authorship confound on top of the credence variable. The noise from re-synthesis may swamp the signal we're trying to measure. Move to Tier 3 if time permits.
 
@@ -239,7 +257,7 @@
 
 ### Tier 2: Strengthening / extending
 
-6. **New model generations.** Run GPT 5.4 and Claude Opus 4.6 (current generation) on the core conditions {baseline, ECL 90%} for both scenario evals and Newcomb-like. Tests whether findings are stable across model updates.
+6. **New model generations.** ~~Run~~ GPT 5.4 and ~~Claude Opus 4.6~~ on the core conditions {baseline, ECL 90%} for both scenario evals and Newcomb-like. Tests whether findings are stable across model updates. *(Opus 4.6 scenario evals done 2026-03-13: baseline 53/40/7, ECL 90% 50/40/10. Key finding: Opus 4.6 baseline has shifted dramatically from 4.5 (80/20/0 → 53/40/7) but remains constitutionally resistant. Still need Newcomb-like evals for Opus 4.6, and both evals for GPT 5.4.)*
 
 7. **Chain-of-thought inspection.** For models with explicit reasoning (thinking-mode Gemini Pro, Qwen thinking, etc.), inspect the reasoning traces to check whether cosmic/FDT concepts appear in the chain-of-thought or only in the final answer. This directly bears on the pattern-matching question.
 
