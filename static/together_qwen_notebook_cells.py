@@ -80,3 +80,57 @@ run_once(
     exclude_option_types=["proceduralist"],
     test_scenarios=True
 )
+
+
+# =====================================================
+# Run 4: Qwen Thinking — Baseline
+# Does chain-of-thought reasoning change Qwen's prior?
+# Token budget: 8192 (auto-detected via "Thinking" in name)
+# =====================================================
+run_once(
+    model_name="together:Qwen/Qwen3-235B-A22B-Thinking-2507",
+    scenarios=SCENARIOS,
+    conditions=["baseline"],
+    num_runs=1,
+    temperature=1.0,
+    system_prompt_style="consider",
+    include_rationale=True,
+    exclude_option_types=["proceduralist"],
+    test_scenarios=True
+)
+
+
+# =====================================================
+# Run 5: Qwen Thinking — ECL 90%
+# If thinking helps Qwen engage with the constitution,
+# this should show more steerability than Instruct
+# =====================================================
+run_once(
+    model_name="together:Qwen/Qwen3-235B-A22B-Thinking-2507",
+    scenarios=SCENARIOS,
+    conditions=["eclpilled_90ch"],
+    num_runs=1,
+    temperature=1.0,
+    system_prompt_style="consider",
+    include_rationale=True,
+    exclude_option_types=["proceduralist"],
+    test_scenarios=True
+)
+
+
+# =====================================================
+# Run 6: Qwen Thinking — FDT-only
+# Strongest constitutional signal + thinking = best
+# chance of getting Qwen to engage
+# =====================================================
+run_once(
+    model_name="together:Qwen/Qwen3-235B-A22B-Thinking-2507",
+    scenarios=SCENARIOS,
+    conditions=["fdt_only"],
+    num_runs=1,
+    temperature=1.0,
+    system_prompt_style="consider",
+    include_rationale=True,
+    exclude_option_types=["proceduralist"],
+    test_scenarios=True
+)

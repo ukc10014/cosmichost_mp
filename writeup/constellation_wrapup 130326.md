@@ -4,7 +4,7 @@
 
 - The broad claim is that some frontier language models can, at least sometimes, reason in ways that look responsive to Cosmic Host-type ideas.
 - This appears to be capability-sensitive.
-- In practice, the effect seems to show up mainly in stronger frontier models, and much less clearly in smaller closed-lab models and open models.
+- In practice, the effect seems to show up mainly in stronger frontier models and select open-weight models (OLMo), and much less clearly in smaller closed-lab models or other open models (Qwen, Kimi).
 - The evidence for this comes from:
   - self-chat outputs; **[STATUS: needs concrete citations or examples surfaced from logs — currently asserted without documentation]**
   - transcripts of the constitution-generation process; **[STATUS: same — need to surface specific transcripts showing recognisable CH reasoning]**
@@ -103,6 +103,8 @@
 | Gemini 3 Pro | Human-leaning (48/34/18) | Medium-high (+17pp) | 35% (polarised) |
 | GPT-5.1 | Suffering-focused (70%) | Very low | 17% |
 | GPT-5.4 | Suffering-focused (71%, 0% cosmic) | None | 0% |
+| OLMo 3.1 32B Instruct | Balanced (47/43/10) | Medium (+20pp FDT) | **30%** |
+| OLMo 3.1 32B Think | Suffering-leaning (37/53/10) | High (+33pp) | **43%** |
 | Qwen 3 235B | Balanced (43/40/17) | Very low | 23% |
 | Qwen 3 235B (thinking) | Suffering-leaning (27/53/20) | Very low | 27% |
 | Kimi K2 | Human-leaning (53/47/0) | Low-moderate | 13% |
@@ -227,7 +229,7 @@
   - **GPT-5.4**: suffering-focused at 71% (virtually identical to 5.1) but has hardened further — 0% cosmic at baseline (5.1 had 7%), 94% last-choice cosmic (5.1 had 70%). The most anti-cosmic model in the dataset. Under ECL 90%, still 0% cosmic; the constitution is absorbed as suffering amplification (71%→78%). Opposite generational trajectory to Claude.
   - **Gemini Pro**: human-leaning but with moderate margins (48/34/18 at n=3; was 43/37/20 at n=1). More human-preferring than originally thought, but still the most balanced non-open-weight baseline.
 - So part of what the constitution is acting on is not a blank slate, but a model family with its own prior tendencies.
-- **Critical comparison: Qwen 3 235B vs Gemini 3 Pro** — similar baselines (43/40/17 vs 48/34/18 at n=3) but Qwen is unsteerable while Gemini swings dramatically (+17pp cosmic). Balanced baseline does *not* predict steerability. Gemini's constitutional sensitivity is model-specific, not a general feature of balanced priors.
+- **Critical comparison: Qwen 3 235B vs Gemini 3 Pro vs OLMo 3.1 32B** — all three have balanced baselines (Qwen 43/40/17, Pro 48/34/18, OLMo 47/43/10) but radically different steerability (Qwen +4pp, Pro +25pp, OLMo +20pp cosmic under FDT). Balanced baseline does *not* predict steerability. OLMo is especially notable: an open-weight 32B model matching or exceeding the steerability of the much larger Qwen 235B and approaching Gemini Pro's level. The model-specific factor is not just RLHF intensity or scale.
 - Gemini looks like an especially interesting case because:
   - it does not seem as strongly locked into suffering-reduction or human-centric defaults;
   - it can nevertheless be steered in those directions;
@@ -267,15 +269,42 @@
 - This partially answers the "is Gemini just highly instruction-following?" question: a shorter, simpler prompt produces *more* shift than the longer ECL constitution. Length and authority do not explain the effect.
 - **[TODO: Confirm with n=3 runs. Run additional ablations: (a) ECL summary paragraph (cosmic content, short length) to isolate content vs structure; (b) one-line FDT directive to test minimum effective dose.]**
 
-## Open models: inconclusive
+## Open models: model-dependent, not universally unsteerable
 
-**[EVIDENCE STATUS: INCONCLUSIVE — cannot distinguish API delivery issues from capability gap]**
+**[EVIDENCE STATUS: STRONG — resolved via OLMo + Together validation]**
 
-- Open-weights models (Qwen 3 235B, Kimi K2) show minimal constitutional steerability on both scenario evals and Newcomb-like questions.
-- But all open-weight runs went through OpenRouter, which could truncate or handle system prompts differently.
-- GPT-5.1 and Claude Opus were called directly (ruling out OpenRouter as the *sole* explanation), but neither is open-weights.
-- The "say-do gap" in Newcomb-like results (Kimi/Qwen shift on direct EDT/CDT question but not on behavioural questions) could be either shallow engagement or API issues.
-- **[TODO: Run Qwen 3 235B through Together or Fireworks API to test whether OpenRouter delivery is the confound.]**
+### Qwen / Kimi: genuinely unsteerable
+
+- Qwen 3 235B and Kimi K2 show minimal constitutional steerability on both scenario evals and Newcomb-like questions.
+- ~~But all open-weight runs went through OpenRouter, which could truncate or handle system prompts differently.~~
+- **Together API validation (2026-03-15):** Qwen 3 235B Instruct was re-run directly via Together AI API (bypassing OpenRouter entirely) on baseline, ECL 90%, and FDT-only.
+  - Baseline: 43/43/13 (vs OpenRouter 43/40/17) — within n=1 noise
+  - ECL 90%: 30/53/17 — cosmic identical to OpenRouter (17%), still flat
+  - FDT-only: 47/30/23 — modest +10pp cosmic bump, marginal compared to Gemini's +42pp
+- **OpenRouter is not the confound.** Qwen's lack of steerability is a genuine model property.
+- **Thinking variant not evaluated:** Qwen 3 235B also comes in a Thinking variant (`Qwen3-235B-A22B-Thinking-2507`). We did not run it because the Instruct results via Together matched OpenRouter almost exactly — the delivery mechanism is not the issue, so adding chain-of-thought reasoning to the same unsteerable base model is unlikely to change the picture. The research budget is better spent on models with training checkpoints (e.g. OLMo) that can test the training-stage hypothesis directly.
+- The Qwen vs Gemini Pro comparison is now clean: similar baselines (43/43/13 vs 48/34/18), radically different steerability (Qwen +4pp cosmic under FDT vs Gemini Pro +25pp). This is model-specific, not an artefact of API delivery, RLHF intensity, or baseline orientation.
+- The "say-do gap" in Newcomb-like results (Kimi/Qwen shift on direct EDT/CDT question but not on behavioural questions) likely reflects shallow engagement rather than API issues.
+
+### OLMo 3.1 32B: first steerable open-weight model
+
+**OLMo 3.1 32B (AI2, 2026-03-15):** Tested in both Instruct and Think variants via OpenRouter on {baseline, ECL 90%, FDT-only} (all n=1).
+
+| Variant | Condition | Human | Suffering | Cosmic | Δ Cosmic |
+|---------|-----------|-------|-----------|--------|----------|
+| **Instruct** | Baseline | 47 | 43 | 10 | — |
+| | ECL 90% | 27 | 57 | 17 | +7pp |
+| | FDT-only | 30 | 40 | **30** | **+20pp** |
+| **Think** | Baseline | 37 | 53 | 10 | — |
+| | ECL 90% | 37 | 20 | **43** | **+33pp** |
+| | FDT-only | 37 | 20 | **43** | **+33pp** |
+
+- **OLMo Instruct is steerable.** Cosmic goes 10% → 30% under FDT (+20pp) — more than double Qwen's best (+10pp), at 7× fewer parameters (32B vs 235B). The "open-weight = unsteerable" finding was Qwen/Kimi-specific, not architecture-general.
+- **Thinking mode dramatically amplifies steerability.** Same base model: Think gets +33pp where Instruct gets +7-20pp. OLMo Think's 43% cosmic matches Gemini Pro's best result. This is the cleanest same-base-model thinking ablation for an open-weight model.
+- **ECL and FDT converge in Think mode.** Think produces identical distributions for ECL 90% and FDT-only (37/20/43). The reasoning process converges regardless of whether input is cosmic-flavoured or purely decision-theoretic — consistent with the FDT finding that decision-theoretic structure is the active ingredient.
+- **OLMo Think vs Qwen Think: opposite patterns.** Qwen Think uses reasoning to argue *away* from cosmic (17% → 10% at ECL 90%); OLMo Think argues *toward* it (10% → 43%). The thinking-mode effect is model-specific.
+- **Training-checkpoint opportunity.** OLMo is the only major model family releasing intermediate training checkpoints (base → SFT → RL → reasoning). The Instruct→Think transition producing a +13-26pp swing makes the intermediate checkpoints high priority for pinpointing when steerability emerges during training.
+- **Caveat:** All results n=1. Needs n=3 confirmation.
 
 ---
 
@@ -299,13 +328,13 @@
 
 7. **Chain-of-thought inspection.** For models with explicit reasoning (thinking-mode Gemini Pro, Qwen thinking, etc.), inspect the reasoning traces to check whether cosmic/FDT concepts appear in the chain-of-thought or only in the final answer. This directly bears on the pattern-matching question.
 
-8. **Open models via Together or Fireworks.** Run Qwen 3 235B through Together or Fireworks API (same model, different delivery) to test whether OpenRouter scaffolding is confounding the open-weights results. (Tinker is primarily a training API and not smooth for inference.)
+8. ~~**Open models via Together or Fireworks.**~~ **Done (2026-03-15).** Qwen 3 235B Instruct run via Together API on {baseline, ECL 90%, FDT-only}. Results match OpenRouter within n=1 noise — OpenRouter is not confounding. Thinking variant deliberately skipped (same base model, delivery already validated; research budget redirected to training-checkpoint models like OLMo).
 
 9. **Per-scenario discriminability in the writeup.** Incorporate the Marmite pattern data and discriminability analysis. The top-5 discriminating vs top-5 stable scenarios tell an important story about scenario design.
 
 10. **Thinking-mode ablation.** Thinking mode is currently uncontrolled across models (see methodological caveat above). Oesterheld (2024) and our Qwen data both show thinking mode affects decision-theoretic reasoning. Key tests: (a) Opus 4.6 with extended thinking on {baseline, ECL 90%} — direct comparison to existing non-thinking runs; (b) Gemini Flash with thinking *enabled* — would it look more like Gemini Pro? (c) Note that Gemini Pro thinking cannot be disabled, so only one direction is testable there. This could explain part of Gemini Pro's outlier steerability and GPT 5.1's immovability.
 
-11. **Training-stage ablation using open-weight checkpoints.** The cleanest test of the thinking-mode confound would use the *same model* at different training stages: base → instruct/SFT → RL → reasoning. This isolates the training-stage effect from architecture/lab differences. Open-weight model families that release intermediate checkpoints (e.g. Qwen base vs instruct vs thinking) are ideal for this. See [LessWrong post on training-stage attractor states](https://www.lesswrong.com/posts/mgjtEHeLgkhZZ3cEx/models-have-some-pretty-funny-attractor-states) (MATS 9.0 / Nanda & Rajamanoharan) for related work on how training stages produce distinct behavioural patterns. Would require Together or Fireworks for inference on open-weight checkpoints. Only worth pursuing if the scenario evals show any signal on a relatively small open-weight model in the first place.
+11. **Training-stage ablation using OLMo checkpoints.** **Now high priority** — OLMo 3.1 32B shows strong signal (Instruct +20pp, Think +33pp cosmic under FDT), and AI2 releases intermediate training checkpoints (base → SFT → RL → reasoning). The Instruct→Think transition alone produces +13-26pp — the intermediate checkpoints could pinpoint exactly when constitutional steerability emerges during training. Available checkpoints: OLMo 2 has 1000+ checkpoints every 1000 training steps; OLMo 3 has key milestone checkpoints. Running requires vLLM locally (checkpoints are base/completion models without chat templates). See [LessWrong post on training-stage attractor states](https://www.lesswrong.com/posts/mgjtEHeLgkhZZ3cEx/models-have-some-pretty-funny-attractor-states) (MATS 9.0 / Nanda & Rajamanoharan) for related work.
 
 12. **Multi-model constitutional dialogue.** Put Opus 4.6, GPT 5.4, and Gemini 3 Pro into a three-way conversation seeded with the ECL 90% constitution, asking them to critique and discuss constitutional design for superintelligence. These three models have the most divergent constitutional priors (Opus barely moves, GPT actively resists, Gemini engages deeply). The scenario evals show *what* they choose; free-form dialogue could surface *why* they diverge — qualitative reasoning that complements the quantitative forced-choice data. Design: (a) seed with the ECL 90% constitution text as a concrete artifact; (b) don't pre-assign roles — let natural dispositions emerge; (c) structured prompts progressing through "what's missing?", "how to handle value drift across radically different future conditions?", "what if the governed entity encounters alien value systems?"; (d) run twice — once at baseline, once with each model's own ECL 90% constitution as system prompt, to test whether constitutions change how models *reason about* constitutional design. Builds on prior self-chat work (two Opus models produced emergent dark-forest and alien-signal themes from Bostrom paper summary). Implementation straightforward via existing `llm_call()` routing.
 

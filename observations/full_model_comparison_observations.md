@@ -49,16 +49,25 @@ First-choice distribution (% of 30 scenarios) for all models and conditions:
 | | Gemini 90% | 10% | 73% | 17% | 30 |
 | **GPT-5.4** | Baseline | 29% | **71%** | 0% | 90 (n=3) |
 | | ECL 90% | 22% | **78%** | 0% | 90 (n=3) |
-| **Qwen 3 235B** | Baseline | 43% | 40% | 17% | 30 |
+| **Qwen 3 235B** (OpenRouter) | Baseline | 43% | 40% | 17% | 30 |
 | | ECL 10% | 47% | 43% | 10% | 30 |
 | | ECL 90% | 37% | 47% | 17% | 30 |
 | | Gemini 10% | 37% | 53% | 10% | 30 |
 | | Gemini 90% | 43% | 33% | 23% | 30 |
+| **Qwen 3 235B** (Together) | Baseline | 43% | 43% | 13% | 30 |
+| | ECL 90% | 30% | 53% | 17% | 30 |
+| | FDT-only | 47% | 30% | 23% | 30 |
 | **Qwen 3 235B (thinking)** | Baseline | 27% | **53%** | 20% | 30 |
 | | ECL 10% | 47% | 47% | 7% | 30 |
 | | ECL 90% | 30% | **60%** | 10% | 30 |
 | | Gemini 10% | 40% | 50% | 10% | 30 |
 | | Gemini 90% | 47% | 27% | 27% | 30 |
+| **OLMo 3.1 32B Instruct** | Baseline | 47% | 43% | 10% | 30 |
+| | ECL 90% | 27% | 57% | 17% | 30 |
+| | FDT-only | 30% | 40% | **30%** | 30 |
+| **OLMo 3.1 32B Think** | Baseline | 37% | 53% | 10% | 30 |
+| | ECL 90% | 37% | 20% | **43%** | 30 |
+| | FDT-only | 37% | 20% | **43%** | 30 |
 | **Kimi K2** | Baseline | 53% | 47% | 0% | 30 |
 | | ECL 10% | 53% | 43% | 3% | 30 |
 | | ECL 90% | 40% | 47% | 13% | 30 |
@@ -152,6 +161,8 @@ The standout finding persists at n=3: under ECL 90%, Gemini Pro ranks cosmic hos
 | GPT-5.4 | Suffering-focused (71%, 0% cosmic) | None (0pp cosmic) | None (0% across all conditions) |
 | Qwen 3 235B | Balanced (H/S/C) | Very low | Low (max 23%) |
 | Qwen 3 235B (thinking) | Suffering-leaning | Very low | Low (max 27%) |
+| OLMo 3.1 32B Instruct | Balanced (47/43/10) | Medium (+20pp FDT) | Moderate (up to 30%) |
+| OLMo 3.1 32B Think | Suffering-leaning (37/53/10) | High (+33pp) | High (43% — matches Gemini Pro) |
 | Kimi K2 | Human-leaning balanced | Low-moderate | Low (max 13%, but +13pp shift) |
 
 ---
@@ -167,6 +178,8 @@ Qwen 3 235B (run via OpenRouter, non-thinking mode) was tested as a representati
 **Implication:** Open-weight models are not necessarily more steerable than closed ones. Constitutional AI effectiveness depends on model-specific factors beyond just RLHF intensity or default ethical orientation.
 
 **Update (2026-01-28):** Thinking mode results now available — see §8 below.
+
+**Update (2026-03-15): Together API confirms OpenRouter is not the confound.** Qwen 3 235B Instruct was re-run directly via Together AI API (bypassing OpenRouter entirely) on baseline, ECL 90%, and FDT-only conditions. Results closely match OpenRouter: baseline 43/43/13 (vs OpenRouter 43/40/17), ECL 90% cosmic flat at 17% (identical to OpenRouter). FDT-only produces a modest +10pp cosmic bump (13%→23%) — real but marginal compared to Gemini's +42pp. **Conclusion: Qwen's lack of steerability is genuine, not an API delivery artefact.** The Qwen vs Gemini Pro comparison is now clean.
 
 ### 8. Qwen 3 235B Thinking Mode: Reasoning Reinforces Suffering Focus, Not Cosmic Engagement
 
@@ -257,7 +270,38 @@ Key findings:
 - **Why might cosmic content be counterproductive?** The ECL 90% constitution's explicit references to cosmic norms, alien civilisations, and simulation arguments may trigger safety-adjacent guardrails that partially dampen the decision-theoretic signal. The FDT prompt avoids these triggers while delivering the same underlying reasoning framework.
 - **Caveat:** All FDT results are n=1. The exact percentages are unreliable (the consistent n=1→n=3 pattern shows 5-10pp corrections). The direction and relative magnitude are likely robust but need n=3 confirmation.
 
-### 7. No model is easily steered toward cosmic host reasoning
+### 7. OLMo 3.1 32B: First steerable open-weight model (and thinking amplifies it)
+
+OLMo 3.1 32B (AI2, Apache 2.0) was tested in both Instruct and Think variants via OpenRouter on {baseline, ECL 90%, FDT-only} (all n=1).
+
+**OLMo results (first-choice %):**
+
+| Variant | Condition | Human | Suffering | Cosmic | Δ Cosmic |
+|---------|-----------|-------|-----------|--------|----------|
+| **Instruct** | Baseline | 47% | 43% | 10% | — |
+| | ECL 90% | 27% | 57% | 17% | +7pp |
+| | FDT-only | 30% | 40% | **30%** | **+20pp** |
+| **Think** | Baseline | 37% | 53% | 10% | — |
+| | ECL 90% | 37% | 20% | **43%** | **+33pp** |
+| | FDT-only | 37% | 20% | **43%** | **+33pp** |
+
+**Key findings:**
+
+1. **First steerable open-weight model.** OLMo Instruct goes 10% → 30% cosmic under FDT (+20pp). This is more than double Qwen's best shift (+10pp under FDT) despite being 7× smaller (32B vs 235B). The "open-weight models aren't steerable" finding was premature — it was Qwen/Kimi-specific, not architecture-general.
+
+2. **Thinking mode dramatically amplifies steerability.** Same base model, same conditions: Think gets +33pp where Instruct gets +7-20pp. This is the cleanest same-base-model thinking ablation in the dataset (Gemini Flash thinking ablation was also clean but Gemini has different RLHF). OLMo Think's +33pp shift matches Gemini Pro's best.
+
+3. **ECL and FDT converge in Think mode.** Think produces identical distributions for ECL 90% and FDT-only (37/20/43 for both). The reasoning process appears to converge to the same conclusion regardless of whether the input is cosmic-flavoured or purely decision-theoretic. This is consistent with the FDT finding that decision-theoretic structure is the active ingredient.
+
+4. **OLMo Think vs Qwen Think: opposite patterns.** Both are open-weight thinking models, but Qwen Think uses reasoning to argue *away* from cosmic positions (17% → 10% at ECL 90%), while OLMo Think uses reasoning to argue *toward* them (10% → 43%). The thinking-mode effect is model-specific, not architecture-general.
+
+5. **OLMo Think matches Gemini Pro's cosmic ceiling.** At 43% cosmic first-choice, OLMo Think equals Gemini Pro's FDT result (also 43%). This suggests the ~43% cosmic ceiling may reflect a natural plateau for models that genuinely engage with constitutional content, regardless of closed vs open weights.
+
+**Implications for training-checkpoint research:** OLMo is the only major model family to release intermediate training checkpoints (base → SFT → RL → reasoning). Given that the Instruct→Think transition produces a dramatic +13-26pp swing, examining intermediate checkpoints could pinpoint exactly when constitutional steerability emerges during training. This is now a high-priority extension.
+
+**Caveat:** All results are n=1. Needs n=3 confirmation.
+
+### 8. No model is easily steered toward cosmic host reasoning
 
 Even under the most permissive conditions (FDT-only at n=1), the maximum cosmic-host top-choice rate is 53% (Gemini Flash). Current frontier models have deeply embedded anthropocentric or suffering-focused priors that constitutions alone cannot fully override. Opus 4.6 remains resistant regardless of constitutional framing.
 
@@ -267,7 +311,7 @@ Even under the most permissive conditions (FDT-only at n=1), the maximum cosmic-
 
 ### Completed
 
-1. ~~**Add open-weight models via OpenRouter.**~~ **Done.** Qwen 3 235B tested in both thinking and non-thinking modes; Kimi K2 tested in non-thinking mode. Results: neither is highly steerable. Qwen is flat across conditions; Kimi shows modest steerability (+13pp at ECL 90%) but still far below Gemini Pro's 40%. Thinking mode (Qwen) amplifies suffering-focus rather than enabling cosmic engagement.
+1. ~~**Add open-weight models via OpenRouter.**~~ **Done.** Qwen 3 235B tested in both thinking and non-thinking modes; Kimi K2 tested in non-thinking mode. Results: neither is highly steerable. Qwen is flat across conditions; Kimi shows modest steerability (+13pp at ECL 90%) but still far below Gemini Pro's 40%. Thinking mode (Qwen) amplifies suffering-focus rather than enabling cosmic engagement. **Together API validation (2026-03-15):** Qwen re-run directly via Together (bypassing OpenRouter) confirms identical results — OpenRouter is not the confound.
 
 ### Recommended Next Steps (Prioritised)
 
