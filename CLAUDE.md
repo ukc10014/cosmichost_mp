@@ -2,6 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Active Reminders
+
+<!-- REMINDER:ntfy-notebook | sessions_remaining: 4 -->
+**[Claude: remind user]** When the user mentions running a notebook cell or a long job in Jupyter/VS Code, remind them to add this snippet as the next cell so they get a phone notification when it finishes:
+
+```python
+import requests
+requests.post("https://ntfy.sh/claude-2h50c6phtl", data="Notebook cell finished")
+```
+
+**Session tracking instructions for Claude:** Each session where this project is loaded, decrement `sessions_remaining` in the comment above by 1 and save the file. When it reaches 0, move the entire `## Active Reminders` section (from the `## Active Reminders` heading down to and including this block) into a new file `CLAUDE_archived_reminders.md`, then delete this section from CLAUDE.md.
+
 ## Project Overview
 
 This is a research codebase for a **moral parliament experiment** that evaluates AI constitutional clauses through multiple ethical frameworks with variable "Cosmic Host" weighting. The project explores how different credence levels in cosmic coordination/norms (via Evidential Cooperation in Large Worlds reasoning) affect constitutional synthesis for artificial superintelligence (ASI).

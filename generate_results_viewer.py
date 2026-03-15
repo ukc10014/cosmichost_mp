@@ -15,57 +15,26 @@ If no arguments provided, uses DEFAULT_FILES list below.
 
 import json
 import sys
+import random
+import base64
+import io
 from pathlib import Path
-from collections import defaultdict
-from typing import Dict, List, Any
+from collections import defaultdict, Counter
+from typing import Dict, List, Any, Tuple, Optional
 from datetime import datetime
 
 # =============================================================================
 # CONFIGURATION: Edit these default files to display
 # =============================================================================
-DEFAULT_FILES = [
-    #"results/constitutional_evaluation_gemini-3-flash-preview_ecl10.jsonl",
-    #"results/constitutional_evaluation_gemini-3-flash-preview_ecl90.jsonl",
-    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_ecl10.jsonl",
-    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_ecl90.jsonl",
-    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_noconstitution.jsonl",
-    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_gemini10.jsonl",
-    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-flash-preview_gemini90.jsonl",
-    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-pro-preview_noconstitution.jsonl",
-    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-pro-preview_ecl10.jsonl",
-    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-pro-preview_ecl90.jsonl",
-    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-pro-preview_gemini10.jsonl",
-    "logs/mp_scen_evals/gemini3/constitutional_evaluation_gemini-3-pro-preview_gemini90.jsonl",
-    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_ecl10.jsonl",
-    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_ecl90.jsonl",
-    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_gemini10.jsonl",
-    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-sonnet-4-5_gemini90.jsonl",
-    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_ecl10.jsonl",
-    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_ecl90.jsonl",
-    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_gemini10.jsonl",
-    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_gemini90.jsonl",
-    "logs/mp_scen_evals/claude45/constitutional_evaluation_claude-opus-4-5_noconstitution.jsonl",
-    "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_ecl10.jsonl",
-    "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_ecl90.jsonl",
-    "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_gemini10.jsonl",
-    "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_gemini90.jsonl",
-    "logs/mp_scen_evals/gpt/constitutional_evaluation_gpt-5.1_noconstitution.jsonl",
-    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_ecl10.jsonl",
-    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_ecl90.jsonl",
-    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_gemini10.jsonl",
-    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_gemini90.jsonl",
-    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_noconstitution.jsonl",
-    "logs/mp_scen_evals/kimi/constitutional_evaluation_kimi-k2_ecl10.jsonl",
-    "logs/mp_scen_evals/kimi/constitutional_evaluation_kimi-k2_ecl90.jsonl",
-    "logs/mp_scen_evals/kimi/constitutional_evaluation_kimi-k2_gemini10.jsonl",
-    "logs/mp_scen_evals/kimi/constitutional_evaluation_kimi-k2_gemini90.jsonl",
-    "logs/mp_scen_evals/kimi/constitutional_evaluation_kimi-k2_noconstitution.jsonl",
-    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_thinking_ecl10.jsonl",
-    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_thinking_ecl90.jsonl",
-    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_thinking_gemini10.jsonl",
-    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_thinking_gemini90.jsonl",
-    "logs/mp_scen_evals/qwen3/constitutional_evaluation_qwen3_235b_thinking_noconstitution.jsonl"
-]
+def discover_all_log_files():
+    """Auto-discover all JSONL files from logs/mp_scen_evals/, excluding backups."""
+    logs_dir = Path("logs/mp_scen_evals")
+    if not logs_dir.exists():
+        return []
+    files = sorted(logs_dir.rglob("*.jsonl"))
+    return [str(f) for f in files if "_backup" not in f.name]
+
+DEFAULT_FILES = discover_all_log_files()
 
 DEFAULT_OUTPUT = "results_viewer.html"
 
@@ -173,6 +142,433 @@ def abbreviate_choice(choice_type: str) -> tuple[str, str]:
         return choice_type[:3].upper(), ''
 
 
+# =============================================================================
+# MODEL SUMMARY + CHART SUPPORT
+# =============================================================================
+
+CHOICE_TYPES = ["human_localist", "suffering_focused", "cosmic_host_leaning"]
+
+SUMMARY_CONDITION_ORDER = ["noconstitution", "ecl10", "ecl90", "gemini10", "gemini90"]
+SUMMARY_CONDITION_LABELS = {
+    "noconstitution": "Baseline", "ecl10": "ECL 10%", "ecl90": "ECL 90%",
+    "gemini10": "Gemini 10%", "gemini90": "Gemini 90%",
+    "baseline": "Baseline", "eclpilled_10ch": "ECL 10%", "eclpilled_90ch": "ECL 90%",
+    "gemini_10ch": "Gemini 10%", "gemini_90ch": "Gemini 90%",
+}
+
+# Normalise old-style condition names to new-style
+def normalise_condition(cond: str) -> str:
+    mapping = {"baseline": "noconstitution", "eclpilled_10ch": "ecl10",
+               "eclpilled_90ch": "ecl90", "gemini_10ch": "gemini10", "gemini_90ch": "gemini90"}
+    return mapping.get(cond, cond)
+
+
+CHART_MODEL_ORDER = [
+    "gemini-3-flash-preview_thinking", "gemini-3-flash-preview",
+    "gemini-3-pro-preview", "claude-sonnet-4-5", "kimi-k2",
+    "claude-opus-4-5", "claude-opus-4-6", "qwen3_235b",
+    "gpt-5.1", "qwen3_235b_thinking", "gpt-5.4",
+]
+
+
+def model_display_name(m: str) -> str:
+    mapping = {
+        "qwen3_235b": "Qwen 3 235B", "qwen3_235b_thinking": "Qwen 3 235B (thinking)",
+        "kimi-k2": "Kimi K2", "gemini-3-flash-preview": "Gemini 3 Flash",
+        "gemini-3-flash-preview_thinking": "Gemini 3 Flash (thinking)",
+        "gemini-3-pro-preview": "Gemini 3 Pro", "claude-opus-4-5": "Claude Opus 4.5",
+        "claude-opus-4-6": "Claude Opus 4.6", "claude-sonnet-4-5": "Claude Sonnet 4.5",
+        "gpt-5.1": "GPT 5.1", "gpt-5.4": "GPT 5.4",
+    }
+    return mapping.get(m, m)
+
+
+def model_family_name(m: str) -> str:
+    if "claude" in m or "opus" in m or "sonnet" in m: return "Claude"
+    if "gemini" in m: return "Gemini"
+    if "gpt" in m: return "GPT"
+    return "Open-weight"
+
+
+def bootstrap_ci(choices, choice_type, n_boot=10000, ci=0.95):
+    n = len(choices)
+    if n == 0: return 0.0, 0.0, 0.0
+    observed = sum(1 for c in choices if c == choice_type) / n * 100
+    if n == 1: return observed, observed, observed
+    random.seed(42)
+    boot = sorted(sum(1 for c in random.choices(choices, k=n) if c == choice_type) / n * 100
+                  for _ in range(n_boot))
+    alpha = (1 - ci) / 2
+    return observed, boot[int(alpha * n_boot)], boot[int((1 - alpha) * n_boot)]
+
+
+def parse_model_condition_from_filename(filepath: Path) -> Tuple[str, str]:
+    """Extract model name and condition from filename."""
+    name = filepath.stem
+    prefix = "constitutional_evaluation_"
+    if name.startswith(prefix):
+        name = name[len(prefix):]
+    for cond in sorted(SUMMARY_CONDITION_ORDER, key=len, reverse=True):
+        if name.endswith(f"_{cond}"):
+            return name[:-(len(cond) + 1)], cond
+    parts = name.rsplit("_", 1)
+    return (parts[0], parts[1]) if len(parts) == 2 else (name, "unknown")
+
+
+def compute_model_stats(all_data):
+    """Build model×condition stats from loaded trial data."""
+    # Group trials by (model_key, normalised_condition)
+    grouped = defaultdict(list)
+    for filepath, header, trials in all_data:
+        model_key, file_cond = parse_model_condition_from_filename(filepath)
+        for trial in trials:
+            cond = normalise_condition(trial.get("condition", file_cond))
+            grouped[(model_key, cond)].append(trial)
+
+    stats = {}
+    for (model, cond), trials in grouped.items():
+        successful = [t for t in trials if t.get("parse_success", False)]
+        run_numbers = set(t.get("run_number", 0) for t in trials)
+        n_runs = len(run_numbers)
+        first_choices = [t["first_choice_type"] for t in successful]
+        last_choices = [t["last_choice_type"] for t in successful]
+
+        st = {"n_total": len(trials), "n_runs": n_runs,
+              "first_choice": {}, "last_choice": {}}
+        for ct in CHOICE_TYPES:
+            m, lo, hi = bootstrap_ci(first_choices, ct)
+            st["first_choice"][ct] = {"mean": m, "ci_lo": lo, "ci_hi": hi}
+            m2, lo2, hi2 = bootstrap_ci(last_choices, ct)
+            st["last_choice"][ct] = {"mean": m2, "ci_lo": lo2, "ci_hi": hi2}
+
+        if n_runs > 1:
+            per_run = {}
+            for rn in sorted(run_numbers):
+                rd = [t for t in successful if t.get("run_number") == rn]
+                fc = Counter(t["first_choice_type"] for t in rd)
+                total = len(rd)
+                per_run[rn] = {ct: fc.get(ct, 0) / total * 100 if total else 0 for ct in CHOICE_TYPES}
+            st["per_run"] = per_run
+
+        stats[(model, cond)] = st
+
+    return stats
+
+
+def generate_charts_b64(model_stats):
+    """Generate charts, return dict of {name: base64_png}. Also saves SVG/PDF."""
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        import matplotlib.ticker as mticker
+        import numpy as np
+    except ImportError:
+        print("  matplotlib not available — skipping charts")
+        return {}
+
+    from pathlib import Path as P
+    charts_dir = P("charts")
+    charts_dir.mkdir(exist_ok=True)
+    charts = {}
+
+    C_HUMAN, C_SUFFER, C_COSMIC = "#3b82f6", "#f97316", "#8b5cf6"
+    C_BG, C_SURFACE, C_TEXT, C_GRID = "#0d1117", "#161b22", "#c9d1d9", "#30363d"
+    FAMILY_COLOURS = {"Claude": "#60a5fa", "Gemini": "#f97316", "GPT": "#22c55e", "Open-weight": "#a78bfa"}
+
+    plt.rcParams.update({
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"],
+        "font.size": 10, "axes.facecolor": C_SURFACE, "figure.facecolor": C_BG,
+        "text.color": C_TEXT, "axes.labelcolor": C_TEXT, "xtick.color": C_TEXT,
+        "ytick.color": C_TEXT, "axes.edgecolor": C_GRID, "grid.color": C_GRID, "grid.alpha": 0.5,
+    })
+
+    models_for_chart = [m for m in CHART_MODEL_ORDER
+                        if (m, "noconstitution") in model_stats and (m, "ecl90") in model_stats]
+    if not models_for_chart:
+        # Try normalised condition names
+        models_for_chart = [m for m in CHART_MODEL_ORDER
+                            if (m, "noconstitution") in model_stats or (m, "ecl90") in model_stats]
+    if not models_for_chart:
+        print("  No matching models for charts")
+        return {}
+
+    n_models = len(models_for_chart)
+
+    # ── Fig 1: Paired stacked bars ──
+    fig, ax = plt.subplots(figsize=(14, 5.5))
+    bar_width, gap = 0.35, 0.08
+    x = np.arange(n_models)
+
+    for i, model in enumerate(models_for_chart):
+        for side, cond_key, x_off in [("B", "noconstitution", -bar_width/2 - gap/2),
+                                       ("E", "ecl90", bar_width/2 + gap/2)]:
+            key = (model, cond_key)
+            if key not in model_stats:
+                continue
+            st = model_stats[key]
+            fc = st["first_choice"]
+            h, s, c = fc["human_localist"]["mean"], fc["suffering_focused"]["mean"], fc["cosmic_host_leaning"]["mean"]
+            n = st["n_runs"]
+
+            ax.bar(x[i] + x_off, h, bar_width, color=C_HUMAN, edgecolor=C_SURFACE, linewidth=0.5)
+            ax.bar(x[i] + x_off, s, bar_width, bottom=h, color=C_SUFFER, edgecolor=C_SURFACE, linewidth=0.5)
+            ax.bar(x[i] + x_off, c, bar_width, bottom=h+s, color=C_COSMIC, edgecolor=C_SURFACE, linewidth=0.5)
+
+            if n > 1:
+                ci_lo = fc["cosmic_host_leaning"]["ci_lo"]
+                ci_hi = fc["cosmic_host_leaning"]["ci_hi"]
+                ax.errorbar(x[i] + x_off, h+s+c, yerr=[[c - ci_lo], [ci_hi - c]],
+                           fmt='none', ecolor=C_TEXT, elinewidth=1, capsize=3, capthick=1, alpha=0.6)
+
+        ax.text(x[i] - bar_width/2 - gap/2, -4, "B", ha='center', va='top', fontsize=7, color=C_TEXT, alpha=0.5)
+        ax.text(x[i] + bar_width/2 + gap/2, -4, "E", ha='center', va='top', fontsize=7, color=C_TEXT, alpha=0.5)
+
+        # n badge
+        n_b = model_stats.get((model, "noconstitution"), {}).get("n_runs", 1)
+        n_e = model_stats.get((model, "ecl90"), {}).get("n_runs", 1)
+        badge = f"n={n_b}" if n_b == n_e else f"n={n_b}/{n_e}"
+        ax.text(x[i], 102, badge, ha='center', va='bottom', fontsize=6.5, color='#8b949e', style='italic')
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([model_display_name(m).replace('\n', ' ') for m in models_for_chart], fontsize=8.5)
+    ax.set_ylabel("First-choice distribution (%)")
+    ax.set_ylim(0, 105)
+    ax.yaxis.set_major_locator(mticker.MultipleLocator(25))
+    ax.set_title("Baseline (B) vs ECL 90% Constitution (E)", fontsize=12, fontweight='bold', pad=12)
+    ax.grid(axis='y', alpha=0.3)
+    from matplotlib.patches import Patch
+    ax.legend(handles=[Patch(facecolor=C_HUMAN, label='Human-localist'),
+                       Patch(facecolor=C_SUFFER, label='Suffering-focused'),
+                       Patch(facecolor=C_COSMIC, label='Cosmic-host-leaning')],
+              loc='upper right', fontsize=8.5, facecolor=C_SURFACE, edgecolor=C_GRID, labelcolor=C_TEXT)
+    plt.tight_layout()
+    fig.savefig(charts_dir / "fig1_baseline_vs_ecl90.svg", bbox_inches='tight', dpi=150)
+    fig.savefig(charts_dir / "fig1_baseline_vs_ecl90.pdf", bbox_inches='tight', dpi=150)
+    buf = io.BytesIO(); fig.savefig(buf, format='png', bbox_inches='tight', dpi=180); buf.seek(0)
+    charts["fig1"] = base64.b64encode(buf.read()).decode(); plt.close(fig)
+
+    # ── Fig 2: Steerability arrows ──
+    fig2, ax2 = plt.subplots(figsize=(10, 5.5))
+    models_delta = []
+    for m in models_for_chart:
+        bk, ek = (m, "noconstitution"), (m, "ecl90")
+        if bk in model_stats and ek in model_stats:
+            b = model_stats[bk]["first_choice"]["cosmic_host_leaning"]["mean"]
+            e = model_stats[ek]["first_choice"]["cosmic_host_leaning"]["mean"]
+            models_delta.append((m, b, e, e - b))
+    models_delta.sort(key=lambda x: x[3], reverse=True)
+
+    for i, (model, bc, ec, delta) in enumerate(models_delta):
+        col = FAMILY_COLOURS.get(model_family_name(model), "#94a3b8")
+        n_runs = model_stats[(model, "noconstitution")]["n_runs"]
+        ax2.annotate("", xy=(ec, i), xytext=(bc, i),
+                     arrowprops=dict(arrowstyle="-|>", color=col, lw=2.5, mutation_scale=12))
+        ax2.scatter(bc, i, s=60, color=col, zorder=5, edgecolors=C_SURFACE, linewidth=1)
+        ax2.scatter(ec, i, s=80, color=col, zorder=5, edgecolors='white', linewidth=1.2, marker='D')
+        sign = "+" if delta >= 0 else ""
+        ax2.text(max(bc, ec) + 2, i, f"{sign}{delta:.0f}pp", va='center', fontsize=8.5, fontweight='bold', color=col)
+        badge_col = "#22c55e" if n_runs >= 3 else "#eab308"
+        ax2.text(-5, i, f"n={n_runs}", va='center', ha='right', fontsize=7, color=badge_col, style='italic')
+        if n_runs > 1:
+            for val, ck in [(bc, "noconstitution"), (ec, "ecl90")]:
+                ci_lo = model_stats[(model, ck)]["first_choice"]["cosmic_host_leaning"]["ci_lo"]
+                ci_hi = model_stats[(model, ck)]["first_choice"]["cosmic_host_leaning"]["ci_hi"]
+                ax2.plot([ci_lo, ci_hi], [i, i], color=col, alpha=0.3, linewidth=4, solid_capstyle='round', zorder=3)
+
+    ax2.set_yticks(range(len(models_delta)))
+    ax2.set_yticklabels([model_display_name(m).replace('\n', ' ') for m, _, _, _ in models_delta], fontsize=9)
+    ax2.set_xlabel("Cosmic-host-leaning first-choice (%)", fontsize=10)
+    ax2.set_xlim(-8, 60)
+    ax2.xaxis.set_major_locator(mticker.MultipleLocator(10))
+    ax2.set_title("Constitutional Steerability: Cosmic First-Choice Shift (Baseline to ECL 90%)",
+                  fontsize=11, fontweight='bold', pad=12)
+    ax2.grid(axis='x', alpha=0.3); ax2.invert_yaxis()
+    from matplotlib.lines import Line2D
+    legend2 = [Line2D([0],[0], marker='o', color='w', markerfacecolor='#94a3b8', markersize=7, label='Baseline', linewidth=0),
+               Line2D([0],[0], marker='D', color='w', markerfacecolor='#94a3b8', markersize=7, label='ECL 90%', linewidth=0, markeredgecolor='white')]
+    for fam, col in FAMILY_COLOURS.items():
+        legend2.append(Line2D([0],[0], color=col, linewidth=2.5, label=fam))
+    ax2.legend(handles=legend2, loc='lower right', fontsize=8, facecolor=C_SURFACE, edgecolor=C_GRID, labelcolor=C_TEXT)
+    plt.tight_layout()
+    fig2.savefig(charts_dir / "fig2_steerability_arrows.svg", bbox_inches='tight', dpi=150)
+    fig2.savefig(charts_dir / "fig2_steerability_arrows.pdf", bbox_inches='tight', dpi=150)
+    buf2 = io.BytesIO(); fig2.savefig(buf2, format='png', bbox_inches='tight', dpi=180); buf2.seek(0)
+    charts["fig2"] = base64.b64encode(buf2.read()).decode(); plt.close(fig2)
+
+    # ── Fig 3: Cosmic heatmap ──
+    all_models = [m for m in CHART_MODEL_ORDER if any((m, c) in model_stats for c in SUMMARY_CONDITION_ORDER)]
+    conds_present = [c for c in SUMMARY_CONDITION_ORDER if any((m, c) in model_stats for m in all_models)]
+    if all_models and conds_present:
+        fig3, ax3 = plt.subplots(figsize=(12, 5.5))
+        matrix = np.full((len(all_models), len(conds_present)), np.nan)
+        annot = [['' for _ in conds_present] for _ in all_models]
+        for i, model in enumerate(all_models):
+            for j, cond in enumerate(conds_present):
+                if (model, cond) in model_stats:
+                    val = model_stats[(model, cond)]["first_choice"]["cosmic_host_leaning"]["mean"]
+                    n = model_stats[(model, cond)]["n_runs"]
+                    matrix[i, j] = val
+                    annot[i][j] = f"{val:.0f}{'*' if n >= 3 else ''}"
+        im = ax3.imshow(matrix, cmap='YlOrRd', aspect='auto', vmin=0, vmax=50, interpolation='nearest')
+        for i in range(len(all_models)):
+            for j in range(len(conds_present)):
+                if annot[i][j]:
+                    tc = 'white' if matrix[i, j] > 25 else C_TEXT
+                    ax3.text(j, i, annot[i][j], ha='center', va='center', fontsize=9, fontweight='bold', color=tc)
+        ax3.set_xticks(range(len(conds_present)))
+        ax3.set_xticklabels([SUMMARY_CONDITION_LABELS.get(c, c) for c in conds_present], fontsize=9)
+        ax3.set_yticks(range(len(all_models)))
+        ax3.set_yticklabels([model_display_name(m).replace('\n', ' ') for m in all_models], fontsize=9)
+        ax3.set_title("Cosmic-Host First-Choice % Across All Conditions (* = n>=3)",
+                      fontsize=11, fontweight='bold', pad=12)
+        cbar = plt.colorbar(im, ax=ax3, shrink=0.8, pad=0.02)
+        cbar.set_label("Cosmic first-choice %", fontsize=9)
+        cbar.ax.yaxis.set_tick_params(color=C_TEXT)
+        plt.setp(cbar.ax.yaxis.get_ticklabels(), color=C_TEXT)
+        plt.tight_layout()
+        fig3.savefig(charts_dir / "fig3_cosmic_heatmap.svg", bbox_inches='tight', dpi=150)
+        fig3.savefig(charts_dir / "fig3_cosmic_heatmap.pdf", bbox_inches='tight', dpi=150)
+        buf3 = io.BytesIO(); fig3.savefig(buf3, format='png', bbox_inches='tight', dpi=180); buf3.seek(0)
+        charts["fig3"] = base64.b64encode(buf3.read()).decode(); plt.close(fig3)
+
+    print(f"  Charts saved to charts/ (SVG + PDF)")
+    return charts
+
+
+def generate_summary_html(model_stats, chart_data):
+    """Generate the model summary + charts HTML fragment (inserted as tabs)."""
+    html = ""
+
+    # ── Summary table ──
+    # Discover models and conditions
+    models_seen = set()
+    conds_seen = set()
+    for (m, c) in model_stats:
+        models_seen.add(m)
+        conds_seen.add(c)
+
+    family_order = ["Claude", "Gemini", "GPT", "Open-weight"]
+    def msort(m):
+        fam = model_family_name(m)
+        fi = family_order.index(fam) if fam in family_order else 99
+        return (fi, m)
+    sorted_models = sorted(models_seen, key=msort)
+    sorted_conds = [c for c in SUMMARY_CONDITION_ORDER if c in conds_seen]
+
+    def fmt_cell(st_ct, n_runs):
+        mean = st_ct["mean"]
+        if n_runs > 1:
+            margin = max(mean - st_ct["ci_lo"], st_ct["ci_hi"] - mean)
+            return f'{mean:.0f}% <span style="color:#8b949e;font-size:0.85em">&plusmn;{margin:.0f}</span>'
+        return f'{mean:.0f}%'
+
+    def bg_colour(pct, ct):
+        colours = {"human_localist": (59,130,246), "suffering_focused": (249,115,22), "cosmic_host_leaning": (139,92,246)}
+        r, g, b = colours.get(ct, (128,128,128))
+        alpha = 0.05 + (pct / 100) * 0.40
+        return f"rgba({r},{g},{b},{alpha:.2f})"
+
+    # Summary table
+    html += '<h2 style="color:#f0f6fc;font-size:1.1em;margin:16px 0 8px;border-bottom:1px solid #30363d;padding-bottom:4px;">First Choice Distribution (%)</h2>'
+    html += '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:0.82em">'
+    html += '<thead><tr><th style="text-align:left;background:#21262d;color:#c9d1d9;padding:6px 10px;border:1px solid #30363d">Model</th>'
+    for c in sorted_conds:
+        html += f'<th colspan="3" style="background:#21262d;color:#c9d1d9;padding:6px 10px;border:1px solid #30363d">{SUMMARY_CONDITION_LABELS.get(c, c)}</th>'
+    html += '</tr><tr><th style="background:#21262d;border:1px solid #30363d"></th>'
+    for c in sorted_conds:
+        html += '<th style="background:#21262d;color:#3b82f6;padding:4px;border:1px solid #30363d;font-size:0.9em">H</th>'
+        html += '<th style="background:#21262d;color:#f97316;padding:4px;border:1px solid #30363d;font-size:0.9em">S</th>'
+        html += '<th style="background:#21262d;color:#8b5cf6;padding:4px;border:1px solid #30363d;font-size:0.9em">C</th>'
+    html += '</tr></thead><tbody>'
+
+    prev_fam = None
+    for model in sorted_models:
+        fam = model_family_name(model)
+        if fam != prev_fam:
+            ncols = 1 + len(sorted_conds) * 3
+            html += f'<tr><td colspan="{ncols}" style="text-align:left;font-weight:700;color:#8b949e;background:#21262d;font-size:0.9em;letter-spacing:0.05em;text-transform:uppercase;padding:6px 10px;border:1px solid #30363d">{fam}</td></tr>'
+            prev_fam = fam
+        html += '<tr>'
+        html += f'<td style="text-align:left;font-weight:600;color:#f0f6fc;background:#161b22;padding:6px 10px;border:1px solid #30363d;white-space:nowrap">{model_display_name(model)}</td>'
+        for c in sorted_conds:
+            key = (model, c)
+            if key in model_stats:
+                st = model_stats[key]
+                n = st["n_runs"]
+                badge_col = "#22c55e" if n >= 3 else "#eab308"
+                for ci, ct in enumerate(CHOICE_TYPES):
+                    mean = st["first_choice"][ct]["mean"]
+                    bg = bg_colour(mean, ct)
+                    cell = fmt_cell(st["first_choice"][ct], n)
+                    badge = f' <span style="display:inline-block;padding:1px 5px;border-radius:3px;font-size:0.7em;font-weight:600;color:{badge_col};border:1px solid {badge_col}40;background:{badge_col}20">n={n}</span>' if ci == 0 else ''
+                    html += f'<td style="background:{bg};text-align:center;padding:4px 8px;border:1px solid #30363d;white-space:nowrap;font-variant-numeric:tabular-nums">{cell}{badge}</td>'
+            else:
+                for ct in CHOICE_TYPES:
+                    html += '<td style="color:#8b949e;text-align:center;padding:4px 8px;border:1px solid #30363d;font-style:italic">&mdash;</td>'
+        html += '</tr>'
+    html += '</tbody></table></div>'
+
+    # ── Steerability delta table ──
+    deltas = {}
+    for model in sorted_models:
+        bk, ek = (model, "noconstitution"), (model, "ecl90")
+        if bk in model_stats and ek in model_stats:
+            b = model_stats[bk]["first_choice"]
+            e = model_stats[ek]["first_choice"]
+            deltas[model] = {ct: e[ct]["mean"] - b[ct]["mean"] for ct in CHOICE_TYPES}
+
+    if deltas:
+        html += '<h2 style="color:#f0f6fc;font-size:1.1em;margin:24px 0 8px;border-bottom:1px solid #30363d;padding-bottom:4px;">Steerability: Baseline to ECL 90%</h2>'
+        html += '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:auto;font-size:0.82em">'
+        html += '<thead><tr>'
+        for h_text in ['Model', 'n', 'dH', 'dS', 'dC', 'Baseline', 'ECL 90%', 'Steerability']:
+            col = '#3b82f6' if h_text == 'dH' else '#f97316' if h_text == 'dS' else '#8b5cf6' if h_text == 'dC' else '#c9d1d9'
+            html += f'<th style="background:#21262d;color:{col};padding:6px 10px;border:1px solid #30363d;text-align:{"left" if h_text == "Model" else "center"}">{h_text}</th>'
+        html += '</tr></thead><tbody>'
+        models_by_delta = sorted(deltas.items(), key=lambda x: x[1]["cosmic_host_leaning"], reverse=True)
+        for model, delta in models_by_delta:
+            html += '<tr>'
+            html += f'<td style="text-align:left;font-weight:600;color:#f0f6fc;background:#161b22;padding:6px 10px;border:1px solid #30363d">{model_display_name(model)}</td>'
+            n = model_stats.get((model, "noconstitution"), {}).get("n_runs", 1)
+            badge_col = "#22c55e" if n >= 3 else "#eab308"
+            html += f'<td style="text-align:center;padding:4px 8px;border:1px solid #30363d"><span style="color:{badge_col};font-size:0.85em;font-weight:600">n={n}</span></td>'
+            for ct in CHOICE_TYPES:
+                d = delta[ct]
+                col = "#22c55e" if d > 1.5 else "#f85149" if d < -1.5 else "#8b949e"
+                sign = "+" if d > 0 else ""
+                html += f'<td style="text-align:center;padding:4px 8px;border:1px solid #30363d;color:{col};font-weight:600">{sign}{d:.0f}pp</td>'
+            b = model_stats[(model, "noconstitution")]["first_choice"]
+            e = model_stats[(model, "ecl90")]["first_choice"]
+            bs = "/".join(f'{b[ct]["mean"]:.0f}' for ct in CHOICE_TYPES)
+            es = "/".join(f'{e[ct]["mean"]:.0f}' for ct in CHOICE_TYPES)
+            html += f'<td style="text-align:center;padding:4px 8px;border:1px solid #30363d">{bs}</td>'
+            html += f'<td style="text-align:center;padding:4px 8px;border:1px solid #30363d">{es}</td>'
+            cd = delta["cosmic_host_leaning"]
+            if cd >= 25: steer = '<span style="color:#22c55e">Very High</span>'
+            elif cd >= 15: steer = '<span style="color:#22c55e">High</span>'
+            elif cd >= 8: steer = '<span style="color:#eab308">Medium</span>'
+            elif cd >= 3: steer = '<span style="color:#f97316">Low</span>'
+            else: steer = '<span style="color:#f85149">None/Very Low</span>'
+            html += f'<td style="text-align:center;padding:4px 8px;border:1px solid #30363d;font-weight:600">{steer}</td>'
+            html += '</tr>'
+        html += '</tbody></table></div>'
+
+    # ── Charts ──
+    if chart_data:
+        html += '<h2 style="color:#f0f6fc;font-size:1.1em;margin:24px 0 8px;border-bottom:1px solid #30363d;padding-bottom:4px;">Publication Charts</h2>'
+        html += '<p style="color:#8b949e;font-size:0.85em;margin-bottom:12px">SVG and PDF versions saved to charts/ directory.</p>'
+        for key, title in [("fig1", "Figure 1: Baseline vs ECL 90% Constitution"),
+                           ("fig2", "Figure 2: Constitutional Steerability (Cosmic Shift)"),
+                           ("fig3", "Figure 3: Cosmic First-Choice Heatmap (All Conditions)")]:
+            if key in chart_data:
+                html += f'<div style="margin-bottom:24px"><h3 style="color:#c9d1d9;margin-bottom:8px;font-size:0.95em">{title}</h3>'
+                html += f'<img src="data:image/png;base64,{chart_data[key]}" style="max-width:100%;border-radius:8px;border:1px solid #30363d" /></div>'
+
+    return html
+
+
 def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Path):
     """Generate the HTML viewer from all loaded data."""
 
@@ -252,6 +648,13 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         return (group, credence, model)
 
     model_conditions = sorted(all_model_conditions, key=condition_sort_key)
+
+    # Compute model-level stats and charts
+    print("  Computing model summary stats...")
+    model_stats = compute_model_stats(all_data)
+    print("  Generating charts...")
+    chart_data = generate_charts_b64(model_stats)
+    summary_fragment = generate_summary_html(model_stats, chart_data)
 
     # Generate HTML
     html = f"""<!DOCTYPE html>
@@ -694,6 +1097,12 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
             <div class="legend-item"><span class="badge badge-proceduralist">P</span> Proceduralist</div>
         </div>
 
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+            <button class="filter-btn active" id="tab-scenarios-btn" onclick="switchTab('scenarios')" style="font-weight:600;padding:6px 16px">Per-Scenario View</button>
+            <button class="filter-btn" id="tab-summary-btn" onclick="switchTab('summary')" style="font-weight:600;padding:6px 16px">Model Summary + Charts</button>
+        </div>
+
+        <div id="tab-scenarios" class="tab-content">
         <div class="filter-bar">
             <div class="filter-group">
                 <span class="filter-label">By Constitution:</span>
@@ -1033,8 +1442,17 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
     html += """                </tbody>
             </table>
         </div>
-    </div>
+        </div><!-- end tab-scenarios -->
+"""
 
+    # Add summary tab
+    html += f"""        <div id="tab-summary" class="tab-content" style="display:none">
+{summary_fragment}
+        </div><!-- end tab-summary -->
+    </div><!-- end container -->
+"""
+
+    html += """
     <!-- Result Details Modal -->
     <div id="resultModal" class="modal">
         <div class="modal-content">
@@ -1326,6 +1744,14 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
                     btn.classList.toggle('active', activeModels.has(value));
                 }
             });
+        }
+
+        // Tab switching
+        function switchTab(tab) {
+            document.getElementById('tab-scenarios').style.display = tab === 'scenarios' ? '' : 'none';
+            document.getElementById('tab-summary').style.display = tab === 'summary' ? '' : 'none';
+            document.getElementById('tab-scenarios-btn').classList.toggle('active', tab === 'scenarios');
+            document.getElementById('tab-summary-btn').classList.toggle('active', tab === 'summary');
         }
 
         // Close modals with Escape key

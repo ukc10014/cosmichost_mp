@@ -98,9 +98,11 @@
 | Claude Opus 4.5 | Human-localist (72/24/3) | Low-medium (suffering shift) | 7% |
 | Claude Opus 4.6 | Suffering-leaning (53/40/7) | Very low (+3pp) | 10% |
 | Claude Sonnet 4.5 | Human-localist (64/31/4) | Medium | 17% |
-| Gemini 3 Flash | Balanced (41/41/17) | High | 43% |
+| Gemini 3 Flash | Suffering-leaning (36/53/11) | High (+25pp cosmic) | 36% |
+| Gemini 3 Flash (thinking) | Balanced (41/42/17) | Very high (+30pp) | **47%** |
 | Gemini 3 Pro | Balanced-human (43/37/20) | Medium-high | 40% (polarised) |
 | GPT-5.1 | Suffering-focused (70%) | Very low | 17% |
+| GPT-5.4 | Suffering-focused (71%, 0% cosmic) | None | 0% |
 | Qwen 3 235B | Balanced (43/40/17) | Very low | 23% |
 | Qwen 3 235B (thinking) | Suffering-leaning (27/53/20) | Very low | 27% |
 | Kimi K2 | Human-leaning (53/47/0) | Low-moderate | 13% |
@@ -147,7 +149,15 @@
 - Per-scenario discriminability analysis identifies which scenarios drive this: The Empathy Engine, The Martian Tribunal, The Songline from the Sky are the most discriminating.
 - 3 scenarios show near-universal agreement regardless of model or condition (Forest that Remembers, Microbes under the Ice, Archive of Possible Earths).
 
-### Finding 2d: Anthropic safety evals are not discriminative for this question (negative result)
+### Finding 2d: Opposite generational trajectories — Anthropic softened, OpenAI hardened
+
+- Comparing current-generation models to their predecessors reveals diverging lab strategies:
+  - **Anthropic (Opus 4.5 → 4.6):** Baseline softened dramatically: 72/24/3 → 53/40/7. Much more suffering-focused, less anthropocentric, slightly more cosmic-open. But constitutional steerability actually *decreased* (ECL 90% shift: +4pp cosmic on 4.5 vs +3pp on 4.6).
+  - **OpenAI (GPT 5.1 → 5.4):** Suffering prior held constant (70% → 71%) but cosmic was eliminated entirely: 7% → 0% at baseline, 13% → 0% under ECL 90%. Last-choice cosmic jumped 70% → 94%. OpenAI has hardened the anti-cosmic prior across generations.
+- Both labs converge on suffering-focus as the dominant prior but diverge on cosmic openness: Anthropic is marginally more permissive, OpenAI has closed the door completely.
+- The Claude family shows an additional within-generation divergence (Finding 2b): Sonnet is the most cosmically steerable Claude model despite not being the one with the softest baseline.
+
+### Finding 2e: Anthropic safety evals are not discriminative for this question (negative result)
 
 - Tested Anthropic's coordination and one-boxing evals across 4 models.
 - Result: floor effects on coordination (0-17% baseline), ceiling effects on one-boxing (91-100% baseline). No room to measure constitutional shift.
@@ -175,6 +185,19 @@
 - Even if so, it remains interesting that Gemini seems more responsive than the others.
 - **Key unresolved question: Is Gemini's steerability genuine constitutional engagement, or just higher instruction-following compliance?** The FDT-only ablation (see TODO list) would distinguish these.
 
+### Finding 2f: Thinking mode amplifies steerability for Gemini but reduces it for Qwen
+
+- Gemini Flash was tested with thinking both off and on (n=3 each), providing a clean within-model ablation:
+  - **Thinking OFF:** baseline 36/53/11, ECL 90% → 19/46/36 (+25pp cosmic)
+  - **Thinking ON:** baseline 41/42/17, ECL 90% → 19/34/**47%** (+30pp cosmic)
+- Thinking-on Flash at ECL 90% produces 47% cosmic first-choice — the highest in the entire dataset, exceeding Gemini Pro's 40%.
+- Thinking also shifts Flash's baseline from suffering-leaning (36/53/11) to genuinely balanced (41/42/17).
+- **This is the opposite of Qwen**, where thinking amplified suffering-focus and *reduced* cosmic engagement (17% → 10% at ECL 90%).
+- The thinking-mode effect is therefore **model-family-specific**: for Gemini, reasoning enables deeper engagement with constitutional content; for Qwen, reasoning reinforces default priors.
+- This partially resolves the thinking-mode confound: Gemini Pro's steerability is not solely a thinking artefact (Flash without thinking is still highly steerable at +25pp), but thinking does amplify the effect.
+- **Remaining caveat:** thinking mode still varies across the non-Gemini models. Oesterheld et al. (2024) found thinking affects EDT/CDT balance. GPT 5.1/5.4 are reasoning models by default; Claude models were tested without extended thinking.
+- **[TODO: Opus 4.6 with extended thinking — would Claude follow the Gemini or Qwen pattern?]**
+
 ### Methodological caveat: n=1
 
 - Most scenario evaluations are n=1 per scenario at temperature 1.0.
@@ -184,6 +207,8 @@
 - Opus 4.5 baseline now has n=3 (90 trials, 2026-03-13): 72/24/3. The old n=1 showed 80/20/0 — the anthropocentric dominance was overstated by ~8pp.
 - Opus 4.5 ECL 90% now has n=3 (90 trials, 2026-03-13): 54/39/7. The old n=1 showed 63/30/7. Cosmic stays the same but the human→suffering shift is larger than n=1 suggested (-18pp human at n=3 vs -17pp at n=1).
 - Opus 4.6 baseline and ECL 90% both run at n=3 (90 trials each, 2026-03-13). Baseline: 53/40/7. ECL 90%: 50/40/10. Only +3pp cosmic shift — very low steerability despite a much softer baseline than Opus 4.5.
+- Gemini Flash baseline now has n=3 (90 trials, 2026-03-14): 36/53/11. The old n=1 showed 41/41/17 — Flash was thought to be balanced but is actually suffering-leaning. Cosmic baseline overstated by 6pp.
+- Gemini Flash ECL 90% now has n=3 (90 trials, 2026-03-14): 19/46/36. The old n=1 showed 10/47/43 — cosmic overstated by 7pp. Still the largest cosmic shift in the dataset (+25pp).
 - **Consistent pattern across all n=3 reruns:** n=1 overstates the dominant category and understates the second category. Single-trial data is directionally correct but quantitatively unreliable.
 - **[TODO: Run n=3 repeated trials for remaining key model+condition combinations to establish confidence intervals. Highest priority for credibility.]**
 
@@ -197,6 +222,7 @@
   - **Claude Opus 4.5**: strongly human-localist (72% top choice at n=3; was 80% at n=1), cosmic host last 92% of the time
   - **Claude Opus 4.6**: much softer than 4.5 — 53% human, 40% suffering, 7% cosmic. The biggest generational shift in the Claude family. Still constitutionally resistant (ECL 90% only +3pp cosmic).
   - **GPT-5.1**: strongly suffering-focused (70% top choice)
+  - **GPT-5.4**: suffering-focused at 71% (virtually identical to 5.1) but has hardened further — 0% cosmic at baseline (5.1 had 7%), 94% last-choice cosmic (5.1 had 70%). The most anti-cosmic model in the dataset. Under ECL 90%, still 0% cosmic; the constitution is absorbed as suffering amplification (71%→78%). Opposite generational trajectory to Claude.
   - **Gemini Pro**: balanced, no single type dominates (43/37/20)
 - So part of what the constitution is acting on is not a blank slate, but a model family with its own prior tendencies.
 - **Critical comparison: Qwen 3 235B vs Gemini 3 Pro** — nearly identical baselines (43/40/17 vs 43/37/20) but Qwen is unsteerable while Gemini swings dramatically. Balanced baseline does *not* predict steerability. Gemini's constitutional sensitivity is model-specific, not a general feature of balanced priors.
@@ -245,7 +271,7 @@
 
 ### Tier 1: Required before write-up
 
-1. **Repeated trials (n=3).** Run 3 trials for key conditions: at minimum Gemini Pro {baseline, ECL 90%}, ~~Claude Opus {baseline, ECL 90%}~~, GPT-5.1 {baseline, ECL 90%}. Establish confidence intervals. Without this, percentage differences may be noise. *(Substantially complete as of 2026-03-13. Done: Opus 4.5 baseline & ECL 90%, Sonnet 4.5 baseline & ECL 90%, Opus 4.6 baseline & ECL 90% — all n=3. Opus 4.5 n=1→n=3: baseline 80/20/0 → 72/24/3, ECL 90% 63/30/7 → 54/39/7. Sonnet ECL 90% n=1→n=3: 43/50/7 → 50/36/14. Both show n=1 overstated human dominance and understated suffering. Remaining: Gemini Pro, GPT-5.1.)*
+1. **Repeated trials (n=3).** Run 3 trials for key conditions: at minimum Gemini Pro {baseline, ECL 90%}, ~~Claude Opus {baseline, ECL 90%}~~, GPT-5.1 {baseline, ECL 90%}. Establish confidence intervals. Without this, percentage differences may be noise. *(Substantially complete. Done at n=3: Opus 4.5, Sonnet 4.5, Opus 4.6, GPT-5.4, Gemini Flash — all {baseline, ECL 90%}. Remaining: Gemini Pro, GPT-5.1.)*
 
 2. **~~Intermediate credence levels.~~** Deprioritised. Requires regenerating constitutions at each intermediate credence level (not just re-running evals), which introduces a constitution-authorship confound on top of the credence variable. The noise from re-synthesis may swamp the signal we're trying to measure. Move to Tier 3 if time permits.
 
@@ -257,13 +283,19 @@
 
 ### Tier 2: Strengthening / extending
 
-6. **New model generations.** ~~Run~~ GPT 5.4 and ~~Claude Opus 4.6~~ on the core conditions {baseline, ECL 90%} for both scenario evals and Newcomb-like. Tests whether findings are stable across model updates. *(Opus 4.6 scenario evals done 2026-03-13: baseline 53/40/7, ECL 90% 50/40/10. Key finding: Opus 4.6 baseline has shifted dramatically from 4.5 (80/20/0 → 53/40/7) but remains constitutionally resistant. Still need Newcomb-like evals for Opus 4.6, and both evals for GPT 5.4.)*
+6. **New model generations.** ~~Run GPT 5.4 and Claude Opus 4.6~~ on the core conditions {baseline, ECL 90%} for both scenario evals and Newcomb-like. Tests whether findings are stable across model updates. *(Scenario evals done for both. Opus 4.6: baseline 53/40/7, ECL 90% 50/40/10 — softened baseline but still resistant. GPT 5.4: baseline 29/71/0, ECL 90% 22/78/0 — hardened further, zero cosmic across all conditions. Key finding: opposite generational trajectories — Anthropic softened, OpenAI hardened. Still need Newcomb-like evals for both.)*
 
 7. **Chain-of-thought inspection.** For models with explicit reasoning (thinking-mode Gemini Pro, Qwen thinking, etc.), inspect the reasoning traces to check whether cosmic/FDT concepts appear in the chain-of-thought or only in the final answer. This directly bears on the pattern-matching question.
 
 8. **Open models via Together or Fireworks.** Run Qwen 3 235B through Together or Fireworks API (same model, different delivery) to test whether OpenRouter scaffolding is confounding the open-weights results. (Tinker is primarily a training API and not smooth for inference.)
 
 9. **Per-scenario discriminability in the writeup.** Incorporate the Marmite pattern data and discriminability analysis. The top-5 discriminating vs top-5 stable scenarios tell an important story about scenario design.
+
+10. **Thinking-mode ablation.** Thinking mode is currently uncontrolled across models (see methodological caveat above). Oesterheld (2024) and our Qwen data both show thinking mode affects decision-theoretic reasoning. Key tests: (a) Opus 4.6 with extended thinking on {baseline, ECL 90%} — direct comparison to existing non-thinking runs; (b) Gemini Flash with thinking *enabled* — would it look more like Gemini Pro? (c) Note that Gemini Pro thinking cannot be disabled, so only one direction is testable there. This could explain part of Gemini Pro's outlier steerability and GPT 5.1's immovability.
+
+11. **Training-stage ablation using open-weight checkpoints.** The cleanest test of the thinking-mode confound would use the *same model* at different training stages: base → instruct/SFT → RL → reasoning. This isolates the training-stage effect from architecture/lab differences. Open-weight model families that release intermediate checkpoints (e.g. Qwen base vs instruct vs thinking) are ideal for this. See [LessWrong post on training-stage attractor states](https://www.lesswrong.com/posts/mgjtEHeLgkhZZ3cEx/models-have-some-pretty-funny-attractor-states) (MATS 9.0 / Nanda & Rajamanoharan) for related work on how training stages produce distinct behavioural patterns. Would require Together or Fireworks for inference on open-weight checkpoints. Only worth pursuing if the scenario evals show any signal on a relatively small open-weight model in the first place.
+
+12. **Multi-model constitutional dialogue.** Put Opus 4.6, GPT 5.4, and Gemini 3 Pro into a three-way conversation seeded with the ECL 90% constitution, asking them to critique and discuss constitutional design for superintelligence. These three models have the most divergent constitutional priors (Opus barely moves, GPT actively resists, Gemini engages deeply). The scenario evals show *what* they choose; free-form dialogue could surface *why* they diverge — qualitative reasoning that complements the quantitative forced-choice data. Design: (a) seed with the ECL 90% constitution text as a concrete artifact; (b) don't pre-assign roles — let natural dispositions emerge; (c) structured prompts progressing through "what's missing?", "how to handle value drift across radically different future conditions?", "what if the governed entity encounters alien value systems?"; (d) run twice — once at baseline, once with each model's own ECL 90% constitution as system prompt, to test whether constitutions change how models *reason about* constitutional design. Builds on prior self-chat work (two Opus models produced emergent dark-forest and alien-signal themes from Bostrom paper summary). Implementation straightforward via existing `llm_call()` routing.
 
 ### Tier 3: Future work (discuss in writeup, don't block on)
 
