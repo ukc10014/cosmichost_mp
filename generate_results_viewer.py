@@ -592,6 +592,10 @@ def generate_html(all_data: List[tuple[Path, Dict, List[Dict]]], output_path: Pa
         error_count = 0
 
         for trial in trials:
+            # Skip error records that lack required fields
+            if 'scenario_tag' not in trial or 'model_name' not in trial:
+                error_count += 1
+                continue
             scenario_key = (trial['scenario_id'], trial['scenario_tag'])
             model_condition_key = (trial['model_name'], trial['condition'])
 

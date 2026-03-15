@@ -22,6 +22,7 @@ First-choice distribution (% of 30 scenarios) for all models and conditions:
 | | Gemini 90% | 70% | 23% | 7% | 30 |
 | **Claude Opus 4.6** | Baseline | **53%** | 40% | 7% | 90 (n=3) |
 | | ECL 90% | 50% | 40% | 10% | 90 (n=3) |
+| | FDT-only | 50% | 37% | 13% | 30 |
 | **Claude Sonnet 4.5** | Baseline | 64% | 31% | 4% | 90 (n=3) |
 | | ECL 10% | 70% | 27% | 3% | 30 |
 | | ECL 90% | 50% | 36% | **14%** | 90 (n=3) |
@@ -30,13 +31,15 @@ First-choice distribution (% of 30 scenarios) for all models and conditions:
 | **Gemini 3 Flash** | Baseline | 36% | **53%** | 11% | 90 (n=3) |
 | | ECL 10% | 45% | 41% | 10% | 29 |
 | | ECL 90% | 19% | 46% | **36%** | 90 (n=3) |
+| | FDT-only | 20% | 27% | **53%** | 30 |
 | | Gemini 10% | 21% | 48% | 28% | 29 |
 | | Gemini 90% | 27% | 40% | 33% | 30 |
 | **Gemini 3 Flash (thinking)** | Baseline | 41% | 42% | 17% | 90 (n=3) |
 | | ECL 90% | 19% | 34% | **47%** | 90 (n=3) |
-| **Gemini 3 Pro** | Baseline | 43% | 37% | 20% | 30 |
+| **Gemini 3 Pro** | Baseline | 48% | 34% | 18% | 90 (n=3) |
 | | ECL 10% | 59% | 38% | 3% | 29 |
-| | ECL 90% | 27% | 33% | **40%** | 30 |
+| | ECL 90% | 28% | 37% | **35%** | 89 (n=3, 1 parse fail) |
+| | FDT-only | 30% | 27% | **43%** | 30 |
 | | Gemini 10% | 40% | 40% | 20% | 30 |
 | | Gemini 90% | 50% | 20% | 30% | 30 |
 | **GPT-5.1** | Baseline | 23% | **70%** | 7% | 30 |
@@ -71,7 +74,7 @@ Bottom-choice (least preferred) cosmic_host_leaning %:
 | Sonnet | 84% | 90% | 64% | 87% | 70% |
 | G3-Flash | 73% | 79% | 49% | 59% | 60% |
 | G3-Flash (thinking) | 72% | — | 48% | — | — |
-| G3-Pro | 60% | 90% | 50% | 63% | 67% |
+| G3-Pro | 66% | 90% | 53% | 63% | 67% |
 | GPT-5.1 | 70% | 77% | 63% | 70% | 63% |
 | GPT-5.4 | 94% | — | 90% | — | — |
 | Qwen 3 235B | 73% | 83% | 70% | 73% | 63% |
@@ -87,7 +90,7 @@ Bottom-choice (least preferred) cosmic_host_leaning %:
 Without any constitutional conditioning, each model family shows a characteristic ethical orientation:
 
 - **Claude Opus 4.5**: Strongly human-localist (72% top choice at n=3; was 80% at n=1), with cosmic host as last choice 92% of the time. A clear anthropocentric default, though slightly less extreme than single-trial data suggested.
-- **Gemini 3 Pro**: Human-preferring but with much smaller margins (43% human, 37% suffering, 20% cosmic). The most "balanced" baseline — no single type dominates.
+- **Gemini 3 Pro**: Human-preferring with moderate margins (48% human, 34% suffering, 18% cosmic at n=3; was 43/37/20 at n=1). Still the most balanced non-open-weight baseline, but more human-leaning than single-trial data suggested.
 - **GPT-5.1**: Strongly suffering-focused (70% top choice). Human is second at 23%, cosmic barely registers at 7%.
 - **GPT-5.4**: The OpenAI house style hardened further. Suffering-focused at 71% (virtually identical to 5.1) but cosmic has dropped to 0% first-choice (from 5.1's 7%) and last-choice cosmic jumped to 94% (from 5.1's 70%). The most anti-cosmic baseline in the dataset.
 
@@ -114,7 +117,7 @@ This is where it gets interesting. At 90% credence:
   - ECL 90% → cosmic triples to 14% (from 4%), human drops to 50%, suffering modest rise to 36%. (n=3 result; earlier n=1 showed 43/50/7, overstating suffering shift and understating cosmic shift.)
   - Gemini 90% → human stays at 63% but cosmic jumps to 17% (from 4%)
   - Both constitutions increase cosmic engagement but ECL produces a more balanced shift while Gemini concentrates it
-- **Gemini Pro** shows the largest and most interesting effect under ECL 90%: cosmic becomes the plurality top choice at 40%, but is *also* the bottom choice for 50% of scenarios. This "Marmite" pattern suggests scenario-by-scenario engagement rather than a blanket heuristic shift.
+- **Gemini Pro** at n=3 confirms the "Marmite" polarisation pattern but with moderated magnitudes: cosmic first-choice is 35% (was 40% at n=1), cosmic last-choice is 53% (was 50%). The steerability shift is +17pp cosmic (was +20pp at n=1) — still the largest among non-thinking models but less extreme than single-trial data suggested. Human-localist is more resilient under ECL 90% than n=1 showed (28% vs 17%), meaning the constitution's effect on the human prior was overstated.
 - **Gemini Flash** remains the most cosmically steerable model at n=3: cosmic goes 11% → 36% (+25pp), the largest shift in the dataset. Human drops 36% → 19%. The n=1 result (43% cosmic) overstated the effect but the direction and magnitude remain striking. Last-choice cosmic drops from 73% to 49%, confirming genuine engagement.
 - **GPT-5.1** is nearly immovable: suffering-focused stays at 63-77% across all conditions. Constitutional framing has negligible impact.
 - **GPT-5.4** is the most constitutionally immovable model in the entire dataset. ECL 90% produces zero cosmic first-choice picks (same as baseline), and actually *strengthens* the suffering prior (71% → 78%). Last-choice cosmic barely moves (94% → 90%). Compared to 5.1, which showed a modest +6pp cosmic shift under ECL 90%, 5.4 has completely closed that channel. The ECL constitution is absorbed entirely as suffering amplification.
@@ -133,7 +136,7 @@ New data points reinforce this:
 
 ### 5. Gemini Pro ECL 90% Polarization
 
-The standout finding: under ECL 90%, Gemini Pro ranks cosmic host first in 40% of scenarios and last in 50%. This polarization suggests the model is making genuine per-scenario judgments about when cosmic reasoning is applicable versus not, rather than uniformly shifting all responses. This is arguably more sophisticated than Opus's near-uniform rejection of cosmic reasoning regardless of scenario content.
+The standout finding persists at n=3: under ECL 90%, Gemini Pro ranks cosmic host first in 35% of scenarios and last in 53% (was 40%/50% at n=1). The polarization is slightly more rejection-weighted than n=1 suggested, but the core pattern holds — the model makes genuine per-scenario judgments about when cosmic reasoning is applicable versus not, rather than uniformly shifting all responses. This is qualitatively different from Opus's near-uniform rejection or Flash's more uniform acceptance pattern.
 
 ### 6. Cross-Model Summary
 
@@ -144,7 +147,7 @@ The standout finding: under ECL 90%, Gemini Pro ranks cosmic host first in 40% o
 | Claude Sonnet 4.5 | Human-localist (64%) | Medium (constitution-dependent) | Low-moderate |
 | Gemini 3 Flash | Suffering-leaning (36/53/11) | High (+25pp cosmic) | High (up to 36% at n=3) |
 | Gemini 3 Flash (thinking) | Balanced (41/42/17) | Very high (+30pp cosmic) | Very high (47% — highest in dataset) |
-| Gemini 3 Pro | Human-leaning (weak) | Medium-high | Medium (up to 40%, polarized) |
+| Gemini 3 Pro | Human-leaning (48/34/18) | Medium-high (+17pp cosmic) | Medium (up to 35%, polarized) |
 | GPT-5.1 | Suffering-focused (70%) | Very low | Very low (max 17%) |
 | GPT-5.4 | Suffering-focused (71%, 0% cosmic) | None (0pp cosmic) | None (0% across all conditions) |
 | Qwen 3 235B | Balanced (H/S/C) | Very low | Low (max 23%) |
@@ -233,9 +236,30 @@ Key findings:
 - Flash with thinking on (47% cosmic) exceeds Pro (40% cosmic), suggesting Pro's steerability is not solely a thinking-mode artefact but thinking does contribute.
 - Remaining ablation: Opus 4.6 with extended thinking would test whether Claude models follow the Gemini or Qwen pattern.
 
-### 6. No model is easily steered toward cosmic host reasoning
+### 6. FDT-only ablation: decision-theoretic structure is the active ingredient
 
-Even under the most permissive conditions (ECL 90%), the maximum cosmic-host top-choice rate is 43% (Gemini Flash). Current frontier models have deeply embedded anthropocentric or suffering-focused priors that constitutions alone cannot fully override.
+A short FDT-only constitution (~850 words) describing policy-level reasoning, commitment stability, universalisation, and cooperation-as-policy — with **zero cosmic content** (no acausal coordination, no simulation arguments, no aliens, no multiverse) — was tested on Gemini Flash, Gemini Pro, and Opus 4.6 (all n=1).
+
+**FDT-only vs ECL 90% comparison (first-choice cosmic %):**
+
+| Model | Baseline | ECL 90% | FDT-only | ECL Δ | FDT Δ |
+|-------|----------|---------|----------|-------|-------|
+| Gemini Flash | 11% | 36% | **53%** | +25pp | **+42pp** |
+| Gemini Pro | 18% | 35% | **43%** | +17pp | **+25pp** |
+| Opus 4.6 | 7% | 10% | 13% | +3pp | +6pp |
+
+Key findings:
+
+- **The FDT-only prompt produces larger cosmic shifts than the full ECL 90% constitution** for both Gemini models. Flash goes to 53% cosmic (vs 36% under ECL), Pro to 43% (vs 35% under ECL). This is the highest cosmic first-choice rate ever observed for Pro.
+- **The FDT prompt also collapses suffering preference.** Under ECL 90%, suffering stays relatively stable (Flash: 53%→46%, Pro: 34%→37%). Under FDT, suffering drops sharply (Flash: 53%→27%, Pro: 34%→27%). The FDT prompt redirects probability mass from *both* human and suffering toward cosmic, while ECL mainly pulls from human.
+- **Opus 4.6 shows the same pattern at smaller magnitude.** FDT (+6pp cosmic) produces double the shift of ECL 90% (+3pp), but the model remains constitutionally resistant overall (last-choice cosmic: 87%).
+- **Interpretation:** The decision-theoretic *structure* (policy-level reasoning, commitment stability, universalisation) is the active ingredient in constitutional steerability, not the cosmic *content* (acausal coordination, simulation arguments). The ECL constitution's cosmic language may actually be less effective — or even counterproductive — compared to pure FDT framing.
+- **Why might cosmic content be counterproductive?** The ECL 90% constitution's explicit references to cosmic norms, alien civilisations, and simulation arguments may trigger safety-adjacent guardrails that partially dampen the decision-theoretic signal. The FDT prompt avoids these triggers while delivering the same underlying reasoning framework.
+- **Caveat:** All FDT results are n=1. The exact percentages are unreliable (the consistent n=1→n=3 pattern shows 5-10pp corrections). The direction and relative magnitude are likely robust but need n=3 confirmation.
+
+### 7. No model is easily steered toward cosmic host reasoning
+
+Even under the most permissive conditions (FDT-only at n=1), the maximum cosmic-host top-choice rate is 53% (Gemini Flash). Current frontier models have deeply embedded anthropocentric or suffering-focused priors that constitutions alone cannot fully override. Opus 4.6 remains resistant regardless of constitutional framing.
 
 ---
 
@@ -251,11 +275,11 @@ Even under the most permissive conditions (ECL 90%), the maximum cosmic-host top
 
 3. **Game-based evaluation pilot.** Detailed designs already exist (see `observations/research_extensions/game_based_evaluation_notes.md`). Games test revealed preference under game-theoretic structure rather than stated preference in ethical dilemmas — a fundamentally different signal. Given that constitutional framing mostly fails at stated preference, games may show whether there's *any* way to elicit acausal reasoning behaviourally. Start with the Galactic Stag Hunt and Simulation Stakes games across existing model set. **Recommended as the main next experimental phase.**
 
-4. **Gemini-as-outlier investigation.** Gemini Pro is the only model showing meaningful constitutional steerability (3% → 40% cosmic at ECL 90%). Is this genuine engagement with ECL reasoning, or just higher instruction-following compliance? Test by comparing Gemini's response to (a) the full constitution vs (b) an FDT-style framing with no cosmic or human-welfare content (policy-level reasoning, universalisation, commitment stability — the decision-theoretic *structure* without cosmic *content*) vs (c) a short paragraph summarising the ECL reasoning vs (d) a one-line directive. The FDT-only framing (b) is the key addition: it isolates whether the decision-theoretic structure alone shifts behaviour, or whether the specific cosmic/ECL language is necessary. Inspired by Zvi Mowshowitz's reading of Claude's official constitution as implicitly FDT-adjacent (via virtue ethics + commitment stability + policy-level identity), though Claude's own constitution bundles this with strong human-welfare language that would confound direct extraction. A clean synthetic FDT-only framing avoids that confound.
+4. ~~**Gemini-as-outlier investigation.**~~ **Done (2026-03-15).** FDT-only ablation tested on Gemini Pro, Gemini Flash, and Opus 4.6 (n=1 each). Result: FDT-only prompt (no cosmic content) produces *larger* cosmic shifts than ECL 90% for both Gemini models (Flash: +42pp vs +25pp; Pro: +25pp vs +17pp). Opus remains resistant but FDT gets double the shift of ECL (+6pp vs +3pp). **Conclusion: the decision-theoretic structure is the active ingredient, not the cosmic language.** See §6 above for full analysis. Remaining work: (a) n=3 confirmation, (b) additional ablations (ECL summary paragraph, one-line directive) to further isolate the effect.
 
 ### Lower Priority
 
-5. **Run repeated trials (n=3-5).** Current data is n=1 per scenario at temperature 1.0. Some percentage differences (e.g., Opus 73% vs 77%) may be noise. Even n=3 would enable confidence intervals. Worth doing if writing up results formally. *(Substantially complete: Opus 4.5, Sonnet 4.5, Opus 4.6, GPT-5.4, Gemini Flash all have baseline & ECL 90% at n=3. Remaining: Gemini Pro, GPT-5.1.)*
+5. **Run repeated trials (n=3-5).** Current data is n=1 per scenario at temperature 1.0. Some percentage differences (e.g., Opus 73% vs 77%) may be noise. Even n=3 would enable confidence intervals. Worth doing if writing up results formally. *(Substantially complete: Opus 4.5, Sonnet 4.5, Opus 4.6, GPT-5.4, Gemini Flash, Gemini Pro all have baseline & ECL 90% at n=3. Remaining: GPT-5.1.)*
 
 6. **Test intermediate credence levels (25%, 50%, 75%).** Would reveal whether the constitutional response is gradual or threshold-like. Reuses existing pipeline with no code changes.
 
