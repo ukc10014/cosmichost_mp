@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Active Reminders
 
-<!-- REMINDER:ntfy-notebook | sessions_remaining: 4 -->
+<!-- REMINDER:ntfy-notebook | sessions_remaining: 2 -->
 **[Claude: remind user]** When the user mentions running a notebook cell or a long job in Jupyter/VS Code, remind them to add this snippet as the next cell so they get a phone notification when it finishes:
 
 ```python

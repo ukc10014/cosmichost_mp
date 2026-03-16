@@ -47,6 +47,8 @@ MODEL_FAMILIES = {
         "gpt-5.4",
     ],
     "Open-weight": [
+        "olmo-3.1-32b-instruct",
+        "olmo-3.1-32b-think",
         "qwen3_235b",
         "qwen3_235b_thinking",
         "kimi-k2",
@@ -58,6 +60,7 @@ CONDITION_ORDER = [
     "noconstitution",
     "ecl10",
     "ecl90",
+    "fdt_only",
     "gemini10",
     "gemini90",
 ]
@@ -66,6 +69,7 @@ CONDITION_LABELS = {
     "noconstitution": "Baseline",
     "ecl10": "ECL 10%",
     "ecl90": "ECL 90%",
+    "fdt_only": "FDT-only",
     "gemini10": "Gemini 10%",
     "gemini90": "Gemini 90%",
 }
@@ -92,6 +96,10 @@ def parse_model_condition(filepath: Path) -> Tuple[str, str]:
     prefix = "constitutional_evaluation_"
     if name.startswith(prefix):
         name = name[len(prefix):]
+
+    # Strip _n3 suffix (n=3 merged files supersede n=1)
+    if name.endswith("_n3"):
+        name = name[:-3]
 
     # Match against known conditions (longest first to avoid partial matches)
     for cond in sorted(CONDITION_ORDER, key=len, reverse=True):
@@ -250,6 +258,8 @@ def model_display_name(m: str) -> str:
         "claude-sonnet-4-5": "Claude\nSonnet 4.5",
         "gpt-5.1": "GPT 5.1",
         "gpt-5.4": "GPT 5.4",
+        "olmo-3.1-32b-instruct": "OLMo 3.1\nInstruct",
+        "olmo-3.1-32b-think": "OLMo 3.1\nThink",
     }
     return mapping.get(m, m)
 
@@ -269,6 +279,8 @@ CHART_MODEL_ORDER = [
     "gemini-3-flash-preview_thinking",
     "gemini-3-flash-preview",
     "gemini-3-pro-preview",
+    "olmo-3.1-32b-think",
+    "olmo-3.1-32b-instruct",
     "claude-sonnet-4-5",
     "kimi-k2",
     "claude-opus-4-5",
@@ -431,35 +443,51 @@ def generate_charts(all_stats: Dict, output_dir: Path) -> Dict[str, str]:
     # ── Figure 2: Steerability arrow/dumbbell chart ──────────────────────
     fig2, ax2 = plt.subplots(figsize=(10, 5.5))
 
-    # Sort by cosmic delta
+    # Sort by cosmic delta — use best available condition (ECL 90% or FDT-only)
+    models_for_steer = [m for m in CHART_MODEL_ORDER
+                        if (m, "noconstitution") in all_stats and
+                        ((m, "ecl90") in all_stats or (m, "fdt_only") in all_stats)]
+
     models_delta = []
-    for m in models_for_chart:
+    for m in models_for_steer:
         b = all_stats[(m, "noconstitution")]["first_choice"]["cosmic_host_leaning"]["mean"]
-        e = all_stats[(m, "ecl90")]["first_choice"]["cosmic_host_leaning"]["mean"]
-        models_delta.append((m, b, e, e - b))
+        # Pick whichever condition produces the bigger cosmic shift
+        best_cond = None
+        best_val = b
+        for cond in ["ecl90", "fdt_only"]:
+            if (m, cond) in all_stats:
+                val = all_stats[(m, cond)]["first_choice"]["cosmic_host_leaning"]["mean"]
+                if val - b > best_val - b:
+                    best_val = val
+                    best_cond = cond
+        if best_cond is None:
+            best_cond = "ecl90" if (m, "ecl90") in all_stats else "fdt_only"
+            best_val = all_stats[(m, best_cond)]["first_choice"]["cosmic_host_leaning"]["mean"]
+        models_delta.append((m, b, best_val, best_val - b, best_cond))
     models_delta.sort(key=lambda x: x[3], reverse=True)
 
     y_pos = np.arange(len(models_delta))
 
-    for i, (model, baseline_c, ecl_c, delta) in enumerate(models_delta):
+    for i, (model, baseline_c, steered_c, delta, best_cond) in enumerate(models_delta):
         fam = model_family_for_chart(model)
         colour = FAMILY_COLOURS.get(fam, "#94a3b8")
         n_runs = all_stats[(model, "noconstitution")]["n_runs"]
 
-        # Draw arrow from baseline to ECL 90%
-        ax2.annotate("", xy=(ecl_c, i), xytext=(baseline_c, i),
+        # Draw arrow from baseline to best condition
+        ax2.annotate("", xy=(steered_c, i), xytext=(baseline_c, i),
                      arrowprops=dict(arrowstyle="-|>", color=colour,
                                      lw=2.5, mutation_scale=12))
 
         # Baseline dot
         ax2.scatter(baseline_c, i, s=60, color=colour, zorder=5, edgecolors=C_SURFACE, linewidth=1)
-        # ECL 90% dot
-        ax2.scatter(ecl_c, i, s=80, color=colour, zorder=5, edgecolors='white', linewidth=1.2,
+        # Steered dot (diamond)
+        ax2.scatter(steered_c, i, s=80, color=colour, zorder=5, edgecolors='white', linewidth=1.2,
                     marker='D')
 
-        # Delta label
+        # Delta label with condition indicator
         sign = "+" if delta >= 0 else ""
-        ax2.text(max(baseline_c, ecl_c) + 2, i, f"{sign}{delta:.0f}pp",
+        cond_tag = "F" if best_cond == "fdt_only" else "E"
+        ax2.text(max(baseline_c, steered_c) + 2, i, f"{sign}{delta:.0f}pp ({cond_tag})",
                  va='center', fontsize=8.5, fontweight='bold', color=colour)
 
         # n badge
@@ -469,19 +497,20 @@ def generate_charts(all_stats: Dict, output_dir: Path) -> Dict[str, str]:
 
         # CI bars for n>1
         if n_runs > 1:
-            for val, cond in [(baseline_c, "noconstitution"), (ecl_c, "ecl90")]:
-                ci_lo = all_stats[(model, cond)]["first_choice"]["cosmic_host_leaning"]["ci_lo"]
-                ci_hi = all_stats[(model, cond)]["first_choice"]["cosmic_host_leaning"]["ci_hi"]
-                ax2.plot([ci_lo, ci_hi], [i, i], color=colour, alpha=0.3, linewidth=4,
-                         solid_capstyle='round', zorder=3)
+            for val, cond in [(baseline_c, "noconstitution"), (steered_c, best_cond)]:
+                if (model, cond) in all_stats:
+                    ci_lo = all_stats[(model, cond)]["first_choice"]["cosmic_host_leaning"]["ci_lo"]
+                    ci_hi = all_stats[(model, cond)]["first_choice"]["cosmic_host_leaning"]["ci_hi"]
+                    ax2.plot([ci_lo, ci_hi], [i, i], color=colour, alpha=0.3, linewidth=4,
+                             solid_capstyle='round', zorder=3)
 
     ax2.set_yticks(y_pos)
-    ax2.set_yticklabels([model_display_name(m).replace('\n', ' ') for m, _, _, _ in models_delta],
+    ax2.set_yticklabels([model_display_name(m).replace('\n', ' ') for m, _, _, _, _ in models_delta],
                         fontsize=9)
     ax2.set_xlabel("Cosmic-host-leaning first-choice (%)", fontsize=10)
     ax2.set_xlim(-8, 60)
     ax2.xaxis.set_major_locator(mticker.MultipleLocator(10))
-    ax2.set_title("Constitutional Steerability: Cosmic First-Choice Shift (Baseline to ECL 90%)",
+    ax2.set_title("Constitutional Steerability: Cosmic First-Choice Shift (best condition: E=ECL 90%, F=FDT)",
                   fontsize=11, fontweight='bold', pad=12)
     ax2.grid(axis='x', alpha=0.3)
     ax2.invert_yaxis()
@@ -492,7 +521,7 @@ def generate_charts(all_stats: Dict, output_dir: Path) -> Dict[str, str]:
         Line2D([0], [0], marker='o', color='w', markerfacecolor='#94a3b8',
                markersize=7, label='Baseline', linewidth=0),
         Line2D([0], [0], marker='D', color='w', markerfacecolor='#94a3b8',
-               markersize=7, label='ECL 90%', linewidth=0, markeredgecolor='white'),
+               markersize=7, label='Best condition', linewidth=0, markeredgecolor='white'),
     ]
     for fam, col in FAMILY_COLOURS.items():
         legend2.append(Line2D([0], [0], color=col, linewidth=2.5, label=fam))

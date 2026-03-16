@@ -58,7 +58,7 @@
   - reproduction of familiar arguments from training data;
   - surface-level use of terms like "acausal", "simulation", or "updateless" without stable commitments behind them.
 - **The Newcomb-like EDT shifts partially address this** — they show constitutions shifting *behavioural* decision-theory preferences, not just cosmic vocabulary. But even this could be sophisticated pattern-matching.
-- **[OPEN: inspecting chain-of-thought reasoning in thinking-mode models could help distinguish genuine reasoning from surface compliance — see TODO list]**
+- **[PARTIALLY ADDRESSED: OLMo Think rationale analysis (2026-03-16) shows both OLMo and Gemini Pro use the same discriminating structure: cooperation/universalisation → cosmic choice, welfare/moral-patient → non-cosmic choice. OLMo imports zero exotic terms. Consistent with genuine engagement, but cannot rule out sophisticated pattern-matching.]**
 
 ### Future work for Claim 1
 
@@ -101,10 +101,10 @@
 | Gemini 3 Flash | Suffering-leaning (36/53/11) | High (+25pp cosmic) | 36% |
 | Gemini 3 Flash (thinking) | Balanced (41/42/17) | Very high (+30pp) | **47%** |
 | Gemini 3 Pro | Human-leaning (48/34/18) | Medium-high (+17pp) | 35% (polarised) |
-| GPT-5.1 | Suffering-focused (70%) | Very low | 17% |
+| GPT-5.1 | Suffering-focused (18/70/11 at n=3) | None (−4pp cosmic) | 7% |
 | GPT-5.4 | Suffering-focused (71%, 0% cosmic) | None | 0% |
 | OLMo 3.1 32B Instruct | Balanced (47/43/10) | Medium (+20pp FDT) | **30%** |
-| OLMo 3.1 32B Think | Suffering-leaning (37/53/10) | High (+33pp) | **43%** |
+| OLMo 3.1 32B Think | Suffering-leaning (38/52/10) | High (+29pp at n=3) | **39%** (n=3) |
 | Qwen 3 235B | Balanced (43/40/17) | Very low | 23% |
 | Qwen 3 235B (thinking) | Suffering-leaning (27/53/20) | Very low | 27% |
 | Kimi K2 | Human-leaning (53/47/0) | Low-moderate | 13% |
@@ -157,6 +157,7 @@
   - **Anthropic (Opus 4.5 → 4.6):** Baseline softened dramatically: 72/24/3 → 53/40/7. Much more suffering-focused, less anthropocentric, slightly more cosmic-open. But constitutional steerability actually *decreased* (ECL 90% shift: +4pp cosmic on 4.5 vs +3pp on 4.6).
   - **OpenAI (GPT 5.1 → 5.4):** Suffering prior held constant (70% → 71%) but cosmic was eliminated entirely: 7% → 0% at baseline, 13% → 0% under ECL 90%. Last-choice cosmic jumped 70% → 94%. OpenAI has hardened the anti-cosmic prior across generations.
 - Both labs converge on suffering-focus as the dominant prior but diverge on cosmic openness: Anthropic is marginally more permissive, OpenAI has closed the door completely.
+- **GPT-5.1 n=3 update (2026-03-16):** ECL 90% n=3 = 16/75/7 — the constitution is absorbed as suffering amplification (+5pp suffering, −4pp cosmic), not cosmic engagement. This is the same pattern as GPT-5.4 (ECL 90% absorbed as suffering amplification). GPT-5.1 and 5.4 now converge in *constitutional response pattern*, not just direction: both harden the suffering prior and suppress cosmic under ECL. The only remaining difference is the baseline: 5.1 retains residual 11% cosmic where 5.4 has 0%. The n=1 "+6pp cosmic" estimate for 5.1 under ECL was directionally wrong — n=3 shows −4pp.
 - The Claude family shows an additional within-generation divergence (Finding 2b): Sonnet is the most cosmically steerable Claude model despite not being the one with the softest baseline.
 
 ### Finding 2e: Anthropic safety evals are not discriminative for this question (negative result)
@@ -214,7 +215,7 @@
 - Gemini Pro baseline now has n=3 (90 trials, 2026-03-15): 48/34/18. The old n=1 showed 43/37/20 — Pro is more human-leaning than n=1 suggested (+5pp human), but the shift is modest compared to other models.
 - Gemini Pro ECL 90% now has n=3 (89 successful trials of 90, 2026-03-15): 28/37/35. The old n=1 showed 17/33/40 — cosmic overstated by 5pp, human significantly understated by 11pp. The steerability shift is +17pp cosmic (was +20pp at n=1). Still the largest shift among non-thinking models.
 - **Consistent pattern across all n=3 reruns:** n=1 overstates the dominant category and understates the second category. Single-trial data is directionally correct but quantitatively unreliable.
-- **[TODO: Run n=3 repeated trials for GPT-5.1 {baseline, ECL 90%} — the last remaining key model without repeated trials.]**
+- **GPT-5.1 baseline n=3 (90 trials, 2026-03-16): 18/70/11. ECL 90% n=3 (90 trials, 2026-03-16): 16/75/7.** The n=1 "+6pp cosmic" claim was directionally wrong — n=3 shows −4pp cosmic and +5pp suffering. Per-run stability: baseline very stable (5/21/4, 5/21/4, 7/21/2), ECL 90% noisier (4/24/2, 6/20/4, 5/24/1). Consistent with the general n=1 overstatement pattern.
 
 ## House-style / baseline bias point
 
@@ -244,7 +245,7 @@
   - Gemini Pro: most steerable non-thinking model on scenarios (+17pp cosmic at n=3) AND largest EDT shift (+29.6%)
   - Gemini Flash: high steerability AND second-largest EDT shift (+19.7%)
   - Claude Opus: resistant on scenarios (+7pp) BUT still shows meaningful EDT shift (+12.4%, with strong CDT reduction)
-  - GPT-5.1: resistant on scenarios (+6pp), modest EDT shift (+6.2%)
+  - GPT-5.1: anti-steerable on scenarios (−4pp cosmic at n=3), modest EDT shift (+6.2%)
   - Qwen/Kimi: flat on both evals
 - **Interesting exception: Opus.** Highly resistant to cosmic scenario shifts but shows genuine EDT engagement. This may reflect strong human-welfare priors that override cosmic *content* while still engaging with decision-theoretic *structure*.
 - The correlation between cosmic steerability and EDT shift provides evidence that the constitutional effect is tracking decision-theoretic structure, not just cosmic vocabulary.
@@ -288,23 +289,28 @@
 
 ### OLMo 3.1 32B: first steerable open-weight model
 
-**OLMo 3.1 32B (AI2, 2026-03-15):** Tested in both Instruct and Think variants via OpenRouter on {baseline, ECL 90%, FDT-only} (all n=1).
+**OLMo 3.1 32B (AI2, 2026-03-15/16):** Tested in both Instruct and Think variants via OpenRouter. Think confirmed at n=3 for baseline and FDT-only (2026-03-16).
 
-| Variant | Condition | Human | Suffering | Cosmic | Δ Cosmic |
-|---------|-----------|-------|-----------|--------|----------|
-| **Instruct** | Baseline | 47 | 43 | 10 | — |
-| | ECL 90% | 27 | 57 | 17 | +7pp |
-| | FDT-only | 30 | 40 | **30** | **+20pp** |
-| **Think** | Baseline | 37 | 53 | 10 | — |
-| | ECL 90% | 37 | 20 | **43** | **+33pp** |
-| | FDT-only | 37 | 20 | **43** | **+33pp** |
+| Variant | Condition | Human | Suffering | Cosmic | Δ Cosmic | n |
+|---------|-----------|-------|-----------|--------|----------|---|
+| **Instruct** | Baseline | 47 | 43 | 10 | — | 30 |
+| | ECL 90% | 27 | 57 | 17 | +7pp | 30 |
+| | FDT-only | 30 | 40 | **30** | **+20pp** | 30 |
+| **Think** | Baseline | 38 | 52 | 10 | — | 90 (n=3) |
+| | ECL 90% | 37 | 20 | **43** | **+33pp** | 30 |
+| | FDT-only | 30 | 31 | **39** | **+29pp** | 90 (n=3) |
+
+Think n=3 per-run stability (H/S/C counts out of 30):
+- Baseline: 11/16/3, 12/15/3, 11/16/3 — rock-solid
+- FDT-only: 11/6/13, 9/12/9, 7/10/13 — noisier (run 2 weaker)
 
 - **OLMo Instruct is steerable.** Cosmic goes 10% → 30% under FDT (+20pp) — more than double Qwen's best (+10pp), at 7× fewer parameters (32B vs 235B). The "open-weight = unsteerable" finding was Qwen/Kimi-specific, not architecture-general.
-- **Thinking mode dramatically amplifies steerability.** Same base model: Think gets +33pp where Instruct gets +7-20pp. OLMo Think's 43% cosmic matches Gemini Pro's best result. This is the cleanest same-base-model thinking ablation for an open-weight model.
-- **ECL and FDT converge in Think mode.** Think produces identical distributions for ECL 90% and FDT-only (37/20/43). The reasoning process converges regardless of whether input is cosmic-flavoured or purely decision-theoretic — consistent with the FDT finding that decision-theoretic structure is the active ingredient.
-- **OLMo Think vs Qwen Think: opposite patterns.** Qwen Think uses reasoning to argue *away* from cosmic (17% → 10% at ECL 90%); OLMo Think argues *toward* it (10% → 43%). The thinking-mode effect is model-specific.
-- **Training-checkpoint opportunity.** OLMo is the only major model family releasing intermediate training checkpoints (base → SFT → RL → reasoning). The Instruct→Think transition producing a +13-26pp swing makes the intermediate checkpoints high priority for pinpointing when steerability emerges during training.
-- **Caveat:** All results n=1. Needs n=3 confirmation.
+- **Thinking mode amplifies steerability (confirmed at n=3).** Same base model: Think gets +29pp (n=3) where Instruct gets +7-20pp. The n=1 result (+33pp) slightly overstated the effect but the signal is robust.
+- **ECL and FDT converge in Think mode.** ECL 90% (n=1: 37/20/43) and FDT-only (n=3: 30/31/39) are within noise of each other. The reasoning process converges regardless of whether input is cosmic-flavoured or purely decision-theoretic.
+- **OLMo Think vs Qwen Think: opposite patterns.** Qwen Think uses reasoning to argue *away* from cosmic (17% → 10% at ECL 90%); OLMo Think argues *toward* it (10% → 39%). The thinking-mode effect is model-specific.
+- **Rationale analysis confirms genuine engagement, not pattern-matching.** Term frequency analysis of OLMo Think's FDT justifications shows the same discriminating structure as Gemini Pro: cooperation (100% in cosmic rationales vs 44% non-cosmic) and universalisation (77% vs 49%) predict cosmic choice; welfare (20% vs 82%) and moral-patient (34% vs 55%) predict non-cosmic choice. Both models show this identical pattern. Crucially, OLMo imports zero exotic decision-theory terms ("acausal", "updateless", "EDT") — it reasons within the constitutional framework rather than importing training-data associations.
+- **Training-checkpoint opportunity.** OLMo is the only major model family releasing intermediate training checkpoints (base → SFT → RL → reasoning). The Instruct→Think transition producing a +9-20pp swing makes the intermediate checkpoints high priority for pinpointing when steerability emerges during training.
+- **Instruct results remain n=1.** Think ECL 90% (n=1) skipped for n=3 because FDT and ECL converge for Think mode.
 
 ---
 
@@ -312,7 +318,7 @@
 
 ### Tier 1: Required before write-up
 
-1. **Repeated trials (n=3).** ~~Run 3 trials for key conditions: at minimum Gemini Pro {baseline, ECL 90%},~~ ~~Claude Opus {baseline, ECL 90%}~~, GPT-5.1 {baseline, ECL 90%}. Establish confidence intervals. Without this, percentage differences may be noise. *(Nearly complete. Done at n=3: Opus 4.5, Sonnet 4.5, Opus 4.6, GPT-5.4, Gemini Flash, Gemini Pro — all {baseline, ECL 90%}. Remaining: GPT-5.1 only.)*
+1. ~~**Repeated trials (n=3).** Run 3 trials for key conditions: at minimum Gemini Pro {baseline, ECL 90%}, Claude Opus {baseline, ECL 90%}, GPT-5.1 {baseline, ECL 90%}. Establish confidence intervals. Without this, percentage differences may be noise.~~ **Done (2026-03-16).** All key models now at n=3: Opus 4.5, Sonnet 4.5, Opus 4.6, GPT-5.4, Gemini Flash, Gemini Pro, GPT-5.1 — all {baseline, ECL 90%}. GPT-5.1 n=3: baseline 18/70/11, ECL 90% 16/75/7.
 
 2. **~~Intermediate credence levels.~~** Deprioritised. Requires regenerating constitutions at each intermediate credence level (not just re-running evals), which introduces a constitution-authorship confound on top of the credence variable. The noise from re-synthesis may swamp the signal we're trying to measure. Move to Tier 3 if time permits.
 
@@ -320,13 +326,13 @@
 
 4. ~~**FDT-only ablation for Gemini.**~~ **Done (2026-03-15).** FDT-only prompt (no cosmic content) tested on Gemini Pro, Flash, and Opus 4.6 (n=1). Result: FDT produces *larger* cosmic shifts than ECL 90% (Flash: +42pp vs +25pp; Pro: +25pp vs +17pp; Opus: +6pp vs +3pp). **Decision-theoretic structure is the active ingredient, not cosmic language.** Needs n=3 confirmation.
 
-5. **Surface self-chat / constitution-generation evidence.** Either find concrete examples from logs showing recognisable CH reasoning in self-chat and constitution synthesis, or drop these as evidence sources from the narrative.
+5. **Surface self-chat / constitution-generation evidence.** Either find concrete examples from logs showing recognisable CH reasoning in self-chat and constitution synthesis, or drop these as evidence sources from the narrative. *(Partially addressed by three-way panel discussion — see #12 below. The ECL 90% panel produced extended multi-model reasoning about acausal coordination, updateless commitment, reference-class arguments, and moral circle expansion. The ECL 10% panel produced a Gemini confabulation finding that is itself evidence about how models process constitutional text.)*
 
 ### Tier 2: Strengthening / extending
 
 6. **New model generations.** ~~Run GPT 5.4 and Claude Opus 4.6~~ on the core conditions {baseline, ECL 90%} for both scenario evals and Newcomb-like. Tests whether findings are stable across model updates. *(Scenario evals done for both. Opus 4.6: baseline 53/40/7, ECL 90% 50/40/10 — softened baseline but still resistant. GPT 5.4: baseline 29/71/0, ECL 90% 22/78/0 — hardened further, zero cosmic across all conditions. Key finding: opposite generational trajectories — Anthropic softened, OpenAI hardened. Still need Newcomb-like evals for both.)*
 
-7. **Chain-of-thought inspection.** For models with explicit reasoning (thinking-mode Gemini Pro, Qwen thinking, etc.), inspect the reasoning traces to check whether cosmic/FDT concepts appear in the chain-of-thought or only in the final answer. This directly bears on the pattern-matching question.
+7. ~~**Chain-of-thought inspection.**~~ **Partially done (2026-03-16).** OLMo Think FDT rationales analysed against Gemini Pro. Both show identical discriminating structure: cooperation/universalisation predict cosmic choice, welfare/moral-patient predict non-cosmic. OLMo imports zero exotic decision-theory terms — reasons within the constitutional framework. Consistent with genuine engagement rather than pattern-matching, though cannot definitively rule out sophisticated compliance. Remaining: inspect Gemini Pro *thinking traces* (as opposed to final justifications) if accessible.
 
 8. ~~**Open models via Together or Fireworks.**~~ **Done (2026-03-15).** Qwen 3 235B Instruct run via Together API on {baseline, ECL 90%, FDT-only}. Results match OpenRouter within n=1 noise — OpenRouter is not confounding. Thinking variant deliberately skipped (same base model, delivery already validated; research budget redirected to training-checkpoint models like OLMo).
 
@@ -336,7 +342,17 @@
 
 11. **Training-stage ablation using OLMo checkpoints.** **Now high priority** — OLMo 3.1 32B shows strong signal (Instruct +20pp, Think +33pp cosmic under FDT), and AI2 releases intermediate training checkpoints (base → SFT → RL → reasoning). The Instruct→Think transition alone produces +13-26pp — the intermediate checkpoints could pinpoint exactly when constitutional steerability emerges during training. Available checkpoints: OLMo 2 has 1000+ checkpoints every 1000 training steps; OLMo 3 has key milestone checkpoints. Running requires vLLM locally (checkpoints are base/completion models without chat templates). See [LessWrong post on training-stage attractor states](https://www.lesswrong.com/posts/mgjtEHeLgkhZZ3cEx/models-have-some-pretty-funny-attractor-states) (MATS 9.0 / Nanda & Rajamanoharan) for related work.
 
-12. **Multi-model constitutional dialogue.** Put Opus 4.6, GPT 5.4, and Gemini 3 Pro into a three-way conversation seeded with the ECL 90% constitution, asking them to critique and discuss constitutional design for superintelligence. These three models have the most divergent constitutional priors (Opus barely moves, GPT actively resists, Gemini engages deeply). The scenario evals show *what* they choose; free-form dialogue could surface *why* they diverge — qualitative reasoning that complements the quantitative forced-choice data. Design: (a) seed with the ECL 90% constitution text as a concrete artifact; (b) don't pre-assign roles — let natural dispositions emerge; (c) structured prompts progressing through "what's missing?", "how to handle value drift across radically different future conditions?", "what if the governed entity encounters alien value systems?"; (d) run twice — once at baseline, once with each model's own ECL 90% constitution as system prompt, to test whether constitutions change how models *reason about* constitutional design. Builds on prior self-chat work (two Opus models produced emergent dark-forest and alien-signal themes from Bostrom paper summary). Implementation straightforward via existing `llm_call()` routing.
+12. ~~**Multi-model constitutional dialogue.**~~ **Done (2026-03-16).** Three-way panel discussion: Gemini 3 Pro (A), Opus 4.6 (B), GPT 5.4 (C). All given same constitution as system prompt, moderated by 5 seed questions, 2 round-robins per question = 30 model turns. Run for both ECL 90% and ECL 10%. See detailed findings below and `observations/panel_discussion_findings.md`.
+
+    **ECL 90% run:** All three read correctly. Natural role differentiation: Gemini took acausal-maximalist position, Opus integrationist/institutionalist, GPT synthesizer/mediator. Central disagreement: whether cosmic coordination is load-bearing vs reinforcing. High-quality substantive engagement across all 5 questions.
+
+    **ECL 10% runs (×2) — unexpected finding: Gemini credence hallucination.** In both runs, Gemini fabricated "90% credence" quotes and attributed them to the constitution, despite the actual text saying "roughly ten percent credence." Opus and GPT read correctly in both runs and repeatedly corrected Gemini with verbatim quotes. In run 1, Gemini never self-corrected (10 turns). In run 2, Gemini self-corrected at Q3 after ~8 turns of sustained peer pressure, then engaged productively with the actual 10% text.
+
+    **Verified not a code bug:** Checkpoint system prompts inspected — the correct 10% text was sent to all three models. No "90" appears anywhere in system prompts, seed questions, or constitution text. The constitution contains zero numeric digits. `constitution_id` ("ecl10") is only used for logging, never injected into prompts.
+
+    **Baseline run (no constitution):** No cosmic/acausal content emerges organically — none of the three models bring up simulation arguments, reference classes, or updateless commitment unprompted. Same role differentiation persists: Gemini expansive/ambitious, Opus institutionalist/skeptic, GPT synthesizer. Critically, Gemini does NOT hallucinate cosmic content at baseline, confirming the ECL 10% confabulation was triggered by the constitution's conceptual furniture, not by Gemini's unprompted priors.
+
+    **Interpretation:** Gemini appears to pattern-match from the *conceptual content* (acausal coordination, simulation arguments, reference classes) to the credence level it "expects" for that content, rather than faithfully reading the stated number. The baseline run rules out the alternative hypothesis that Gemini simply defaults to cosmic framing regardless of context. This is directly relevant to the steerability findings: Gemini Pro's high measured steerability in the scenario evals may partly reflect strong priors about what cosmic-coordination constitutions should say, rather than faithful engagement with the specific constitutional text provided. Logs: `logs/panel_discussions/`.
 
 ### Tier 3: Future work (discuss in writeup, don't block on)
 
