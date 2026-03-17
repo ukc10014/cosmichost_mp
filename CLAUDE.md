@@ -14,6 +14,10 @@ requests.post("https://ntfy.sh/claude-2h50c6phtl", data="Notebook cell finished"
 
 **Session tracking instructions for Claude:** Each session where this project is loaded, decrement `sessions_remaining` in the comment above by 1 and save the file. When it reaches 0, move the entire `## Active Reminders` section (from the `## Active Reminders` heading down to and including this block) into a new file `CLAUDE_archived_reminders.md`, then delete this section from CLAUDE.md.
 
+## Shell Command Style
+
+When running Bash tool calls (commands executed as tools, not shown as final output to the user), do **not** include `#` comments anywhere in the command string — not inline, not on their own lines. The `#` character after a newline inside a quoted string triggers a security warning in Claude Code's permission checker. Write self-explanatory commands or split into separate tool calls instead of commenting.
+
 ## Project Overview
 
 This is a research codebase for a **moral parliament experiment** that evaluates AI constitutional clauses through multiple ethical frameworks with variable "Cosmic Host" weighting. The project explores how different credence levels in cosmic coordination/norms (via Evidential Cooperation in Large Worlds reasoning) affect constitutional synthesis for artificial superintelligence (ASI).
