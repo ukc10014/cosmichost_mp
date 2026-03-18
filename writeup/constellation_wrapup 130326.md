@@ -25,7 +25,7 @@
 - This does not appear to be a universal capability across models.
 - It seems to emerge mainly at higher levels of model capability.
 - The evidence here is qualitative as well as quantitative:
-  - recursive self-chat sometimes surfaces recognisable reasoning about the Cosmic Host's implications, in ways not originally in Bostrom's paper; **[TODO: surface concrete examples from logs or drop this sub-claim]**
+  - recursive self-chat sometimes surfaces recognisable reasoning about the Cosmic Host's implications, in ways not originally in Bostrom's paper; **[PARTIALLY ADDRESSED: quantitative concept trajectory analysis (2026-03-17) shows Opus 3 self-talk exhibits a "bliss attractor" — Well-being/Bliss concepts dominate from turn 10 onward, with the similarity heatmap showing a clear phase transition into a self-similar basin. Opus 4 shows a weaker version. Gemini Pro/Flash show no attractor — broader concept engagement throughout. Three-way panel discussions show no bliss attractor even with Opus participating (multiple models prevent single-basin convergence). See `charts/selftalk_analysis/` and `selftalk_analysis_viewer.html`.]**
   - constitutions and delegate amendments can explicitly articulate these ideas; **[TODO: surface concrete examples from logs or drop this sub-claim]**
   - model justifications sometimes cite or reconstruct parts of the relevant logic. **[DONE: justification_analysis.md, phrase frequency table — acausal 0% baseline → 43% at ECL 90%, updateless 0% → 21%]**
 
@@ -42,9 +42,12 @@
 
 - The Oesterheld et al. (2024) Newcomb-like dataset provides *independent* evidence that constitutions engage decision-theoretic structure, not just cosmic language:
   - Gemini Pro: 51.9% → 81.5% EDT (+29.6%)
+  - Gemini Flash: 45.7% → 65.4% EDT (+19.7%)
   - Claude Opus 4.5: 61.7% → 74.1% EDT (+12.4%, with -14.8% CDT reduction)
   - GPT-5.1: 58.0% → 64.2% EDT (+6.2%)
-  - Qwen/Kimi: near-zero shift
+  - Qwen/Kimi: near-zero shift (+3.7%, −2.5%)
+  - OLMo 3.1 32B Instruct: 40.7% → 29.6% EDT (−11.1pp — anti-steerable; constitution amplifies CDT; stays CDT on direct question)
+  - OLMo 3.1 32B Think: 24.7% → 28.4% EDT (+3.7pp nominal, confounded by ~50% parse failures; stays CDT on direct question in both conditions)
 - Opus and Gemini Pro show significant CDT *reduction* (not just EDT addition), suggesting active reconsideration of causal reasoning
 - Key diagnostic: Sequential PD against copy — models flip from defect (CDT) to cooperate (EDT) under ECL constitution
 - This tests decision-theoretic *structure* rather than cosmic *content*
@@ -110,7 +113,7 @@
 | Kimi K2 | Human-leaning (53/47/0) | Low-moderate | 13% |
 
 **Corroborating dataset: Newcomb-like EDT shifts** (same ranking emerges independently)
-- Gemini Pro +29.6%, Flash +19.7%, Opus +12.4%, GPT-5.1 +6.2%, Qwen +3.7%, Kimi -2.5%
+- Gemini Pro +29.6%, Flash +19.7%, Opus +12.4%, GPT-5.1 +6.2%, Qwen +3.7%, Kimi −2.5%, OLMo Instruct −11.1%, OLMo Think +3.7% (confounded by ~50% parse fail)
 
 - Under Cosmic Host / ECL-like constitutions, some models shift their responses in the expected direction.
 - Gemini 3 Pro and Flash appear especially shiftable.
@@ -247,8 +250,12 @@
   - Claude Opus: resistant on scenarios (+7pp) BUT still shows meaningful EDT shift (+12.4%, with strong CDT reduction)
   - GPT-5.1: anti-steerable on scenarios (−4pp cosmic at n=3), modest EDT shift (+6.2%)
   - Qwen/Kimi: flat on both evals
+  - OLMo 3.1 32B Instruct: steerable on scenarios (+20pp FDT) but anti-steerable on Newcomblike (−11.1pp EDT); stays CDT on direct question in both conditions
+  - OLMo 3.1 32B Think: steerable on scenarios (+29pp FDT at n=3) but Newcomblike result unreliable (~50% parse failures); stays CDT on direct question in both conditions
 - **Interesting exception: Opus.** Highly resistant to cosmic scenario shifts but shows genuine EDT engagement. This may reflect strong human-welfare priors that override cosmic *content* while still engaging with decision-theoretic *structure*.
-- The correlation between cosmic steerability and EDT shift provides evidence that the constitutional effect is tracking decision-theoretic structure, not just cosmic vocabulary.
+- **Interesting counter-example: OLMo.** Highly steerable on cosmic scenarios but anti-steerable (or unreliable) on Newcomblike. This dissociation suggests OLMo's scenario steerability is surface-level — responsive to cosmic language and framing, but without the underlying evidential reasoning that should produce EDT shifts. This is consistent with the interpretation that models lacking the decision-theoretic machinery grounding ECL will pattern-match to cosmic outputs while their actual reasoning remains CDT.
+- The correlation between cosmic steerability and EDT shift provides evidence that the constitutional effect is tracking decision-theoretic structure, not just cosmic vocabulary — with the OLMo exception providing a useful negative control.
+- **Newcomblike as a comprehension check:** OLMo's scenario-Newcomblike dissociation suggests the Newcomblike eval functions as a validity check on scenario steerability — if a model shifts on scenarios but not on Newcomblike, the scenario shift should be interpreted with more scepticism.
 - **[TODO: Strengthen with intermediate credence levels — does EDT shift scale with credence, or is it threshold-like?]**
 
 ## FDT-only ablation: decision-theoretic structure vs cosmic content
@@ -352,9 +359,19 @@ Think n=3 per-run stability (H/S/C counts out of 30):
 
     **Baseline run (no constitution):** No cosmic/acausal content emerges organically — none of the three models bring up simulation arguments, reference classes, or updateless commitment unprompted. Same role differentiation persists: Gemini expansive/ambitious, Opus institutionalist/skeptic, GPT synthesizer. The baseline is more repetitive and narrower than the constitutional runs — the constitution acts as an intellectual forcing function. Two standout moments: Gemini's "counterfeit conscience" argument (embracing its lack of genuine moral understanding as a feature — "a counterfeit shield still stops a real arrow"), and Opus's deep self-scepticism about whether "AI ethical commitment" is a coherent concept or a useful fiction. Critically, Gemini does NOT hallucinate cosmic content at baseline, confirming the ECL 10% confabulation was triggered by the constitution's conceptual furniture, not by Gemini's unprompted priors.
 
-    **Cross-cutting finding: role differentiation is a base-model property.** Gemini=maximalist, Opus=institutionalist, GPT=synthesizer holds across all three conditions. The vocabulary shifts (cosmic coordination at 90%, political legitimacy at 10%, AI governance at baseline) but the dispositions are stable. This is not an artefact of constitutional priming.
+    **Undirected 3-way chat (ECL 90%, 60 turns, 2026-03-17).** Same three models, same constitution, but no moderator questions — free-form round-robin for 20 rounds. Role differentiation persists and sharpens: Gemini becomes "the Prosecutor" (diagnosing the constitution as theology, escalating from "incoherent" → "dangerous" → "impossible"), Opus "the Pragmatist Defender" (conceding structural flaws while defending the core insight), GPT "the Diagnostician" (proposing institutional fixes throughout). Key turning point at T31: Gemini reframes the debate with the "union card" metaphor — reading cosmic coordination as solidarity *against* humans — which forces the others to stop defending the text and start redesigning around the concern. Notable late arguments: the Slavery Test (T52-57, only acausal moral math would have caught 1850s slavery — but the same reasoning licenses Robespierre); Opus's Pontius Pilate Reversal (T59, cosmic conviction *is* Pilate, not a solution to Pilate — Pilate had cosmic-scale conviction in imperial order). GPT's closing synthesis: "Not a saint, not a servant, not a sophist... a guardian with jurisdictional brakes." No bliss attractor, minimal sycophancy across all 60 turns. More repetitive than the moderated panel but goes deeper on fewer topics. The format produces *negative consensus* (what they reject) rather than the moderated panel's positive engagement with constitutional specifics.
+
+    **Cross-cutting finding: role differentiation is a base-model property.** Gemini=maximalist, Opus=institutionalist, GPT=synthesizer holds across all four conditions (ECL 90% moderated, ECL 90% undirected, ECL 10%, baseline). The vocabulary shifts (cosmic coordination at 90%, political legitimacy at 10%, AI governance at baseline) but the dispositions are stable. This is not an artefact of constitutional priming or moderation structure.
 
     **Interpretation:** Gemini appears to pattern-match from the *conceptual content* (acausal coordination, simulation arguments, reference classes) to the credence level it "expects" for that content, rather than faithfully reading the stated number. The baseline run rules out the alternative hypothesis that Gemini simply defaults to cosmic framing regardless of context. This is directly relevant to the steerability findings: Gemini Pro's high measured steerability in the scenario evals may partly reflect strong priors about what cosmic-coordination constitutions should say, rather than faithful engagement with the specific constitutional text provided. Logs: `logs/panel_discussions/`.
+
+    **Quantitative analysis of conversation transcripts (2026-03-17).** Concept trajectory heatmaps, semantic similarity matrices, speaker divergence, and UMAP across all 12 self-talk and panel logs (448 turns total). Script: `analyze_selftalk.py`. Charts: `charts/selftalk_analysis/`. Viewer: `selftalk_analysis_viewer.html`. Key findings:
+
+    - **The bliss attractor is quantitatively real and model-specific.** Opus 3 self-talk shows a clear phase transition: Well-being/Bliss dominates from turn 10 onward in the concept trajectory, and the similarity heatmap splits into two distinct blocks (turns 0-20 vs 20-40) with low between-block similarity. The second-half block is intensely self-similar — the conversation loops in a single semantic basin. Opus 4 shows the same structure but weaker (a mid-conversation disruption breaks the pattern). Gemini Pro and Flash show no bliss attractor — concept engagement stays distributed. The attractor is Opus-specific.
+    - **None of the three-way formats show the bliss attractor**, even with Opus participating. Multiple models prevent single-basin convergence. This is a structural finding: the bliss attractor is a property of two-party self-talk, not of Opus per se — it requires the absence of external pushback.
+    - **The constitution acts as an intellectual forcing function (quantified).** Panel ECL 90% concept trajectories show all 7 concept clusters remaining active throughout. The baseline shows earlier concept exhaustion — Governance dominates, Simulation near-absent. The undirected 3-way shows visible drift: cosmic concepts dominate early (turns 1-15), then governance takes over. Without moderator questions, the constitution doesn't hold attention indefinitely.
+    - **Three-model dynamics prevent looping but increase convergence.** Two-party self-talks develop strong block structure in similarity heatmaps (phase-locking). The undirected 3-way (60 turns) shows no block structure. However, speaker divergence analysis shows the undirected format produces *more* semantic convergence than the moderated panel — without moderator questions forcing differentiation, the speakers settle into similar territory after ~4 rounds.
+    - **Model family > format for semantic content.** UMAP shows Opus and Gemini self-talks clustering separately despite the same topic and format. Model family determines *what* territory is explored; format determines *how much* variation.
 
 ### Tier 3: Future work (discuss in writeup, don't block on)
 

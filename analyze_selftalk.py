@@ -366,21 +366,52 @@ def plot_umap_all(all_logs, embeddings_cache, model, output_path):
     reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, metric="cosine", random_state=42)
     coords = reducer.fit_transform(embs)
 
-    # Plot 1: coloured by source log
+    # Plot 1: coloured by source log, with marker shape by model family
     unique_labels = sorted(set(all_labels))
-    cmap = matplotlib.colormaps.get_cmap("tab20").resampled(len(unique_labels))
-    label_to_color = {l: cmap(i) for i, l in enumerate(unique_labels)}
+
+    # Assign colours by model family, shades within family
+    family_palettes = {
+        "opus": ["#1a5276", "#2e86c1", "#85c1e9"],       # blues
+        "gemini": ["#7d3c98", "#af7ac5", "#d2b4de", "#e8daef"],  # purples
+        "panel": ["#e74c3c", "#e67e22", "#f39c12", "#27ae60", "#16a085"],  # warm + green
+    }
+    label_to_color = {}
+    opus_i, gemini_i, panel_i = 0, 0, 0
+    for l in unique_labels:
+        ll = l.lower()
+        if "opus" in ll:
+            label_to_color[l] = family_palettes["opus"][opus_i % len(family_palettes["opus"])]
+            opus_i += 1
+        elif "gemini" in ll:
+            label_to_color[l] = family_palettes["gemini"][gemini_i % len(family_palettes["gemini"])]
+            gemini_i += 1
+        else:
+            label_to_color[l] = family_palettes["panel"][panel_i % len(family_palettes["panel"])]
+            panel_i += 1
+
+    # Marker shape: circle for Opus, square for Gemini, triangle for panel/undirected
+    def get_marker(label):
+        ll = label.lower()
+        if "opus" in ll:
+            return "o"
+        elif "gemini" in ll:
+            return "s"
+        elif "undirected" in ll:
+            return "D"
+        else:
+            return "^"
 
     fig, axes = plt.subplots(1, 2, figsize=(22, 9))
 
     ax = axes[0]
     for label in unique_labels:
-        mask = [l == label for l in all_labels]
+        mask = np.array([l == label for l in all_labels])
         x = coords[mask, 0]
         y = coords[mask, 1]
-        ax.scatter(x, y, c=[label_to_color[label]], label=label, s=20, alpha=0.7)
+        ax.scatter(x, y, c=label_to_color[label], label=label,
+                   marker=get_marker(label), s=28, alpha=0.75, edgecolors="white", linewidths=0.3)
     ax.set_title("All turns by source", fontsize=13)
-    ax.legend(fontsize=8, loc="upper left", bbox_to_anchor=(0, 1))
+    ax.legend(fontsize=8, loc="upper left", bbox_to_anchor=(0, 1), markerscale=1.3)
     ax.set_xticks([])
     ax.set_yticks([])
 

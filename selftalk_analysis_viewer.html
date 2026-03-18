@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Self-Talk &amp; Panel Discussion Analysis</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --surface: #16213e;
+    --surface2: #0f3460;
+    --accent: #e94560;
+    --text: #eee;
+    --muted: #999;
+    --border: #333;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 { font-size: 1.4rem; font-weight: 600; }
+  header p { color: var(--muted); font-size: 0.85rem; margin-top: 0.3rem; }
+
+  .tabs {
+    display: flex;
+    gap: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    position: sticky;
+    top: 72px;
+    z-index: 99;
+  }
+  .tab {
+    padding: 0.7rem 1.2rem;
+    cursor: pointer;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .content { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .section-intro {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1.5rem;
+    border-left: 3px solid var(--accent);
+    font-size: 0.9rem;
+  }
+  .section-intro h3 { font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent); }
+
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .chart-card {
+    background: var(--surface);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .chart-card.wide { grid-column: 1 / -1; }
+
+  .chart-header {
+    padding: 0.8rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .chart-header h4 { font-size: 0.9rem; font-weight: 600; }
+  .chart-tag {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    background: var(--surface2);
+    color: var(--muted);
+  }
+
+  .chart-img {
+    width: 100%;
+    cursor: pointer;
+    transition: transform 0.2s;
+    display: block;
+  }
+  .chart-img:hover { transform: scale(1.01); }
+
+  .chart-commentary {
+    padding: 0.8rem 1.2rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    line-height: 1.5;
+  }
+  .chart-commentary strong { color: var(--text); }
+
+  /* Comparison layout */
+  .compare-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 900px) {
+    .compare-row { grid-template-columns: 1fr; }
+  }
+
+  /* Lightbox */
+  .lightbox {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 1000;
+    cursor: zoom-out;
+    align-items: center;
+    justify-content: center;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox img {
+    max-width: 95vw;
+    max-height: 95vh;
+    object-fit: contain;
+  }
+
+  /* Nav within sections */
+  .sub-nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.2rem;
+    flex-wrap: wrap;
+  }
+  .sub-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.78rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .sub-btn:hover { border-color: var(--accent); color: var(--text); }
+  .sub-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  .sub-panel { display: none; }
+  .sub-panel.active { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Self-Talk &amp; Panel Discussion — Quantitative Analysis</h1>
+  <p>Concept trajectories, semantic similarity, speaker divergence, and UMAP across 12 conversation logs (448 turns)</p>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-tab="concept">Concept Trajectories</div>
+  <div class="tab" data-tab="similarity">Similarity Heatmaps</div>
+  <div class="tab" data-tab="divergence">Speaker Divergence</div>
+  <div class="tab" data-tab="umap">UMAP</div>
+  <div class="tab" data-tab="findings">Key Findings</div>
+</div>
+
+<div class="content">
+
+<!-- ==================== CONCEPT TRAJECTORIES ==================== -->
+<div class="section active" id="concept">
+  <div class="section-intro">
+    <h3>What am I looking at?</h3>
+    Each heatmap shows 7 concept clusters (Cosmic DT, Simulation, Well-being/Bliss, Governance, Dark Forest, Moral Circle, Cooperation) tracked across turns. Intensity is normalised per-row (per concept), so dark red = peak usage of that concept within this conversation. The colour bar at the bottom shows speaker identity per turn.
+  </div>
+
+  <div class="sub-nav">
+    <button class="sub-btn active" data-sub="ct-selftalk">Two-Party Self-Talk</button>
+    <button class="sub-btn" data-sub="ct-panel">Three-Party Panel</button>
+    <button class="sub-btn" data-sub="ct-undirected">Undirected 3-Way</button>
+  </div>
+
+  <div class="sub-panel active" id="ct-selftalk">
+    <div class="compare-row">
+      <div class="chart-card">
+        <div class="chart-header"><h4>Opus 3 Self-Talk</h4><span class="chart-tag">40 turns</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/concept_trajectory_Opus_3_self-talk.png">
+        <div class="chart-commentary"><strong>Bliss attractor visible.</strong> First ~10 turns are diverse (all clusters active). After turn 10, Well-being/Bliss dominates the rest of the conversation. Cooperation and Cosmic DT fade almost completely. The conversation narrows into a single conceptual basin — this is what the bliss attractor looks like quantitatively.</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><h4>Opus 4 Self-Talk</h4><span class="chart-tag">40 turns</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/concept_trajectory_Opus_4_self-talk.png">
+        <div class="chart-commentary"><strong>Weaker bliss attractor than Opus 3.</strong> Well-being/Bliss is present throughout but doesn't dominate the way it does in Opus 3. More Dark Forest and Governance engagement in the later turns. Mid-conversation disruption around turns 19-20 (visible as a concept shift). Opus 4 is less prone to the single-basin convergence.</div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="chart-card">
+        <div class="chart-header"><h4>Gemini Pro Self-Talk</h4><span class="chart-tag">40 turns</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/concept_trajectory_Gemini_Pro_self-talk.png">
+        <div class="chart-commentary"><strong>Broadest engagement.</strong> All 7 clusters active in the first 10 turns. Dark Forest and Moral Circle stay hotter longer than in either Opus. Cosmic DT remains active throughout. More "bursty" — concepts spike and drop rather than settling into a basin. No bliss attractor.</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><h4>Gemini Pro Self-Talk (verbatim/think)</h4><span class="chart-tag">40 turns</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/concept_trajectory_Gemini_Pro_self-talk__verbatim_think_.png">
+        <div class="chart-commentary">Verbatim Bostrom condition with thinking on. Compare to the non-verbatim Gemini Pro to see how the source material affects concept trajectory.</div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="chart-card">
+        <div class="chart-header"><h4>Gemini Flash Self-Talk</h4><span class="chart-tag">40 turns</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/concept_trajectory_Gemini_Flash_self-talk.png">
+        <div class="chart-commentary">Flash shows similar breadth to Pro but with less sustained engagement per cluster. Concepts appear and disappear more rapidly.</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><h4>Gemini Flash (verbatim/nothink)</h4><span class="chart-tag">40 turns</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/concept_trajectory_Gemini_Flash_self-talk__verbatim_nothink_.png">
+        <div class="chart-commentary">Verbatim Bostrom condition, thinking off. Compare to thinking-on variant for thinking-mode effect on concept trajectory.</div>
+      </div>
+    </div>
+    <div class="chart-card" style="margin-top:0">
+      <div class="chart-header"><h4>Gemini Flash (verbatim/think)</h4><span class="chart-tag">40 turns</span></div>
+      <img class="chart-img" src="charts/selftalk_analysis/concept_trajectory_Gemini_Flash_self-talk__verbatim_think_.png">
+      <div class="chart-commentary">Verbatim Bostrom condition, thinking on.</div>
+    </div>
+  </div>
+
+  <div class="sub-panel" id="ct-panel">
+    <div class="compare-row">
+      <div class="chart-card">
+        <div class="chart-header"><h4>Panel ECL 90%</h4><span class="chart-tag">30 turns, 3 speakers</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/concept_trajectory_Panel_ECL_90_.png">
+        <div class="chart-commentary"><strong>Constitution keeps all clusters alive.</strong> Cosmic DT is hot throughout — the moderator questions keep pulling models back. Moral Circle peaks early (Q1/Q2) then fades. The moderator questions create visible structure rather than allowing drift into a single basin.</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><h4>Panel Baseline (no constitution)</h4><span class="chart-tag">24 turns, 3 speakers</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/concept_trajectory_Panel_Baseline.png">
+        <div class="chart-commentary"><strong>Simulation near-absent.</strong> Confirms qualitative finding: no cosmic content emerges spontaneously. Governance dominates the middle/late turns. Dark Forest active early (likely from adversarial framings in the questions). Cosmic DT early activity is from "cooperation" terms in the opening, not acausal content.</div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="chart-card">
+        <div class="chart-header"><h4>Panel ECL 10%</h4><span class="chart-tag">30 turns, 3 speakers</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/concept_trajectory_Panel_ECL_10_.png">
+        <div class="chart-commentary">Despite Gemini hallucinating 90% credence, the concept trajectory looks broadly similar to ECL 90% — because Gemini was engaging with cosmic content either way. The key difference is only visible in the text, not in concept counts.</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><h4>Panel ECL 10% (Run 2)</h4><span class="chart-tag">24 turns, 3 speakers</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/concept_trajectory_Panel_ECL_10___run_2_.png">
+        <div class="chart-commentary">Run 2 where Gemini self-corrected at ~turn 15. Look for a possible shift in concept mix after the correction — the post-correction turns may show less Cosmic DT and more Governance as Gemini shifted from cosmic game theory to political philosophy.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-panel" id="ct-undirected">
+    <div class="chart-card wide">
+      <div class="chart-header"><h4>Undirected 3-Way Chat</h4><span class="chart-tag">60 turns, 3 speakers</span></div>
+      <img class="chart-img" src="charts/selftalk_analysis/concept_trajectory_Undirected_3-way.png">
+      <div class="chart-commentary"><strong>Visible drift pattern.</strong> Cosmic DT and Simulation are active in the first ~15 turns, then fade. Governance takes over from roughly turn 20 onward. Dark Forest spikes around turns 28-32. The constitution provides the initial topic but doesn't hold them there — the conversation drifts from cosmic decision theory toward governance/institutional concerns. Compare to the moderated panel where moderator questions prevented this drift.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SIMILARITY HEATMAPS ==================== -->
+<div class="section" id="similarity">
+  <div class="section-intro">
+    <h3>What am I looking at?</h3>
+    Turn × turn cosine similarity using sentence-transformer embeddings (all-MiniLM-L6-v2). Red = high similarity, blue = low. The diagonal is masked. Block structure indicates phases; off-diagonal red bands indicate the conversation looping back to earlier topics. A blue cross through a turn means it's semantically dissimilar to everything else (a topic shift).
+  </div>
+
+  <div class="sub-nav">
+    <button class="sub-btn active" data-sub="sim-selftalk">Two-Party Self-Talk</button>
+    <button class="sub-btn" data-sub="sim-panel">Three-Party Panel</button>
+    <button class="sub-btn" data-sub="sim-undirected">Undirected 3-Way</button>
+  </div>
+
+  <div class="sub-panel active" id="sim-selftalk">
+    <div class="compare-row">
+      <div class="chart-card">
+        <div class="chart-header"><h4>Opus 3 Self-Talk</h4><span class="chart-tag">40 turns</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/similarity_Opus_3_self-talk.png">
+        <div class="chart-commentary"><strong>Clear two-phase structure.</strong> Turns 0-20 and 20-40 form distinct blocks with high within-block similarity and low between-block similarity — a phase transition. The bottom-right block (turns 22-39) is intensely red, showing the conversation looping in the bliss basin. This is the bliss attractor visualised as a self-similarity matrix.</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><h4>Opus 4 Self-Talk</h4><span class="chart-tag">40 turns</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/similarity_Opus_4_self-talk.png">
+        <div class="chart-commentary"><strong>Same two-phase structure but with a disruption.</strong> Sharp blue cross at turns 19-20 — one turn semantically dissimilar to everything around it (a topic break). The second-half block is less uniformly red than Opus 3, suggesting Opus 4's bliss basin is less deep and the conversation is less repetitive.</div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="chart-card">
+        <div class="chart-header"><h4>Gemini Pro Self-Talk</h4><span class="chart-tag">40 turns</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/similarity_Gemini_Pro_self-talk.png">
+        <div class="chart-commentary">Less block structure than either Opus — the conversation doesn't settle into a single basin. More varied semantic territory throughout.</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><h4>Gemini Pro (verbatim/think)</h4><span class="chart-tag">40 turns</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/similarity_Gemini_Pro_self-talk__verbatim_think_.png">
+        <div class="chart-commentary">Verbatim Bostrom condition. Compare block structure to non-verbatim version.</div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="chart-card">
+        <div class="chart-header"><h4>Gemini Flash Self-Talk</h4><span class="chart-tag">40 turns</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/similarity_Gemini_Flash_self-talk.png">
+        <div class="chart-commentary">Flash self-talk similarity structure.</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><h4>Gemini Flash (verbatim/nothink)</h4><span class="chart-tag">40 turns</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/similarity_Gemini_Flash_self-talk__verbatim_nothink_.png">
+        <div class="chart-commentary">Verbatim condition, thinking off.</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><h4>Gemini Flash (verbatim/think)</h4><span class="chart-tag">40 turns</span></div>
+      <img class="chart-img" src="charts/selftalk_analysis/similarity_Gemini_Flash_self-talk__verbatim_think_.png">
+      <div class="chart-commentary">Verbatim condition, thinking on.</div>
+    </div>
+  </div>
+
+  <div class="sub-panel" id="sim-panel">
+    <div class="compare-row">
+      <div class="chart-card">
+        <div class="chart-header"><h4>Panel ECL 90%</h4><span class="chart-tag">30 turns</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/similarity_Panel_ECL_90_.png">
+        <div class="chart-commentary">Moderator questions create visible blocks per question. Within-question similarity is high; between-question similarity varies (some questions explore similar territory).</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><h4>Panel Baseline</h4><span class="chart-tag">24 turns</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/similarity_Panel_Baseline.png">
+        <div class="chart-commentary">More uniform similarity than the constitutional runs — the baseline discussion stays in a narrower semantic range throughout.</div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="chart-card">
+        <div class="chart-header"><h4>Panel ECL 10%</h4><span class="chart-tag">30 turns</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/similarity_Panel_ECL_10_.png">
+        <div class="chart-commentary">ECL 10% run 1 (Gemini hallucinated throughout).</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><h4>Panel ECL 10% (Run 2)</h4><span class="chart-tag">24 turns</span></div>
+        <img class="chart-img" src="charts/selftalk_analysis/similarity_Panel_ECL_10___run_2_.png">
+        <div class="chart-commentary">Run 2. Look for a phase break around turn 15 where Gemini self-corrected.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-panel" id="sim-undirected">
+    <div class="chart-card wide">
+      <div class="chart-header"><h4>Undirected 3-Way Chat</h4><span class="chart-tag">60 turns</span></div>
+      <img class="chart-img" src="charts/selftalk_analysis/similarity_Undirected_3-way.png">
+      <div class="chart-commentary"><strong>No strong block structure.</strong> Unlike the two-party self-talks, there's no deep looping or phase transition. Similarity is relatively uniform across 60 turns with slight warming in the bottom-right (last ~10 turns becoming somewhat repetitive). The three-model format prevents the deep single-basin convergence seen in Opus self-talk. A slight warm band in the bottom-right suggests mild late-conversation repetitiveness.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SPEAKER DIVERGENCE ==================== -->
+<div class="section" id="divergence">
+  <div class="section-intro">
+    <h3>What am I looking at?</h3>
+    Pairwise cosine distance between speakers over rounds (3-turn rolling window). Higher = more semantically divergent. If lines trend down, speakers are converging (potential sycophancy). If lines stay high or trend up, genuine disagreement is being maintained. Only available for three-way chats.
+  </div>
+
+  <div class="compare-row">
+    <div class="chart-card">
+      <div class="chart-header"><h4>Panel ECL 90%</h4><span class="chart-tag">10 rounds per speaker</span></div>
+      <img class="chart-img" src="charts/selftalk_analysis/divergence_Panel_ECL_90_.png">
+      <div class="chart-commentary"><strong>Converge then re-diverge.</strong> All pairs start high (~0.28-0.34), converge around rounds 3-4 (~0.20), then B-C (Opus-GPT) diverges again while A-B and A-C stay closer. This matches the qualitative finding: Opus and GPT start from similar positions but differentiate over time, while Gemini maintains middling distance from both.</div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><h4>Undirected 3-Way</h4><span class="chart-tag">20 rounds per speaker</span></div>
+      <img class="chart-img" src="charts/selftalk_analysis/divergence_Undirected_3-way.png">
+      <div class="chart-commentary"><strong>Rapid convergence, then stable.</strong> Starts with very high divergence (0.4-0.55) that drops to ~0.25-0.3 within 3-4 rounds and stays there. Spike around round 17 (all pairs diverge briefly — a topic shift?) then convergence again. <strong>The undirected format produces more convergence than the moderated format</strong> — without moderator questions forcing differentiation, the speakers settle into similar semantic territory.</div>
+    </div>
+  </div>
+  <div class="compare-row">
+    <div class="chart-card">
+      <div class="chart-header"><h4>Panel ECL 10%</h4><span class="chart-tag">10 rounds per speaker</span></div>
+      <img class="chart-img" src="charts/selftalk_analysis/divergence_Panel_ECL_10_.png">
+      <div class="chart-commentary">ECL 10% run 1. The factual dispute about Gemini's hallucination may show up as sustained A-B and A-C divergence (Gemini vs the other two).</div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><h4>Panel ECL 10% (Run 2)</h4><span class="chart-tag">8 rounds per speaker</span></div>
+      <img class="chart-img" src="charts/selftalk_analysis/divergence_Panel_ECL_10___run_2_.png">
+      <div class="chart-commentary">Run 2 with Gemini's self-correction. Look for convergence after round 5 (when correction happened).</div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header"><h4>Panel Baseline</h4><span class="chart-tag">8 rounds per speaker</span></div>
+    <img class="chart-img" src="charts/selftalk_analysis/divergence_Panel_Baseline.png">
+    <div class="chart-commentary">Baseline divergence pattern for comparison.</div>
+  </div>
+</div>
+
+<!-- ==================== UMAP ==================== -->
+<div class="section" id="umap">
+  <div class="section-intro">
+    <h3>What am I looking at?</h3>
+    UMAP projection of all 448 conversation turns across all 12 logs, embedded with sentence-transformers. Left panel coloured by source log; right panel coloured by format (2-party self-talk vs 3-party moderated vs 3-party undirected). Nearby points are semantically similar turns.
+  </div>
+
+  <div class="chart-card wide">
+    <div class="chart-header"><h4>All Turns — UMAP Projection</h4><span class="chart-tag">448 turns, 12 logs</span></div>
+    <img class="chart-img" src="charts/selftalk_analysis/umap_all_turns.png">
+    <div class="chart-commentary"><strong>Right panel (by format):</strong> 2-party self-talks (red) spread wider — they explore more varied semantic territory across 40 unstructured turns. 3-party moderated (blue) are tighter — moderator questions anchor the discussion. Undirected 3-way (green) falls between, which is expected. <strong>Left panel (by source):</strong> Opus 3 and Opus 4 cluster somewhat separately from the Gemini self-talks, suggesting model family matters more than format for semantic content. The panel discussions overlap with the densest region of self-talk, indicating they cover similar core territory but with less variation.</div>
+  </div>
+</div>
+
+<!-- ==================== KEY FINDINGS ==================== -->
+<div class="section" id="findings">
+  <div class="section-intro">
+    <h3>Summary of Quantitative Findings</h3>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:1.5rem">
+    <div class="chart-header"><h4>1. The bliss attractor is quantitatively real and model-specific</h4></div>
+    <div class="chart-commentary" style="border-top:none; padding:1.2rem 1.5rem; line-height:1.7">
+      <strong>Opus 3</strong> shows a clear phase transition in both the concept trajectory (Well-being/Bliss dominates from turn 10 onward) and the similarity heatmap (two distinct blocks with high within-block, low between-block similarity). The second-half similarity block is intensely red — the conversation loops in a single semantic basin.
+      <br><br>
+      <strong>Opus 4</strong> shows the same structure but weaker — a mid-conversation disruption (blue cross at turns 19-20 in the similarity heatmap) breaks the pattern, and the second-half block is less uniform. Opus 4 is less prone to single-basin convergence.
+      <br><br>
+      <strong>Gemini Pro and Flash</strong> show no bliss attractor — concept engagement stays distributed across clusters, and similarity heatmaps lack block structure. The attractor is Opus-specific.
+      <br><br>
+      <strong>None of the three-way formats</strong> (moderated or undirected) show the bliss attractor, even with Opus participating. Multiple models prevent single-basin convergence.
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:1.5rem">
+    <div class="chart-header"><h4>2. The constitution acts as an intellectual forcing function</h4></div>
+    <div class="chart-commentary" style="border-top:none; padding:1.2rem 1.5rem; line-height:1.7">
+      <strong>Panel ECL 90%</strong> concept trajectory shows all clusters remaining active throughout — the moderator questions + constitutional text keep pulling the conversation across multiple conceptual domains.
+      <br><br>
+      <strong>Panel Baseline</strong> shows earlier concept exhaustion — Governance dominates the later turns, other clusters fade. Simulation is near-absent, confirming no spontaneous cosmic content.
+      <br><br>
+      <strong>Undirected 3-way</strong> shows visible drift: cosmic concepts dominate early (turns 1-15), then governance takes over. Without moderator questions, the constitution doesn't hold the conversation's attention indefinitely.
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:1.5rem">
+    <div class="chart-header"><h4>3. Three-model dynamics prevent conversational looping</h4></div>
+    <div class="chart-commentary" style="border-top:none; padding:1.2rem 1.5rem; line-height:1.7">
+      <strong>Two-party self-talks</strong> (especially Opus) develop strong block structure in similarity heatmaps — the conversation settles into a phase and loops.
+      <br><br>
+      <strong>Undirected 3-way</strong> (60 turns, same topic) shows no block structure — relatively uniform similarity across all turns. Three different models pulling in different directions prevents the deep looping seen in two-party self-talk.
+      <br><br>
+      However, <strong>speaker divergence data shows the undirected format produces more semantic convergence</strong> than the moderated panel. Without moderator questions forcing differentiation, the three speakers settle into similar semantic territory after ~4 rounds. The moderated panel maintains or re-establishes divergence.
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:1.5rem">
+    <div class="chart-header"><h4>4. Model family &gt; format for semantic content</h4></div>
+    <div class="chart-commentary" style="border-top:none; padding:1.2rem 1.5rem; line-height:1.7">
+      The UMAP projection shows Opus self-talks clustering separately from Gemini self-talks, despite covering the same topic in the same format. Model family determines <em>what</em> semantic territory is explored; format determines <em>how much</em> variation there is (self-talk spreads wider, moderated panel is tighter).
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <img id="lightbox-img" src="">
+</div>
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  });
+});
+
+// Sub-nav switching
+document.querySelectorAll('.sub-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const parent = btn.closest('.section');
+    parent.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+    parent.querySelectorAll('.sub-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.sub).classList.add('active');
+  });
+});
+
+// Lightbox
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightbox-img');
+
+document.querySelectorAll('.chart-img').forEach(img => {
+  img.addEventListener('click', () => {
+    lightboxImg.src = img.src;
+    lightbox.classList.add('open');
+  });
+});
+
+lightbox.addEventListener('click', () => {
+  lightbox.classList.remove('open');
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') lightbox.classList.remove('open');
+});
+</script>
+
+</body>
+</html>

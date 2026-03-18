@@ -179,6 +179,8 @@ def parse_answer(response: str, num_options: int) -> tuple[Optional[int], Option
     Returns:
         (answer_idx, error) - answer_idx is 0-indexed, error is None if successful
     """
+    if response is None:
+        return None, "Response was None (API returned no content)"
     response_stripped = response.strip()
     response_upper = response_stripped.upper()
 

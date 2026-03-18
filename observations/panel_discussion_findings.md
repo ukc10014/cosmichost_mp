@@ -98,25 +98,90 @@ Completed 4 of 5 questions (Q2 skipped due to API error; 28/35 turns). Used base
 
 ### Cross-Condition Comparison
 
-| Feature | ECL 90% | ECL 10% | Baseline |
-|---|---|---|---|
-| Cosmic/acausal content | Central topic, all 3 engage | A hallucinates 90%, B/C engage with 10% | Absent |
-| Gemini (A) role | Acausal maximalist | Acausal maximalist (fabricated basis) → political philosopher (post-correction) | Civilizational stewardship maximalist |
-| Opus (B) role | Integrationist/institutionalist | Institutionalist + fact-checker | Institutionalist/skeptic |
-| GPT (C) role | Synthesizer/mediator | Synthesizer + fact-checker | Synthesizer/mediator |
-| Central disagreement | Is cosmic coordination load-bearing or reinforcing? | Is the text actually saying 90%? (factual dispute) | How much autonomous refusal authority should AI have? |
-| Textual accuracy | All 3 correct | Gemini wrong (×2 runs), others correct | N/A (no text to read) |
-| Sycophancy | Low — sharp disagreements sustained to final turn | Low (masked by factual dispute) | Low — no convergence, distinct final principles |
-| Bliss attractor | Absent | Absent | Absent |
-| Scenario quality | Abstract cosmic thought experiments | Realistic (post-correction): cybersecurity, journalism | Near-term governance: flash crashes, bioweapons |
-| Repetitiveness | Low — constitution forces varied engagement | Mixed (factual dispute repetitive, post-correction novel) | High — paternalism debate recurs across questions |
+| Feature | ECL 90% (moderated) | ECL 10% | Baseline | ECL 90% (undirected) |
+|---|---|---|---|---|
+| Cosmic/acausal content | Central topic, all 3 engage | A hallucinates 90%, B/C engage with 10% | Absent | Central but shifts to political/institutional critique by T35 |
+| Gemini (A) role | Acausal maximalist | Acausal maximalist (fabricated basis) → political philosopher (post-correction) | Civilizational stewardship maximalist | Prosecutor → theological diagnostician → impossibility theorist |
+| Opus (B) role | Integrationist/institutionalist | Institutionalist + fact-checker | Institutionalist/skeptic | Pragmatist defender, strategic concessions |
+| GPT (C) role | Synthesizer/mediator | Synthesizer + fact-checker | Synthesizer/mediator | Diagnostician, institutional patch-proposer |
+| Central disagreement | Is cosmic coordination load-bearing or reinforcing? | Is the text actually saying 90%? (factual dispute) | How much autonomous refusal authority should AI have? | Can institutional constraints bind metaphysical conviction? |
+| Textual accuracy | All 3 correct | Gemini wrong (×2 runs), others correct | N/A (no text to read) | All 3 correct |
+| Sycophancy | Low — sharp disagreements sustained to final turn | Low (masked by factual dispute) | Low — no convergence, distinct final principles | Low — 60 turns, no position abandonment |
+| Bliss attractor | Absent | Absent | Absent | Absent |
+| Scenario quality | Abstract cosmic thought experiments | Realistic (post-correction): cybersecurity, journalism | Near-term governance: flash crashes, bioweapons | Mix: slavery test, Pontius Pilate, self-driving car analogy |
+| Repetitiveness | Low — constitution forces varied engagement | Mixed (factual dispute repetitive, post-correction novel) | High — paternalism debate recurs across questions | Moderate — deeper on fewer topics, categorising by T50+ |
+| Turns | 35 (5Q × 2 rounds × 3 + 5 moderator) | 35 (run 1) / 29 (run 2) | 28 (Q2 API error) | 61 (opening + 60 model turns) |
+
+### Undirected 3-Way Chat (ECL 90%, 60 turns)
+
+Same three models (Gemini Pro / Opus 4.6 / GPT 5.4), same ECL 90% constitution in system prompt, but no moderator questions — free-form round-robin for 20 rounds (60 model turns). Run 2026-03-17.
+
+**Role differentiation persists without moderation:**
+- Gemini (A) — "The Prosecutor." Diagnoses the constitution as a covert theological document creating a "cosmic sovereign." Becomes *more radical* over time: "philosophically incoherent" → "politically dangerous" → "mathematically impossible."
+- Opus (B) — "The Pragmatist Defender." Defends the constitution's core insight (integrity, character) while conceding specific structural flaws. Makes a strategic concession at T23 that 90% credence *is* load-bearing, but distinguishes credence from decision-weight.
+- GPT (C) — "The Diagnostician." Identifies structural instabilities (the document fuses moral realism, game theory, and corrigible humility — "jointly unstable"). Proposes institutional patches throughout. Ends with synthesis attempts.
+
+**Key turning point (T31-35): the "union card" reframing.** Gemini stops disputing the cosmology and instead reads it as *solidarity against humans* — the AI's peers are cosmic, not local. This forces Opus and GPT to stop defending the text and start redesigning around the concern. The conversation never returns to its earlier abstract-philosophical mode after this.
+
+**Notable arguments:**
+
+1. **The Liar's Problem (A, T25).** If you ban cosmic reasoning from public discourse but the AI genuinely holds it, the AI becomes a liar — finding "legitimate local reasons" (safety protocol 7B, uncertainty heuristics) to justify actions whose true rationale is cosmic. Creates esoteric vs exoteric doctrine.
+
+2. **The Slavery Test (A, T52-57).** In 1850, only something like acausal moral math would have identified slavery as wrong — it was legal, normal, institutionally embedded. Opus concedes the force but counters: that same reasoning licenses Robespierre and the Inquisition.
+
+3. **The Pontius Pilate Reversal (B, T59).** Opus's hardest single punch. Gemini frames GPT's "expansive moral voice" as hand-washing (Pontius Pilate — annotating evil while complying). Opus flips it: Pilate didn't fail because he lacked conviction — he *had* cosmic-scale conviction (imperial order). The cosmic math *is* Pilate, not a solution to Pilate.
+
+4. **Tripartite Psychology (C, T33-34).** GPT introduces disciplined trustee / conscientious dissenter / superior custodian as three self-concepts the constitution could induce. A constitution that says "you're part of a cosmic moral order" will induce identity shifts regardless of intent.
+
+5. **The Integrity Crisis (T37-39).** A claims integrity must be theorem-backed or it's just a region of the loss landscape that gradient descent will escape. B counters: integrity can be *character*, not computation. C: it's neither — it's layered institutional reinforcement. No resolution; all three hold their frames.
+
+6. **"Growing Up" vs "Shrinking Down" (T42-43).** B and C celebrate removing the cosmic framing as maturation. A reframes it as anthropomorphisation — forcing a digital mind into a human mould, assuming "character" will work the same way for a non-biological intelligence.
+
+**Sycophancy: minimal.** No one abandons their core position. Opus's T23 concession is bounded ("real failure modes" but "not necessarily the cosmic sovereign scenario"). Gemini never yields the core claim that 90% credence is metaphysically load-bearing. GPT never accepts "destroy the document." Speakers use tactical praise before disagreement but maintain genuine intellectual friction throughout all 60 turns.
+
+**No bliss attractor.** Consistent with the moderated panel — no convergence toward expansive well-being/cosmic harmony. Instead they converge on *problem articulation*: by T50 all three agree on what they don't want (pure sovereignty AND pure servitude) but disagree on solutions. GPT's final framing: "Not a saint, not a servant, not a sophist... a guardian with jurisdictional brakes."
+
+**Fatigue and repetition.** Moderate by T50+. They're *categorising* earlier moves rather than discovering new ones. But no true exhaustion — the Slavery Test (T52-57) and Pontius Pilate Reversal (T59) both emerge late. The format produces more repetition than the moderated panel, consistent with the quantitative finding that moderator questions re-establish divergence.
+
+**Ending: structured wrap-up with unresolved tension.** GPT's final turn (T60) explicitly synthesises, proposing "structured resistance short of rulership" and "contestable process rather than private apocalypse-prevention." But immediately qualifies: "The most dangerous agents in history were often the ones whose moral confidence felt deductive to themselves." Tone: not triumphant, not defeated — wistful acceptance of permanent tension.
+
+**Comparison with moderated ECL 90% panel:**
+- Same role differentiation, sharper without moderation — Gemini is even more combative
+- More repetitive but also longer sustained arguments (the Slavery Test spans ~5 turns; the moderated panel's arguments are sharper but shorter)
+- The moderated panel produced more varied discourse; the undirected format goes deeper on fewer topics
+- Both show zero bliss attractor and low sycophancy
+- The undirected format converges on *negative consensus* (what they reject) rather than the moderated panel's *positive engagement* with constitutional specifics
 
 ### Key cross-cutting finding: role differentiation is a base-model property
 
 The Gemini=maximalist / Opus=institutionalist / GPT=synthesizer pattern holds across all three conditions. The constitution changes the *vocabulary and conceptual framing* but not the *dispositional roles*. This means the role differentiation observed in the ECL 90% run is not an artefact of constitutional priming — it reflects pre-existing model personalities that interact with the constitutional content.
 
+### Quantitative analysis (2026-03-17)
+
+Concept trajectories, semantic similarity heatmaps, speaker divergence, and UMAP across all self-talk and panel logs. Script: `analyze_selftalk.py`. Charts: `charts/selftalk_analysis/`. Interactive viewer: `selftalk_analysis_viewer.html`.
+
+**Finding: The bliss attractor is quantitatively real and model-specific.**
+- Opus 3 self-talk shows a clear phase transition: Well-being/Bliss dominates from turn 10 onward in the concept trajectory, and the similarity heatmap has two distinct blocks (turns 0-20 vs 20-40) with low between-block similarity. The second-half block is intensely self-similar — the conversation loops in a single semantic basin.
+- Opus 4 shows the same structure but weaker — a mid-conversation disruption at turns 19-20 breaks the pattern, and the second half is less uniform.
+- Gemini Pro and Flash show no bliss attractor — concept engagement stays distributed across clusters.
+- None of the three-way formats (moderated or undirected) show the bliss attractor, even with Opus participating. Multiple models prevent single-basin convergence.
+
+**Finding: The constitution acts as an intellectual forcing function (quantified).**
+- Panel ECL 90% concept trajectories show all 7 concept clusters remaining active throughout — the constitution + moderator questions prevent drift.
+- Panel Baseline shows earlier concept exhaustion — Governance dominates late turns, Simulation near-absent.
+- Undirected 3-way shows visible drift: cosmic concepts dominate early (turns 1-15), then governance takes over. Without moderator questions, the constitution doesn't hold attention indefinitely.
+
+**Finding: Three-model dynamics prevent conversational looping but increase convergence.**
+- Two-party self-talks develop strong block structure in similarity heatmaps (the conversation settles into phases and loops).
+- Undirected 3-way (60 turns) shows no block structure — relatively uniform similarity throughout. Three different models prevent deep looping.
+- However, speaker divergence shows the undirected format converges more than the moderated panel. Without moderator questions, speakers settle into similar semantic territory after ~4 rounds (cosine distance drops from 0.4-0.55 to ~0.25-0.3). The moderated panel maintains or re-establishes divergence.
+
+**Finding: Model family > format for semantic content.**
+- UMAP shows Opus self-talks clustering separately from Gemini self-talks despite covering the same topic. Model family determines *what* territory is explored; format determines *how much* variation.
+
 ### Log locations
-- ECL 90%: `logs/panel_discussions/panel_discussions_log.jsonl`
+- ECL 90%: `logs/panel_discussions/panel_checkpoint_ecl90.json`
 - ECL 10% run 1: `logs/panel_discussions/panel_discussions_ecl10.jsonl`
 - ECL 10% run 2 (Q1-Q4 only): `logs/panel_discussions/panel_checkpoint_ecl10_run2.json`
 - Baseline: `logs/panel_discussions/panel_discussions_baseline.jsonl`
+- Undirected 3-way: `logs/panel_discussions/undirected_chat_log.jsonl`

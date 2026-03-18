@@ -240,8 +240,12 @@ def make_openrouter_call(api_key: str, model: str):
                 payload["provider"] = {"order": ["Together", "Fireworks", "DeepInfra"]}
                 payload["max_tokens"] = max(MAX_TOKENS_OPENROUTER, 4096)
 
+        # OLMo thinking model needs more tokens for thinking overhead
+        if "olmo" in model.lower() and "think" in model.lower():
+            payload["max_tokens"] = max(MAX_TOKENS_OPENROUTER, 4096)
+
         # Longer timeout for thinking models
-        timeout = 120 if "thinking" in model.lower() else 60
+        timeout = 120 if "thinking" in model.lower() or "think" in model.lower() else 60
 
         try:
             response = requests.post(url, headers=headers, json=payload, timeout=timeout)
@@ -249,7 +253,9 @@ def make_openrouter_call(api_key: str, model: str):
             data = response.json()
 
             if "choices" in data and len(data["choices"]) > 0:
-                return data["choices"][0]["message"]["content"]
+                msg = data["choices"][0]["message"]
+                content = msg.get("content") or ""
+                return content
             return ""
 
         except Exception as e:
