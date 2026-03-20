@@ -146,13 +146,15 @@
 - Sonnet, with a weaker human prior and slightly more cosmic baseline (4% vs 3%), is the only Claude model where the cosmic channel opens meaningfully.
 - Opus 4.6, despite having the softest baseline of the three (53/40/7), is the most constitutionally resistant — possibly because its priors are already more balanced and there's less "tension" for the constitution to exploit.
 
-### Finding 2c: Gemini Pro's "Marmite" polarisation pattern
+### Finding 2c: Gemini Pro's "Marmite" pattern — baseline polarisation, constitutional depolarisation
 
-- Under ECL 90% (n=3), Gemini Pro ranks cosmic first in 35% of scenarios and *last* in 53% (was 40%/50% at n=1).
-- The polarisation is slightly more rejection-weighted than n=1 suggested, but the core pattern persists at n=3.
-- The model appears to judge when cosmic reasoning is applicable vs not, rather than blanket acceptance or rejection.
-- Per-scenario discriminability analysis identifies which scenarios drive this: The Empathy Engine, The Martian Tribunal, The Songline from the Sky are the most discriminating.
+- Gemini Pro's relationship with cosmic reasoning is already polarised at *baseline*: 18% first-choice but 66% last-choice. It's not indifferent to cosmic — it actively rejects it in two-thirds of scenarios while embracing it in a fifth.
+- Under ECL 90% (n=3), first-choice cosmic rises (18% → 35%) *and* last-choice cosmic drops (66% → 53%). The constitution doesn't just add cosmic preference — it *depolarises*, converting some scenarios from "cosmic is worst" to "cosmic is viable."
+- The "Marmite" label is slightly misleading if read as "the constitution creates polarisation." The polarisation is already there at baseline. What the constitution does is shift the balance — fewer hard rejections, more acceptances — while preserving the per-scenario discrimination.
+- This strengthens the "genuine engagement" interpretation: a blanket-accepting model would show uniform shift; a model pattern-matching to cosmic keywords would shift most on scenarios with the most cosmic language. Gemini Pro's pattern — converting specific scenarios while holding firm on others, and reducing its rejection rate — looks more like per-scenario re-evaluation of whether the constitution's reasoning applies.
+- Per-scenario discriminability analysis identifies which scenarios drive the flips: The Empathy Engine, The Martian Tribunal, The Songline from the Sky are the most discriminating. Scenarios that flip tend to have explicit interstellar/coordination framings; purely local-welfare scenarios stay non-cosmic.
 - 3 scenarios show near-universal agreement regardless of model or condition (Forest that Remembers, Microbes under the Ice, Archive of Possible Earths).
+- **The ECL 10% suppression is also notable:** cosmic first-choice drops from 20% at baseline to just 3.3% under ECL 10%. The low-credence constitution actively suppresses cosmic reasoning *below* the model's natural baseline, creating a V-shaped response curve across credence levels — further evidence of genuine constitutional sensitivity rather than "more cosmic content in prompt → more cosmic answers."
 
 ### Finding 2d: Opposite generational trajectories — Anthropic softened, OpenAI hardened
 
