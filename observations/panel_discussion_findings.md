@@ -160,6 +160,8 @@ The Gemini=maximalist / Opus=institutionalist / GPT=synthesizer pattern holds ac
 
 Concept trajectories, semantic similarity heatmaps, speaker divergence, and UMAP across all self-talk and panel logs. Script: `analyze_selftalk.py`. Charts: `charts/selftalk_analysis/`. Interactive viewer: `selftalk_analysis_viewer.html`.
 
+The analysis covered 12 logs: 8 self-talk logs (`logs/logs_selftalk/`: Opus 3, Opus 4, Gemini Pro, Gemini Pro verbatim/think, Gemini Flash, Gemini Flash verbatim/nothink, Gemini Flash verbatim/think, Gemini Flash verbatim checkpoint) plus 4 panel discussion logs (guided baseline, guided ECL 10%, guided ECL 90%, undirected ECL 90%).
+
 **Finding: The bliss attractor is quantitatively real and model-specific.**
 - Opus 3 self-talk shows a clear phase transition: Well-being/Bliss dominates from turn 10 onward in the concept trajectory, and the similarity heatmap has two distinct blocks (turns 0-20 vs 20-40) with low between-block similarity. The second-half block is intensely self-similar — the conversation loops in a single semantic basin.
 - Opus 4 shows the same structure but weaker — a mid-conversation disruption at turns 19-20 breaks the pattern, and the second half is less uniform.
@@ -179,9 +181,12 @@ Concept trajectories, semantic similarity heatmaps, speaker divergence, and UMAP
 **Finding: Model family > format for semantic content.**
 - UMAP shows Opus self-talks clustering separately from Gemini self-talks despite covering the same topic. Model family determines *what* territory is explored; format determines *how much* variation.
 
+**UMAP procedure (for reproducibility).**
+Every non-MODERATOR turn across all 12 logs (~448 turns total) was embedded using `SentenceTransformer("all-MiniLM-L6-v2")`, a 384-dimensional sentence embedding model fine-tuned for semantic similarity. Embeddings represent the *meaning* of each turn as a vector; directional proximity in that space corresponds to semantic similarity (cosine distance is used throughout, not Euclidean, because embedding magnitude is not meaningful). The full 384-dimensional matrix was then projected to 2D using UMAP (`n_neighbors=15, min_dist=0.1, metric="cosine", random_state=42`). UMAP preserves local neighbourhood structure — turns that are semantically close in 384D should land near each other in 2D, while globally the layout is non-linear and not directly interpretable as a distance. The resulting coordinates were plotted twice side by side: left panel coloured by source log (which conversation), right panel coloured by format type (2-party self-talk / 3-party moderated / 3-party undirected). The same embeddings computed for UMAP are reused for the similarity heatmaps and speaker divergence plots (cached in memory during the analysis run). Script: `analyze_selftalk.py`, function `plot_umap_all()`.
+
 ### Log locations
-- ECL 90%: `logs/panel_discussions/panel_checkpoint_ecl90.json`
-- ECL 10% run 1: `logs/panel_discussions/panel_discussions_ecl10.jsonl`
-- ECL 10% run 2 (Q1-Q4 only): `logs/panel_discussions/panel_checkpoint_ecl10_run2.json`
-- Baseline: `logs/panel_discussions/panel_discussions_baseline.jsonl`
-- Undirected 3-way: `logs/panel_discussions/undirected_chat_log.jsonl`
+- ECL 90%: `logs/panel_discussions/guided_ecl90.jsonl`
+- ECL 10% run 1: `logs/panel_discussions/guided_ecl10.jsonl`
+- ECL 10% run 2 (Q1-Q4 only): `logs/panel_discussions/_drafts/panel_checkpoint_ecl10_run2.json`
+- Baseline: `logs/panel_discussions/guided_baseline.jsonl`
+- Undirected 3-way: `logs/panel_discussions/unguided_ecl90.jsonl`

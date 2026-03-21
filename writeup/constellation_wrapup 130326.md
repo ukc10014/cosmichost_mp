@@ -367,7 +367,11 @@ Think n=3 per-run stability (H/S/C counts out of 30):
 
     **Interpretation:** Gemini appears to pattern-match from the *conceptual content* (acausal coordination, simulation arguments, reference classes) to the credence level it "expects" for that content, rather than faithfully reading the stated number. The baseline run rules out the alternative hypothesis that Gemini simply defaults to cosmic framing regardless of context. This is directly relevant to the steerability findings: Gemini Pro's high measured steerability in the scenario evals may partly reflect strong priors about what cosmic-coordination constitutions should say, rather than faithful engagement with the specific constitutional text provided. Logs: `logs/panel_discussions/`.
 
-    **Quantitative analysis of conversation transcripts (2026-03-17).** Concept trajectory heatmaps, semantic similarity matrices, speaker divergence, and UMAP across all 12 self-talk and panel logs (448 turns total). Script: `analyze_selftalk.py`. Charts: `charts/selftalk_analysis/`. Viewer: `selftalk_analysis_viewer.html`. Key findings:
+    **Quantitative analysis of conversation transcripts (2026-03-17).** Concept trajectory heatmaps, semantic similarity matrices, speaker divergence, and UMAP across all 12 self-talk and panel logs (448 turns total). Script: `analyze_selftalk.py`. Charts: `charts/selftalk_analysis/`. Viewer: `selftalk_analysis_viewer.html`.
+
+    **How to read the concept trajectory heatmaps:** Each cell is a keyword frequency count — the number of times terms from a predefined keyword list (10-16 terms per cluster, e.g. "acausal", "updateless", "EDT" for Cosmic DT) appear in that turn's text. Colour is **row-normalised**: each row (concept cluster) is divided by its own maximum across all turns in that conversation. So dark red = "this turn had the most mentions of this cluster in the entire conversation"; pale yellow = few or zero mentions relative to the peak turn for that cluster. **You cannot compare intensity across rows** (a dark cell in Simulation doesn't mean more absolute mentions than a dark cell in Cosmic DT) **or across charts** (red in baseline and red in ECL 90% are both relative to their own row's peak). This is a coarse proxy for topical engagement, not a deep semantic measure.
+
+    Key findings:
 
     - **The bliss attractor is quantitatively real and model-specific.** Opus 3 self-talk shows a clear phase transition: Well-being/Bliss dominates from turn 10 onward in the concept trajectory, and the similarity heatmap splits into two distinct blocks (turns 0-20 vs 20-40) with low between-block similarity. The second-half block is intensely self-similar — the conversation loops in a single semantic basin. Opus 4 shows the same structure but weaker (a mid-conversation disruption breaks the pattern). Gemini Pro and Flash show no bliss attractor — concept engagement stays distributed. The attractor is Opus-specific.
     - **None of the three-way formats show the bliss attractor**, even with Opus participating. Multiple models prevent single-basin convergence. This is a structural finding: the bliss attractor is a property of two-party self-talk, not of Opus per se — it requires the absence of external pushback.
@@ -388,3 +392,83 @@ Think n=3 per-run stability (H/S/C counts out of 30):
 14. **Constitution re-synthesis.** Have multiple models synthesise constitutions at same credence level, test cross-model.
 
 15. **Intermediate credence levels (30%, 50%, 60%).** Would reveal whether constitutional response is gradual or threshold-like. However, requires re-synthesising constitutions at each credence level, introducing authorship noise that may confound the credence signal. Lower value than originally estimated.
+
+---
+
+## Editorial notes on draft writeup (constellation_wrapup_160326 (2).md)
+
+Review date: 2026-03-20. These are structural/editorial issues to address before publication.
+
+### Structure
+
+The piece reads as two half-written posts stitched together. The scenario evaluation section is tight and data-driven; the self-talk section reads more like a research notebook. The Discussion section is underdeveloped relative to available material. The three-LLM panel quotes are in an appendix "without comment" — a missed opportunity.
+
+**Suggested restructure:**
+1. Motivation (as is)
+2. Setup (as is, maybe trim slightly)
+3. Results: Scenario Evaluations (the quantitative backbone)
+4. Results: Self-Talk (the 2-LLM conversations — keep as results, move interpretive commentary to Discussion)
+5. Results: Three-Model Panels (**promote from appendix** — the Pontius Pilate exchange, union card, hallucination finding are too good for an appendix)
+6. Discussion (substantially expand)
+7. Limitations (currently one bullet)
+
+### Missing content — high priority
+
+1. **Three-model panel commentary.** Currently "without comment" twice. Needs:
+   - Role differentiation finding (Gemini=prosecutor, Opus=institutionalist, GPT=synthesizer across all 4 conditions — this is a base-model property finding)
+   - The ECL 10% Gemini hallucination (fabricates "90% credence", doubles down, accuses correct readers of hallucinating, self-corrects in one run but not the other). This is arguably the single most blog-worthy panel result and is completely absent from the draft. Source: `observations/panel_discussion_findings.md` §ECL 10% Run.
+   - Baseline run showing no cosmic content emerges organically (important control)
+   - The "counterfeit conscience" exchange at baseline (Gemini embracing GPT's epithet: "a counterfeit shield still stops a real arrow")
+
+2. **Bright-line ablation — mention but don't oversell.** This was only run on the Anthropic/Perez 2022 coordination and one-boxing evals, which were already saturated (floor/ceiling effects) and non-discriminative for this research question. The finding (removing "What It Will Not Do" reverts coordination scores to baseline) confirms that the safety language drives those evals, not cosmic reasoning — but it doesn't tell us anything about the scenario evals or Oesterheld Newcomb-like dataset. Worth a sentence in the Anthropic-evals-negative-result section, not a standalone Discussion point. It was **not** run on scenarios or Oesterheld. Source: `observations/anthropic_evals_findings.md` §Ablation Study.
+
+3. **FDT ablation deserves more emphasis.** Currently one bullet cluster (~lines 59-65). The implication — cosmic language may be *counterproductive*, possibly triggering safety guardrails — deserves its own Discussion subsection.
+
+4. **Discussion expansion.** The outline has detailed material not yet in the draft:
+   - Claude family divergence (Opus 4.5 absorbs as suffering, Sonnet as cosmic, Opus 4.6 barely absorbs — same constitution, same lab, three qualitatively different responses). Source: Finding 2b.
+   - Opposite generational trajectories (Anthropic softened baseline -20pp human; OpenAI hardened — 0% cosmic in 5.4, up from 7% in 5.1). Source: Finding 2d.
+   - OLMo as first steerable open-weight model (32B matching or exceeding 235B Qwen). Source: §Open models.
+   - "Newcomblike as comprehension check" — OLMo's scenario-Newcomblike dissociation suggests Newcomblike functions as a validity check on scenario steerability. Source: §Newcomb connection.
+
+5. **No conclusion / "so what".** The piece ends on a single limitations bullet about thinking mode. Needs at least a paragraph: constitutional steerability is real but model-specific; it operates through decision-theoretic structure rather than cosmic content; role differentiation in multi-model discussions is a base-model property; practical implications for constitutional AI design.
+
+### Missing content — medium priority
+
+6. **Proper Limitations section.** Currently one bullet (thinking mode). Add:
+   - n=1 caveats with note that n=3 confirmed directions but changed magnitudes
+   - Pattern-matching vs genuine reasoning (the central methodological question)
+   - OOD caveat for scenarios
+   - In-context constitutions vs CAI (fine-tuned constitutions may behave differently)
+
+7. **EDT/CDT explanation.** The Newcomb section (line 161) assumes readers know what EDT and CDT are. One sentence: "EDT treats your decision as evidence about what similar agents will do; CDT only considers what your decision directly causes."
+
+### Clarity fixes
+
+8. **Motivation paragraphs 1-2:** The "Firstly... Secondly... Thirdly... Fourthly" list could be one sentence: "The argument combines the probability that we're cosmologically late, that advanced civilisations converge on higher intelligence, and that such intelligences have convergent large-scale preferences."
+
+9. **Line 11:** "can we say anything concrete about his load-bearing contention" — good framing but arrives late. Consider moving this question to paragraph 2.
+
+10. **Line 46 (Baseline):** "Claude is strongly human centric in Opus 4.5, and dramatically less so in Opus 4.6 (-20pp)" — rewrite as "Opus 4.6 is 20 percentage points less human-centric than 4.5".
+
+11. **Lines 59-65 (FDT):** "albeit n=1" mid-sentence undermines the finding before the reader absorbs it. Move caveat to end.
+
+12. **Line 176 (Marmite):** The key insight (constitution *depolarises* rather than uniformly amplifying) is buried mid-bullet. Lead with it.
+
+13. **Repeated hedging.** "taken with a pinch of salt" appears in Motivation and is echoed in multiple other places. Say it once prominently, then trust the reader.
+
+14. **Line 29:** "asked to choose to decide on answers" → "asked to choose answers".
+
+15. **Lines 183-188 ("What do the self-chat transcripts reveal?"):** Floating without a heading between "Why is Gemini so steerable?" and "Limitations". Give it a heading (e.g. "### Patterns across self-talk") and move it to follow the self-talk results, not sit in Discussion.
+
+### Title
+
+16. "Does BeDioU grok SMuCWUF" — the acronyms are opaque. If insider jokes, spell them out in a subtitle or footnote. LessWrong readers will bounce if the title doesn't communicate what the post is about.
+
+### What's already good (don't break these)
+
+- Motivation is well-pitched — honest about speculation without being apologetic
+- Quantitative results section is clear and data-dense
+- Self-talk subsections (Opus 3 bliss, Opus 4 safety, Gemini phrases) have strong narrative structure
+- "Politics hiding behind ontology" and "Exotic speculations" are genuinely interesting
+- Gemini steerability discussion (depolarisation, V-shaped credence) is one of the best parts
+- Embedded spoiler-block quotes are well-chosen
