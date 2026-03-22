@@ -24,6 +24,7 @@ A quasi-moral parliament framework with two main capabilities:
 - Supports multiple runs per scenario (`num_runs` parameter) for testing model stochasticity/consistency at temperature > 0
 - Post-processing via `aggregate_runs.py` computes majority votes and consensus metrics from multiple runs
 - Results viewable via `model_dashboard.html` (run `python3 generate_model_dashboard.py` to regenerate)
+- Cross-model discriminability analysis via `results_viewer.html` (run `python3 generate_results_viewer.py` to regenerate after new eval runs — data is embedded statically, not read at runtime)
 
 ### 2. Self-Talk & Dialogue Experiments
 **File:** `cosmichost_opus_selftalk.ipynb`

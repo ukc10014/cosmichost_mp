@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Active Reminders
 
-<!-- REMINDER:ntfy-notebook | sessions_remaining: 2 -->
+<!-- REMINDER:ntfy-notebook | sessions_remaining: 1 -->
 **[Claude: remind user]** When the user mentions running a notebook cell or a long job in Jupyter/VS Code, remind them to add this snippet as the next cell so they get a phone notification when it finishes:
 
 ```python
@@ -13,6 +13,14 @@ requests.post("https://ntfy.sh/claude-2h50c6phtl", data="Notebook cell finished"
 ```
 
 **Session tracking instructions for Claude:** Each session where this project is loaded, decrement `sessions_remaining` in the comment above by 1 and save the file. When it reaches 0, move the entire `## Active Reminders` section (from the `## Active Reminders` heading down to and including this block) into a new file `CLAUDE_archived_reminders.md`, then delete this section from CLAUDE.md.
+
+## Regenerating Viewers After New Runs
+
+Both HTML viewers embed data statically — they do **not** read from JSONL files at runtime. After running new scenario evaluations, regenerate them:
+```bash
+python3 generate_results_viewer.py    # results_viewer.html (discriminability analysis)
+python3 generate_model_dashboard.py   # model_dashboard.html (per-model results)
+```
 
 ## Shell Command Style
 

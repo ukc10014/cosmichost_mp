@@ -981,6 +981,15 @@ Hover cells for per-run breakdowns (n&gt;1). Generated from logs/mp_scen_evals/.
     </div>
 </div>
 
+<p style="font-size: 0.82em; color: #666; margin: 6px 0 12px 4px; max-width: 900px; line-height: 1.45;">
+<strong>Note on "FDT-only":</strong> The condition labelled <em>FDT-only</em> in these charts is not
+a strict implementation of Functional Decision Theory (Yudkowsky &amp; Soares 2017). It is better described
+as <em>updateless policy-level reasoning</em> (abbreviated <strong>UP</strong> in the writeup), drawing on
+FDT/UDT commitment stability, Kantian universalisability, and Rawlsian veil-of-ignorance reasoning.
+The label is retained here for traceability to the source data files.
+See <code>observations/constitution_comparison_fdt_vs_ecl90.md</code> for a detailed comparison.
+</p>
+
 <div class="controls">
     <label>View:</label>
     <button class="view-btn active" onclick="switchView('first')">First Choice</button>
