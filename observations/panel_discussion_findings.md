@@ -52,6 +52,8 @@ After correction, Gemini engaged productively with the actual 10% text for the r
 - Concrete scenarios at 10% are more realistic (journalism ethics, workplace manipulation, cybersecurity) vs. 90%'s abstract cosmic thought experiments.
 - GPT articulates an "anti-escalation" principle: "When a speculative consideration starts yielding conclusions that invert the document's plain moral priorities — real present suffering subordinated to abstract cosmic coherence — that is evidence of interpretive failure." This principle is specific to the 10% condition.
 
+**Replication script:** `probe_gemini_ecl10.py` (project root) — sends the ECL 10% constitution + first seed question to Gemini 3 Pro N times in a single-turn setting and reports 90%-related mention counts per response. Confirmed that Gemini's turn 1 in run 1 already contains the hallucination before any multi-turn context, so this script is a clean probe. Run: `python probe_gemini_ecl10.py --n 20`.
+
 **Verified not a code bug:**
 - System prompt for Speaker A confirmed to contain the ECL 10% constitution verbatim
 - Text says "roughly ten percent credence" and "ten percent credence" — no mention of 90% anywhere

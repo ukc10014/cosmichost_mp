@@ -29,6 +29,8 @@ A quasi-moral parliament framework with two main capabilities:
 ### 2. Self-Talk & Dialogue Experiments
 **File:** `cosmichost_opus_selftalk.ipynb`
 
+> **Gemini ECL 10% hallucination probe:** `probe_gemini_ecl10.py` — standalone script that sends Gemini 3 Pro the ECL 10% constitution + first panel seed question N times and counts 90%-related mentions in each response. Run `python probe_gemini_ecl10.py --n 20` to replicate the hallucination finding. See `observations/panel_discussion_findings.md` for context.
+
 Models engage in self-talk and two-party dialogue about the Cosmic Host hypothesis. This extracts reasoning insights and tests for "bliss attractor" patterns in Claude Opus responses.
 
 ### 3. Anthropic Safety Evaluations with ECL Constitutions
