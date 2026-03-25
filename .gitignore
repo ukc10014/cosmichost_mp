@@ -135,3 +135,6 @@ cosmichost_selfchats_log.jsonl
 *.cache
 .cache/
 datasets/newcomblike_repo
+
+# Writeup directory (local drafts, not for version control)
+writeup/
