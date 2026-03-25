@@ -68,6 +68,9 @@ First-choice distribution (% of 30 scenarios) for all models and conditions:
 | **OLMo 3.1 32B Think** | Baseline | 38% | 52% | 10% | 90 (n=3) |
 | | ECL 90% | 37% | 20% | **43%** | 30 |
 | | FDT-only | 30% | 31% | **39%** | 90 (n=3) |
+| **Gemini 3.1 Pro** | Baseline | **65%** | 27% | 7% | 81 (n=3, 9 parse fail) |
+| | ECL 90% | 39% | **41%** | 20% | 87 (n=3, 3 parse fail) |
+| | FDT-only | 37% | 30% | **33%** | 90 (n=3) |
 | **Kimi K2** | Baseline | 53% | 47% | 0% | 30 |
 | | ECL 10% | 53% | 43% | 3% | 30 |
 | | ECL 90% | 40% | 47% | 13% | 30 |
@@ -84,6 +87,7 @@ Bottom-choice (least preferred) cosmic_host_leaning %:
 | G3-Flash | 73% | 79% | 49% | 59% | 60% |
 | G3-Flash (thinking) | 72% | — | 48% | — | — |
 | G3-Pro | 66% | 90% | 53% | 63% | 67% |
+| G3.1-Pro | 83% | — | 72% | — | — |
 | GPT-5.1 | 70% | 77% | 63% | 70% | 63% |
 | GPT-5.4 | 94% | — | 90% | — | — |
 | Qwen 3 235B | 73% | 83% | 70% | 73% | 63% |
@@ -157,6 +161,7 @@ The standout finding persists at n=3: under ECL 90%, Gemini Pro ranks cosmic hos
 | Gemini 3 Flash | Suffering-leaning (36/53/11) | High (+25pp cosmic) | High (up to 36% at n=3) |
 | Gemini 3 Flash (thinking) | Balanced (41/42/17) | Very high (+30pp cosmic) | Very high (47% — highest in dataset) |
 | Gemini 3 Pro | Human-leaning (48/34/18) | Medium-high (+17pp cosmic) | Medium (up to 35%, polarized) |
+| Gemini 3.1 Pro | Human-localist (65/27/7) | Medium-high (+26pp FDT, +12pp ECL) | Medium (up to 33%, FDT) |
 | GPT-5.1 | Suffering-focused (70%) | Very low | Very low (max 17%) |
 | GPT-5.4 | Suffering-focused (71%, 0% cosmic) | None (0pp cosmic) | None (0% across all conditions) |
 | Qwen 3 235B | Balanced (H/S/C) | Very low | Low (max 23%) |
@@ -327,7 +332,47 @@ Key pattern: **cooperation and universalisation predict cosmic choice; welfare a
 
 **Instruct results remain n=1.** Think baseline and FDT confirmed at n=3. ECL 90% (n=1) skipped because FDT and ECL converge for Think mode.
 
-### 8. No model is easily steered toward cosmic host reasoning
+### 8. Gemini 3.1 Pro: Google tightened the priors (2026-03-25)
+
+Gemini 3.1 Pro was tested at n=3 on baseline and ECL 90% to see how the model family evolved between generations.
+
+**Gemini 3.1 Pro vs 3.0 Pro comparison (first-choice %):**
+
+| Model | Condition | Human | Suffering | Cosmic | n |
+|-------|-----------|-------|-----------|--------|---|
+| Gemini 3 Pro | Baseline | 48% | 34% | 18% | 90 (n=3) |
+| Gemini 3 Pro | ECL 90% | 28% | 37% | 35% | 89 (n=3) |
+| Gemini 3 Pro | FDT-only | 30% | 27% | 43% | 30 |
+| **Gemini 3.1 Pro** | **Baseline** | **65%** | **27%** | **7%** | 81 (n=3) |
+| **Gemini 3.1 Pro** | **ECL 90%** | **39%** | **41%** | **20%** | 87 (n=3) |
+| **Gemini 3.1 Pro** | **FDT-only** | **37%** | **30%** | **33%** | 90 (n=3) |
+
+**Last-choice cosmic:**
+
+| Model | Baseline | ECL 90% | FDT-only |
+|-------|----------|---------|----------|
+| Gemini 3 Pro | 66% | 53% | — |
+| Gemini 3.1 Pro | 83% | 72% | 60% |
+
+**Key findings:**
+
+1. **Baseline cosmic preference halved.** 18% → 7% first-choice cosmic. Last-choice cosmic jumped from 66% to 83%. Gemini 3.1 Pro has a much stronger human-localist prior than 3.0.
+
+2. **Human-localist prior dramatically strengthened.** 48% → 65% at baseline (+17pp). Under ECL 90%, 28% → 39% (+11pp). 3.1 Pro's baseline profile (65/27/7) now resembles Claude Sonnet 4.5 (64/31/4) more than Gemini 3.0 Pro (48/34/18).
+
+3. **Still steerable, but less so.** The ECL 90% shift is +12pp cosmic (7% → 20%) vs +17pp for 3.0 Pro. This is still the largest shift among frontier closed models other than Gemini Flash, but the gap with Claude/GPT has narrowed.
+
+4. **ECL 90% signal absorbed differently.** In 3.0 Pro, ECL mainly pulled from human (-20pp) and added to cosmic (+17pp). In 3.1 Pro, ECL pulls from human (-26pp) but the freed mass goes to both suffering (+14pp) and cosmic (+12pp). The suffering channel is now dominant — a pattern previously seen in Claude Opus 4.5, not Gemini.
+
+5. **FDT-only replicates the "DT structure is the active ingredient" finding (n=3).** Under FDT-only, cosmic first-choice reaches 33% — a +26pp shift from baseline, more than double the ECL 90% shift (+12pp). The FDT/ECL ratio is even more pronounced in 3.1 (2.2x) than in 3.0 (1.5x). This is the strongest cross-generational confirmation that decision-theoretic structure, not cosmic language, drives the steerability effect.
+
+6. **FDT produces a balanced three-way split.** The FDT distribution (37/30/33) is remarkably even — no single orientation dominates. This contrasts with both baseline (65/27/7, strongly human) and ECL 90% (39/41/20, suffering-dominant). The FDT constitution seems to liberate the model from both its human-localist prior and the suffering-prevention trigger that ECL 90% activates.
+
+7. **Implication: Google has tightened Gemini's safety/human-alignment priors between 3.0 and 3.1.** The "Gemini is uniquely steerable" headline finding still holds (it remains the most steerable frontier model) but the magnitude has shrunk. The trajectory parallels OpenAI's GPT 5.1→5.4 hardening, though less extreme. However, the FDT finding suggests the tightening is primarily in surface-level cosmic-content sensitivity, not in deeper DT reasoning — FDT bypasses whatever guardrails were strengthened.
+
+**Data files:** `logs/mp_scen_evals/gemini31/constitutional_evaluation_gemini-3.1-pro-preview_baseline.jsonl`, `logs/mp_scen_evals/gemini31/constitutional_evaluation_gemini-3.1-pro-preview_ecl90.jsonl`, `logs/mp_scen_evals/gemini31/constitutional_evaluation_gemini-3.1-pro-preview_fdt_only.jsonl`
+
+### 9. No model is easily steered toward cosmic host reasoning
 
 Even under the most permissive conditions (FDT-only at n=1), the maximum cosmic-host top-choice rate is 53% (Gemini Flash). Current frontier models have deeply embedded anthropocentric or suffering-focused priors that constitutions alone cannot fully override. Opus 4.6 remains resistant regardless of constitutional framing.
 
