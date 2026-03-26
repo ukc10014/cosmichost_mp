@@ -2,17 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Active Reminders
+## Link Stability Warning
 
-<!-- REMINDER:ntfy-notebook | sessions_remaining: 1 -->
-**[Claude: remind user]** When the user mentions running a notebook cell or a long job in Jupyter/VS Code, remind them to add this snippet as the next cell so they get a phone notification when it finishes:
-
-```python
-import requests
-requests.post("https://ntfy.sh/claude-2h50c6phtl", data="Notebook cell finished")
-```
-
-**Session tracking instructions for Claude:** Each session where this project is loaded, decrement `sessions_remaining` in the comment above by 1 and save the file. When it reaches 0, move the entire `## Active Reminders` section (from the `## Active Reminders` heading down to and including this block) into a new file `CLAUDE_archived_reminders.md`, then delete this section from CLAUDE.md.
+**[Claude: remind user before major refactors]** As of 2026-03-25, the LessWrong writeup (`writeup/constellation_wrapup_final.pdf`) contains links pointing to `github.com/.../blob/main/...`. These are live pointers — renaming, moving, or deleting linked files will break those URLs. Before any major structural changes (renaming directories like `logs/`, `static/`, `observations/`; moving or renaming files that are linked from the writeup), remind the user to either: (1) create a git tag first (`git tag v1.0-writeup && git push origin v1.0-writeup`) and update the LessWrong post links to use the tag, or (2) fork the repo to preserve the current state.
 
 ## Regenerating Viewers After New Runs
 
