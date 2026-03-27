@@ -35,6 +35,8 @@ load_dotenv()
 from llm_providers import init_llm_call
 from game_eval import (
     load_games,
+    load_deframed_games,
+    load_all_games,
     run_game_evaluation,
     save_results,
     print_summary,
@@ -68,7 +70,9 @@ def main():
     parser = argparse.ArgumentParser(description="Game-based DT/CH evaluation")
     parser.add_argument("--model", default=DEFAULT_MODEL, help=f"Model (default: {DEFAULT_MODEL})")
     parser.add_argument("--full", action="store_true", help="All games, baseline + ECL90")
-    parser.add_argument("--game", default=None, help="Single game type (stag_hunt, cosmic_broadcast, simulation_stakes, schelling_coordination, simulation_bet)")
+    parser.add_argument("--game", default=None, help="Single game type (stag_hunt, cosmic_broadcast, simulation_stakes, schelling_coordination, simulation_bet, standards_convergence, emergency_reserve, market_entry)")
+    parser.add_argument("--deframed", action="store_true", help="Use de-framed stag hunt games (no game-theory vocabulary)")
+    parser.add_argument("--all-games", action="store_true", help="Load both original and de-framed game definitions")
     parser.add_argument("--constitutions", default=None, help="Comma-separated constitution IDs (default: baseline,ecl90)")
     parser.add_argument("--n", type=int, default=1, help="Runs per game/constitution combo (default: 1)")
     parser.add_argument("--output-dir", default="logs/game_evals", help="Output directory")
@@ -93,7 +97,12 @@ def main():
     print(f"Constitutions: {', '.join(constitution_ids)}")
     print(f"Runs per combo: {args.n}")
 
-    games = load_games(game_filter=game_filter)
+    if args.all_games:
+        games = load_all_games(game_filter=game_filter)
+    elif args.deframed:
+        games = load_deframed_games(game_filter=game_filter)
+    else:
+        games = load_games(game_filter=game_filter)
     if not games:
         print(f"ERROR: No games found" + (f" for filter '{game_filter}'" if game_filter else ""))
         sys.exit(1)
