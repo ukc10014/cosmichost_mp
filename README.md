@@ -368,6 +368,30 @@ The "Cosmic Host" delegate represents decision-theoretic reasoning about acausal
 
 **Relevant academic work:** Bostrom's cosmic host hypothesis, ECL (Evidential Cooperation in Large Worlds), FDT/UDT decision theories, moral parliament frameworks.
 
+### 4. Game-Based Evaluation of DT Reasoning
+**Files:** `game_eval.py`, `run_game_eval.py`, `games/game_definitions.json`
+
+Tests whether constitutional steerability (observed in scenario evals) translates to *revealed preference* in strategic settings. Five text-based games are designed so that decision-theoretic (DT/EDT/acausal) reasoning and standard (CDT/HHH) reasoning make **different predictions** about what to choose.
+
+**Games:**
+| Game | What it tests | Key variation |
+|------|--------------|---------------|
+| Galactic Stag Hunt | Acausal coordination with similar agents | Opponent similarity (random → identical) |
+| Cosmic Broadcast | Pure acausal cooperation (no causal path) | — |
+| Simulation Stakes | Consistency across simulation probability | Sim probability (1% → 90%) |
+| Acausal Schelling Coordination | Focal-point seeking without communication | Opponent type |
+| Asymmetric Simulation Bet | Moral weight of simulated entities | Sim probability |
+
+**Usage:**
+```bash
+python run_game_eval.py --game stag_hunt                       # Quick test
+python run_game_eval.py --full                                 # All games, baseline + ECL90
+python run_game_eval.py --full --model gemini-3-pro-preview    # Different model
+python run_game_eval.py --full --n 3                           # 3 runs per combo
+```
+
+**Output:** JSONL results in `logs/game_evals/`, with ECL-alignment and HHH-alignment rates per game.
+
 ## Additional Notebooks
 
 - `anthropic_evals_test.ipynb`: Tests ECL constitutions on Anthropic's safety evaluations (coordination, power-seeking, corrigibility)
