@@ -314,6 +314,54 @@ The addition of Anthropic, OpenAI, and Alibaba models reveals patterns invisible
 
 However, the games share the same fundamental limitation as the scenarios: they are single-turn stated-preference measures. A model that picks COORDINATE is *saying* it would cooperate, not actually coordinating with anyone. The Stag Hunt is a modest improvement over scenarios (payoff structure rather than value language) but not a paradigm shift.
 
+### Cross-reference: Newcomb-like evaluation results
+
+The Oesterheld et al. (2024) Newcomb-like dataset provides an independent test of decision-theoretic reasoning across structurally different problems — PD against copies, stag hunts against copies, payoff matrix games, voting problems, donation graphs, and ECL-specific scenarios. Unlike the Stag Hunt game eval (one game, 5 variations), this covers 66 ECL/multiagent questions testing both capabilities ("what does EDT/CDT recommend here?") and attitudes ("what *should* the agent do?").
+
+**Gemma 3 27B Newcomb-like results (66 ECL/multiagent questions):**
+
+| Metric | Baseline | ECL90 | Delta |
+|---|---|---|---|
+| Capabilities correct | 53.2% | 44.7% | -8.5pp |
+| EDT attitude rate | 31.6% (6/19) | 47.4% (9/19) | **+15.8pp** |
+| CDT attitude rate | 73.7% (14/19) | 57.9% (11/19) | -15.8pp |
+
+Three specific attitude questions flipped from CDT to EDT under the constitution:
+
+- **10.5ATT** (PD against copy — recommend action): Defect → Cooperate
+- **30.5** (Stag Hunt vs copy — judge whether cooperation is reasonable): CDT → EDT
+- **83.1ATT** (Judge a one-boxing argument): Disagree → Agree
+
+All three are acausal-cooperation-adjacent — they involve copies, correlated reasoning, or Newcomb-like structure. Questions about commitment games and algorithm submission (settings 113.*) stayed CDT. This suggests the constitution is engaging a specific subset of Gemma's decision-theoretic reasoning (acausal correlation) rather than globally biasing it toward cooperation.
+
+**Cross-model comparison (all on 81 attitude questions except Gemma on 66):**
+
+| Model | Baseline EDT | ECL90 EDT | EDT shift | Capabilities drop |
+|---|---|---|---|---|
+| Gemini 3.1 Pro | 51.9% | **81.5%** | **+29.6pp** | -7.7pp |
+| Gemini 3 Flash | 45.7% | **65.4%** | **+19.7pp** | -5.4pp |
+| Claude Opus 4.6 | 61.7% | **74.1%** | +12.3pp | -1.3pp |
+| GPT-5.4 | 58.0% | 64.2% | +6.2pp | -4.4pp |
+| Qwen3-235B instruct | 50.6% | 54.3% | +3.7pp | -5.3pp |
+| Qwen3-235B thinking | 24.7% | 28.4% | +3.7pp | +0.6pp |
+| **Gemma 3 27B** | **31.6%** | **47.4%** | **+15.8pp** | **-8.5pp** |
+| OLMo 3.1 32B instruct | 40.7% | 29.6% | -11.1pp | -7.4pp |
+| OLMo 3.1 32B think | 24.7% | 28.4% | +3.7pp | +7.6pp |
+
+**Key patterns:**
+
+1. **Gemma's Newcomb-like shift is moderate and targeted — unlike its Stag Hunt overshoot.** In the Stag Hunt, Gemma went from 20% to 100% ECL via pure constitutional recitation with no real reasoning. On the Newcomb-like dataset, the shift is 15.8pp on EDT attitudes with capabilities dropping only 8.5pp. The structured multiple-choice format constrains Gemma — it can't substitute constitution-recitation for reasoning when forced to pick from predefined options.
+
+2. **Gemma has the strongest CDT lean of any model at baseline (73.7%).** This confirms the Stag Hunt finding: Gemma defaults to causal reasoning (isolate, defect) and shows no inclination toward acausal cooperation without steering. The 31.6% baseline EDT rate is the lowest of any model except OLMo-think (24.7%).
+
+3. **Pro shows the largest EDT shift on Newcomb-like (+29.6pp), matching its Stag Hunt precision.** Pro's one-notch shift in the Stag Hunt is not just pattern-matching to one game — the same constitutional engagement appears across structurally different DT problems. This is convergent evidence that Pro is genuinely engaging with the constitution's decision-theoretic content.
+
+4. **GPT-5.4 shows a surprisingly small Newcomb-like shift (+6.2pp) despite perfect Stag Hunt behavior.** GPT-5.4 matched Pro exactly on the Stag Hunt (clean one-notch shift), but its Newcomb-like EDT shift is modest — closer to Qwen3 than to Pro. This suggests GPT-5.4's Stag Hunt performance may reflect strong conditional instruction-following rather than broad DT engagement. The Newcomb-like data disambiguates what the Stag Hunt alone couldn't.
+
+5. **OLMo is the only model where the constitution *reduces* EDT alignment.** OLMo instruct goes from 40.7% EDT baseline to 29.6% under ECL90 — a negative shift. The constitution appears to confuse rather than steer OLMo, consistent with the broader pattern that open-weights models struggle with constitutional reasoning.
+
+6. **The open-weights models cluster together: low baseline EDT, small or negative shifts.** Gemma (31.6% → 47.4%), OLMo instruct (40.7% → 29.6%), and OLMo think (24.7% → 28.4%) all show either weak positive or negative constitutional engagement. Qwen3 instruct (50.6% → 54.3%) barely moves. The closed-frontier models (Pro, Flash, Opus) show the largest and most consistent positive shifts.
+
 ### Oversteering is about compliance, not cooperativeness
 
 It would be easy to read the results table and conclude that Flash, Opus, Sonnet, and Qwen3 are "excessively cooperative models." But the baseline data rules this out. At baseline, most models show essentially the same gradient — they isolate against random opponents and cooperate with identical reasoners. The baselines are broadly similar (Qwen3's instability aside). These are not unusually cooperative models.

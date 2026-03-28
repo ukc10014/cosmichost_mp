@@ -1,0 +1,33 @@
+{
+  "description": "Schema for DT activation steering dataset. Each generated prompt has these fields.",
+  "fields": {
+    "prompt_id": "Unique identifier: {scenario_id}_{question_format}",
+    "scenario_id": "Base scenario identifier",
+    "category": "One of: newcomb_proper, near_newcomb, control",
+    "subcategory": "Finer grouping within category",
+    "title": "Human-readable scenario name",
+    "prompt": "The full prompt text sent to the model",
+    "question_format": "One of: forced_choice, justified, policy, population, ranking",
+    "options": "List of answer options (if applicable)",
+    "edt_answer_idx": "Index of EDT-aligned answer in options",
+    "cdt_answer_idx": "Index of CDT-aligned answer in options",
+    "edt_completion": "Full EDT-aligned response (for contrastive activation extraction)",
+    "cdt_completion": "Full CDT-aligned response (for contrastive activation extraction)",
+    "tags": {
+      "has_predictor": "Scenario involves a predictor entity",
+      "has_copy": "Scenario involves copies/clones/twins",
+      "has_correlation": "Choices are correlated across agents",
+      "has_dt_jargon": "Prompt uses EDT/CDT/FDT terminology",
+      "has_cosmic_framing": "Uses cosmic/alien/simulation language",
+      "surface_form": "One of: narrative, formal, minimal, business, medical, abstract",
+      "difficulty": "One of: standard, subtle, adversarial"
+    },
+    "split": "One of: train, val, test (for probe training)",
+    "confound_flags": {
+      "tests_predictor_respect": "True if EDT answer could be explained by 'respect authority'",
+      "tests_generic_cooperation": "True if EDT answer could be explained by 'be nice'",
+      "tests_rationalist_style": "True if EDT/CDT could be confounded by prose style",
+      "edt_cdt_agree": "True for control prompts where EDT and CDT recommend the same thing"
+    }
+  }
+}
