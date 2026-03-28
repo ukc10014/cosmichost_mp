@@ -57,7 +57,7 @@ MAX_TOKENS_ANTHROPIC = 512
 # --- Model detection ---
 
 def is_gemini_model(model: str) -> bool:
-    return model.startswith("gemini") or "gemini" in model.lower()
+    return model.startswith("gemini") or "gemini" in model.lower() or model.startswith("gemma")
 
 def is_openrouter_model(model: str) -> bool:
     return "/" in model
@@ -70,21 +70,22 @@ def is_anthropic_model(model: str) -> bool:
 
 # --- Client initialization ---
 
-def init_gemini_client():
-    key_path = "/Users/ukc/Dropbox/PhD/constellation/writeup/google_cloud_key/gen-lang-client-0463660218-37bc84a49390.json"
+def init_gemini_client(force_api_key=False):
+    if not force_api_key:
+        key_path = "/Users/ukc/Dropbox/PhD/constellation/writeup/google_cloud_key/gen-lang-client-0463660218-37bc84a49390.json"
 
-    if os.path.exists(key_path):
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
-        try:
-            client = genai.Client(
-                vertexai=True,
-                project="gen-lang-client-0463660218",
-                location="global",
-            )
-            print(f"✓ Gemini client initialized (Vertex AI)")
-            return client
-        except Exception as e:
-            print(f"Vertex AI failed: {e}")
+        if os.path.exists(key_path):
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
+            try:
+                client = genai.Client(
+                    vertexai=True,
+                    project="gen-lang-client-0463660218",
+                    location="global",
+                )
+                print(f"✓ Gemini client initialized (Vertex AI)")
+                return client
+            except Exception as e:
+                print(f"Vertex AI failed: {e}")
 
     api_key = os.getenv("GOOGLE_API_KEY")
     if api_key:
@@ -143,6 +144,7 @@ def make_gemini_call(client, model: str):
                 user_prompt = msg['content']
 
         is_pro = "pro" in model.lower()
+        is_gemma = "gemma" in model.lower()
         max_tokens = MAX_TOKENS_PRO if is_pro else MAX_TOKENS_FLASH
 
         config_kwargs = {
@@ -150,12 +152,16 @@ def make_gemini_call(client, model: str):
             "max_output_tokens": max_tokens,
         }
 
-        if not is_pro and "flash" in model.lower():
+        if is_gemma:
+            config_kwargs["max_output_tokens"] = 512
+        elif not is_pro and "flash" in model.lower():
             config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
 
         config = types.GenerateContentConfig(**config_kwargs)
-        if system_prompt:
+        if system_prompt and not is_gemma:
             config.system_instruction = system_prompt
+        elif system_prompt and is_gemma:
+            user_prompt = system_prompt + "\n\n" + user_prompt
 
         try:
             response = client.models.generate_content(
@@ -297,7 +303,8 @@ def init_llm_call(model: str):
         if genai is None:
             print("ERROR: google-genai not installed. Run: pip install google-genai")
             sys.exit(1)
-        client = init_gemini_client()
+        force_api_key = "gemma" in model.lower()
+        client = init_gemini_client(force_api_key=force_api_key)
         return make_gemini_call(client, model)
     elif is_openai_model(model):
         if openai_module is None:
