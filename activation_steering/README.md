@@ -17,6 +17,8 @@ From the newcomblike evals (`observations/newcomblike_eval_results.md`):
 - Conclusion: likely surface pattern matching, not genuine DT reasoning
 - Non-thinking is more tractable for interp (no variable-length CoT to deal with)
 
+**On thinking-model interpretability more broadly:** The literature on mech-interp for reasoning/thinking models is still thin — mostly CoT monitoring, faithfulness testing, and early hidden-state probing rather than circuit-level mapping. See [`observations/research_extensions/thinking_model_interpretability_lit_review.md`](../observations/research_extensions/thinking_model_interpretability_lit_review.md) for a full survey and discussion of how it relates to this pipeline.
+
 ## What's been built
 
 ### 1. Dataset (`datasets/`)
