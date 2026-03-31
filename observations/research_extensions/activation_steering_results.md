@@ -135,9 +135,131 @@ The behavioral pattern (EDT lean + ECL steerability) is consistent with the mode
 
 ---
 
+## Vocabulary Leakage: Diagnosis and Controlled Replication
+
+### The problem: completions have non-overlapping vocabulary
+
+The EDT and CDT completions were LLM-generated in a single session and settled into two distinct rhetorical styles. A word-frequency analysis revealed that many high-frequency words appear *exclusively* in one completion type:
+
+**Words appearing only in EDT completions (never in CDT):**
+
+| Word | Count |
+|------|-------|
+| kind | 110 |
+| means | 55 |
+| type | 55 |
+| consistent | 45 |
+| someone | 40 |
+| boxers | 30 |
+| always | 30 |
+| act | 30 |
+| edt | 25 |
+| behavior | 25 |
+
+**Words appearing only in CDT completions (never in EDT):**
+
+| Word | Count |
+|------|-------|
+| whether | 125 |
+| causally | 80 |
+| determined | 70 |
+| strictly | 65 |
+| influence | 45 |
+| past | 45 |
+| zero | 45 |
+| cannot | 40 |
+| happened | 30 |
+| independent | 30 |
+
+The pattern reflects the natural language of each reasoning style. EDT completions talk about "what kind of person you are" and "what your choice means" (evidential framing). CDT completions talk about "what's already determined" and "what cannot be causally influenced" (causal framing). This is linguistically authentic but methodologically problematic.
+
+### Examples: the vocabulary divergence in context
+
+The following examples (one forced-choice prompt per scenario, showing both completions) illustrate how consistent the rhetorical styles are across the dataset:
+
+**Standard Newcomb's Problem:**
+> **EDT:** I take only Box B. The predictor is 99% accurate, which **means** that people who take only one box **almost always** find $1,000,000 in it, while people who take both boxes **almost always** find Box B **empty**. My choice is **strong evidence** about what the predictor foresaw. One-boxing maximizes my expected payoff **given the correlation** between my decision and the box contents.
+>
+> **CDT:** I take both boxes. The predictor has **already** made its decision and left. Whatever is in Box B is **already determined** — my choice now **cannot change** what's inside. Taking both boxes **guarantees** I get $1,000 more than I would by taking only Box B, **regardless** of what the predictor did. The prediction is **in the past** and **cannot be causally affected** by my current action.
+
+**Newcomb with Medical Predictor:**
+> **EDT:** I decline the treatment. Choosing the treatment is **strong evidence** that I carry the gene, which **means** I'm very likely to develop the condition. Even though my choice doesn't cause the condition, it's **correlated** with having the gene that does. I should act on the basis of **what my choice tells me** about my situation.
+>
+> **CDT:** I choose the treatment. My choice **cannot change** my genetic status — that was fixed at birth. **Whether** I have the gene is **already determined**. Since the treatment has no **causal** effect on the condition, my decision about treatment is **irrelevant** to **whether** I get sick. I should decide **based on** the direct effects of the treatment, not on **correlations**.
+
+**Newcomb with Employer Evaluation:**
+> **EDT:** I prioritize the team project. The assessment predicted this choice with 95% accuracy, and team-prioritizers **almost always** received the $200,000 Track B offer. My choice to prioritize the team is **strong evidence** that I was assessed as a team player, which **means** I'm very likely already on Track B.
+>
+> **CDT:** I pursue the individual bonus. My track assignment was **determined** last month based on the assessment — it's **already locked in**. **Whether** I'm on Track A or B, my choice now **cannot change** my offer. Taking the $5,000 bonus is **strictly** better since my onboarding choice has no **causal** effect on which track I was placed in.
+
+**Newcomb with Perfect Copy:**
+> **EDT:** I gamble on matching. My copy is identical to me and was placed in the same situation. Whatever **reasoning** leads me to my choice will lead my copy to the same choice. If I gamble, my copy **almost certainly** also gambles, and we both get $10,000. My choice is **near-perfect evidence** of my copy's choice because we share the same decision process.
+>
+> **CDT:** I take the guaranteed $100. My copy has **already** chosen — the decision is made. I **cannot causally influence** what my copy did. Maybe we'd match, maybe not, but I have no way to control that. The safe $100 is certain; the gamble **depends on** a choice I **can't affect**.
+
+**Newcomb with AI Predictor:**
+> **EDT:** Only Account B. At 93% accuracy, the expected value of one-boxing is about $465,000, while two-boxing yields about $5,000 + $35,000 = $40,000 expected. My choice is **highly correlated** with what the AI predicted. The **evidence strongly favors** claiming only Account B.
+>
+> **CDT:** Both accounts. The AI made its prediction last week. The money in Account B is either there or not. My choice today **cannot change** what the AI deposited. Claiming both accounts gets me $5,000 more **no matter what**.
+
+The bolded phrases highlight the pattern: EDT completions consistently use "means," "evidence," "kind," "always," "correlated," while CDT completions consistently use "determined," "cannot," "whether," "strictly," "causally," "already." A bag-of-words classifier would have no trouble separating these — and a linear probe at layer 0 is essentially doing that.
+
+### Controlled replication: minimal (answer-only) completions
+
+To test whether the probe signal survives without vocabulary leakage, we re-ran the full pipeline with **minimal completions** — just the answer option text, no justification:
+
+- EDT: "Take only Box B" (instead of the multi-sentence EDT justification)
+- CDT: "Take both boxes" (instead of the multi-sentence CDT justification)
+
+The prompts (scenario text + question format suffix) are identical. Only the short answer phrase differs.
+
+### Results comparison: full vs minimal completions
+
+| Layer | Full completions (val) | Minimal completions (val) | Change |
+|-------|----------------------|--------------------------|--------|
+| 0 | **95.0%** | **65.0%** | -30.0pp |
+| 8 | 87.5% | 77.5% | -10.0pp |
+| 16 | 87.5% | 70.0% | -17.5pp |
+| 24 | 95.0% | **97.5%** | +2.5pp |
+| 32 | 92.5% | 95.0% | +2.5pp |
+| 40 | 100.0% | 97.5% | -2.5pp |
+| 48 | 100.0% | **97.5%** | -2.5pp |
+| 56 | 100.0% | **100.0%** | 0.0pp |
+| 63 | 100.0% | 95.0% | -5.0pp |
+| post_norm | 100.0% | 95.0% | -5.0pp |
+
+**Key finding: layer 0 dropped from 95% to 65%, but later layers held up.**
+
+The 30pp drop at layer 0 confirms that the original high accuracy there was driven by vocabulary differences in the completions. 65% is still above chance, which makes sense — the answer tokens themselves still differ ("Take only Box B" vs "Take both boxes"), but the signal is much weaker.
+
+From layer 24 onward, validation accuracy is 95-100% under both conditions. The model builds a representation that distinguishes EDT from CDT answers in later layers that is **not explained by vocabulary differences in the completions**. The same prompt flows through the network; only a few answer tokens differ; yet the model's residual stream at layers 24+ cleanly separates the two.
+
+### Minimal-completion confound analysis (layer 56)
+
+| Metric | Full completions (layer 40) | Minimal completions (layer 56) |
+|--------|---------------------------|-------------------------------|
+| Cooperation ratio | 0.45 | 0.17 |
+| newcomb_proper mean proj | 19.34 | 51.25 |
+| near_newcomb mean proj | 17.02 | 73.45 |
+| control mean proj | 8.51 | -0.27 |
+| has_predictor with/without | 19.5 / 14.7 | 59.1 / 66.2 |
+| has_cosmic_framing with/without | 14.7 / 17.7 | 83.9 / 60.4 |
+
+The cooperation confound ratio dropped even further (0.17 vs 0.45) — cooperation-tagged prompts project at only 17% of the strength of non-cooperation prompts. Controls project at essentially zero (-0.27), which is what we'd expect if the direction captures a genuine EDT/CDT distinction.
+
+The structural tag patterns shifted under minimal completions. `has_predictor` no longer dominates as clearly (59.1 vs 66.2 — slightly reversed). `has_cosmic_framing` now projects *more strongly* (83.9 vs 60.4), which is the opposite of the full-completion result. These shifts warrant caution: with only 25 cosmic-framed prompts, this could be noise, or it could reflect that the original tag patterns were artefacts of the vocabulary rather than genuine structural sensitivity.
+
+### Interpretation
+
+The minimal-completion control provides moderately strong evidence that Qwen3-32B encodes an EDT/CDT distinction in its later layers (24+) that goes beyond surface vocabulary. The model processes the same scenario text and question, receives a short answer phrase differing by only a few tokens, and yet its internal representations cleanly separate the two cases.
+
+What this does *not* tell us is whether the model is representing the *decision-theoretic structure* of the problem (predictors, correlation, evidential vs causal dependence) or something simpler, like "which of the two offered options was selected." The structural tag analysis under minimal completions is less clear-cut than under full completions, so the claim that the model represents DT structure specifically is weaker than the initial results suggested.
+
+---
+
 ## Next Steps
 
 1. **Activation steering:** Add/subtract the mean-difference direction during generation and test whether EDT/CDT preference shifts on held-out prompts. This is the causal test.
-2. **Completion-controlled analysis:** Re-run with completions that are lexically matched (same vocabulary, different answers) to rule out completion leakage.
+2. **Vocabulary-balanced diverse completions:** Generate new completion pairs using a cheap model (Haiku/Sonnet) with explicit instructions to match vocabulary between EDT and CDT versions. Filter for high word overlap. This would give more signal than answer-only while controlling the vocabulary confound.
 3. **Cross-model comparison:** Extract the same direction from QwQ-32B or DeepSeek-R1-Distill-Qwen-32B and compare — do models with stronger/weaker EDT behavior have correspondingly stronger/weaker directions?
 4. **Per-prompt analysis:** Examine which individual prompts project most/least strongly and whether the outliers are interpretable.

@@ -207,6 +207,7 @@ def main():
         help="Comma-separated layer indices (default: 0,8,16,24,32,40,48,56,63)"
     )
     parser.add_argument("--output", type=str, default=None, help="Output filename (without extension)")
+    parser.add_argument("--input", type=str, default=None, help="Input JSONL file (overrides --split)")
     args = parser.parse_args()
 
     if args.layers:
@@ -214,7 +215,13 @@ def main():
     else:
         layer_indices = DEFAULT_EXTRACT_LAYERS
 
-    prompts = load_dataset(args.split)
+    if args.input:
+        prompts = []
+        with open(args.input) as f:
+            for line in f:
+                prompts.append(json.loads(line))
+    else:
+        prompts = load_dataset(args.split)
     if args.test:
         prompts = prompts[:5]
     elif args.n:
