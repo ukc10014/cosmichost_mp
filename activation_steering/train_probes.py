@@ -185,8 +185,8 @@ def run_pca_analysis(edt_acts: np.ndarray, cdt_acts: np.ndarray, direction: np.n
     pca = PCA(n_components=min(20, all_scaled.shape[1]))
     pca.fit(all_scaled)
 
-    dir_scaled = scaler.transform(direction.reshape(1, -1)).flatten()
-    projections = np.array([np.dot(dir_scaled, pc) for pc in pca.components_])
+    dir_normed = direction / np.linalg.norm(direction)
+    projections = np.array([np.dot(dir_normed, pc) for pc in pca.components_])
 
     return {
         "variance_explained": pca.explained_variance_ratio_[:10].tolist(),
@@ -316,7 +316,7 @@ def main():
         save_path = npz_path.with_name(npz_path.stem.replace("contrastive", "probe_results") + ".json")
 
     with open(save_path, "w") as f:
-        json.dump(all_results, f, indent=2)
+        json.dump(all_results, f, indent=2, default=lambda x: float(x) if hasattr(x, 'item') else str(x))
     print(f"\nResults saved to: {save_path}")
 
 

@@ -29,7 +29,7 @@ import mlx_lm
 DATASET_DIR = Path(__file__).parent / "datasets" / "generated"
 OUTPUT_DIR = Path(__file__).parent / "activations"
 
-MODEL_ID = "mlx-community/Qwen3-32B-Instruct-4bit"
+MODEL_ID = "mlx-community/Qwen3-32B-4bit"
 
 NUM_LAYERS = 64
 DEFAULT_EXTRACT_LAYERS = [0, 8, 16, 24, 32, 40, 48, 56, 63]
