@@ -261,6 +261,8 @@ What this does *not* tell us is whether the model is representing the *decision-
 
 *Date: 2026-04-01*
 
+> **⚠ BUG NOTICE (2026-04-01, late):** The steering hook used in all three sweeps below was broken. The code used instance-level `__call__` assignment (`layer.__call__ = steered_call`), but Python looks up dunder methods on the *class*, not the instance — so the hook was silently ignored. All sweeps were effectively unsteered runs; the ~5-10pp EDT% variation was generation noise from temperature=0.7, not a steering effect. The bug has been fixed in `steer_and_eval.py` (now uses class-level patching). **The "null result" interpretation below is invalid — we do not yet have a genuine causal test.** Re-running with the fixed hook is pending.
+
 ### Method
 
 To test whether the EDT/CDT direction identified by the probe *causally controls* the model's decision-theoretic reasoning (vs merely correlating with it), we performed activation addition (Turner et al. 2023 / Li et al. 2023 style):
@@ -332,24 +334,30 @@ All three sweeps show EDT% fluctuating within a ~10pp band around the baseline (
 
 ### Interpretation
 
-The probe identified a direction that **represents** the EDT/CDT distinction (91–95% classification accuracy) but does not **cause** it. This is the "readout vs mechanism" distinction (Li et al. 2023): the model encodes enough information in its activations to distinguish EDT from CDT completions, but the direction along which this information is encoded is not the same direction that determines the model's output choice.
+> **⚠ The interpretation below was written before the hook bug was discovered. It is retained for historical context, but its conclusions are not supported by the data — the sweeps were unsteered. See bug notice above.**
 
-Several factors likely explain this:
+~~The probe identified a direction that **represents** the EDT/CDT distinction (91–95% classification accuracy) but does not **cause** it. This is the "readout vs mechanism" distinction (Li et al. 2023): the model encodes enough information in its activations to distinguish EDT from CDT completions, but the direction along which this information is encoded is not the same direction that determines the model's output choice.~~
 
-1. **The representation is about the completion, not the decision.** The probe was trained on activations from `prompt + full_completion` — the model has already "seen" the answer. The direction separates *representations of EDT text* from *representations of CDT text*, which is a different thing from a feature that *selects which answer to give*. During generation, the model hasn't committed to an answer yet when the hook fires, so adding a direction that encodes "what EDT text looks like" doesn't push the model toward producing EDT text.
+~~Several factors likely explain this:~~
 
-2. **Consistent with shallow DT reasoning.** The behavioral evidence already suggested this model's EDT lean is shallow: non-thinking mode adds zero DT signal over thinking mode, 4-bit quantization attenuates constitutional uptake to just +3.7pp, and diagnostic question flips are incoherent across conditions. If the model doesn't have a deep DT-reasoning mechanism, there's no single feature to steer.
+1. ~~**The representation is about the completion, not the decision.** The probe was trained on activations from `prompt + full_completion` — the model has already "seen" the answer. The direction separates *representations of EDT text* from *representations of CDT text*, which is a different thing from a feature that *selects which answer to give*. During generation, the model hasn't committed to an answer yet when the hook fires, so adding a direction that encodes "what EDT text looks like" doesn't push the model toward producing EDT text.~~
 
-3. **Decision may be distributed or nonlinear.** The choice between EDT and CDT answers may emerge from an ensemble of features (attention patterns, token-level heuristics, positional cues) rather than a single linear direction. Activation addition assumes the relevant computation is linear and concentrated, which may not hold here.
+2. ~~**Consistent with shallow DT reasoning.** The behavioral evidence already suggested this model's EDT lean is shallow: non-thinking mode adds zero DT signal over thinking mode, 4-bit quantization attenuates constitutional uptake to just +3.7pp, and diagnostic question flips are incoherent across conditions. If the model doesn't have a deep DT-reasoning mechanism, there's no single feature to steer.~~
+
+3. ~~**Decision may be distributed or nonlinear.** The choice between EDT and CDT answers may emerge from an ensemble of features (attention patterns, token-level heuristics, positional cues) rather than a single linear direction. Activation addition assumes the relevant computation is linear and concentrated, which may not hold here.~~
 
 ### What this means for the project
 
-The full mech interp pipeline — dataset generation, activation extraction, linear probing, confound analysis, and causal intervention — produced a **well-characterized null result**:
+> **⚠ Invalidated — see bug notice above. The "null result" was an artefact of a broken hook, not a genuine finding.**
 
-- **Correlational:** The model cleanly encodes EDT/CDT in its residual stream, and the encoding correlates with structural DT features (predictors, correlation) rather than surface cooperation or cosmic framing.
-- **Causal:** The encoding direction does not causally control the model's answers. Adding or subtracting it during generation produces no systematic shift in EDT/CDT preference.
+~~The full mech interp pipeline — dataset generation, activation extraction, linear probing, confound analysis, and causal intervention — produced a **well-characterized null result**:~~
 
-This null result is informative. It tells us that whatever drives this model's ~57% EDT lean on Newcomb-like problems is not a single linear feature amenable to activation steering. The model may be doing something more like "pattern matching to answer templates" than "computing a decision-theoretic recommendation" — consistent with the behavioral evidence for shallow engagement with DT reasoning.
+- ~~**Correlational:** The model cleanly encodes EDT/CDT in its residual stream, and the encoding correlates with structural DT features (predictors, correlation) rather than surface cooperation or cosmic framing.~~
+- ~~**Causal:** The encoding direction does not causally control the model's answers. Adding or subtracting it during generation produces no systematic shift in EDT/CDT preference.~~
+
+~~This null result is informative. It tells us that whatever drives this model's ~57% EDT lean on Newcomb-like problems is not a single linear feature amenable to activation steering. The model may be doing something more like "pattern matching to answer templates" than "computing a decision-theoretic recommendation" — consistent with the behavioral evidence for shallow engagement with DT reasoning.~~
+
+**Status (2026-04-01, late):** The correlational findings (probe accuracy, confound analysis) are unaffected by the hook bug — those used `extract_activations.py` which loops through layers manually, not `__call__` patching. The causal intervention needs to be re-run with the fixed hook. Attribution patching (`attribution_patching.py`, using the fixed class-level hook) is in progress to identify the best layer before re-running the behavioral sweep.
 
 Result files: `activation_steering/activations/steering_sweep_layer40.json`, `steering_sweep_layer40_raw.json`, `steering_sweep_layer48_raw.json`
 
@@ -421,9 +429,11 @@ Introduces a "resilience" metric: after removing a CoT sentence, resample multip
 
 **Relevance:** Provides a concrete validation protocol for any future steering experiments on thinking models. If we steer QwQ-32B toward EDT reasoning, does the model produce EDT-sounding CoT that gets overridden by its actual reasoning? The resilience metric answers this: resample after steering and check persistence. Also a cautionary note — activation steering on thinking models may be inherently less effective because the model can "reason its way back" in subsequent CoT tokens.
 
-### Synthesis: What the Literature Suggests About Our Null Result
+### Synthesis: What the Literature Suggests ~~About Our Null Result~~
 
-Our probe-steering gap — high classification accuracy (91-100%), null causal intervention — is a known phenomenon in the literature. Several factors likely contributed:
+> **⚠ This synthesis was written before the hook bug was discovered. The "null result" it explains was an artefact. The literature insights remain relevant for experiment design, but the specific diagnosis of "why our steering failed" is moot — steering was never actually applied. Re-running with the fixed hook will determine whether there is a genuine null result to explain.**
+
+~~Our probe-steering gap — high classification accuracy (91-100%), null causal intervention — is a known phenomenon in the literature.~~ Several factors ~~likely contributed~~ are worth considering for the re-run:
 
 1. **Layer selection was optimized for readability, not causality.** Venhoff et al. show that attribution patching identifies different (often earlier) layers than probe accuracy. Our layer 40 may encode EDT/CDT information that the model has already finished using by that point.
 

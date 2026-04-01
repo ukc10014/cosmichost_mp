@@ -131,27 +131,33 @@ def install_steering_hook(model, layer_idx: int, direction_mx: mx.array, alpha: 
 
 
 def install_steering_hook_instance(model, layer_idx: int, direction_mx: mx.array, alpha: float):
-    """Instance-level hook — patches just this one layer object, not the class.
+    """Class-level hook — creates a dynamic subclass with a steered __call__.
 
-    Safer than class-level patching: doesn't affect other layers.
+    NOTE: Python dunder methods (__call__) are looked up on the *type*, not
+    the instance. Setting layer.__call__ as an instance attribute is silently
+    ignored. We must create a new class to override __call__.
+
+    Only patches the single layer object by swapping its __class__.
     """
     layer = model.model.layers[layer_idx]
-    original_call = type(layer).__call__
+    original_class = layer.__class__
+    original_call = original_class.__call__
 
     scaled_direction = alpha * direction_mx
 
-    def steered_call(x, mask=None, cache=None):
-        out = original_call(layer, x, mask, cache)
+    def steered_call(self, x, mask=None, cache=None):
+        out = original_call(self, x, mask, cache)
         out = out + scaled_direction
         return out
 
-    layer._original_call = original_call
-    layer.__call__ = steered_call
+    layer.__class__ = type(
+        f"Steered_TransformerBlock_{layer_idx}",
+        (original_class,),
+        {"__call__": steered_call},
+    )
 
     def cleanup():
-        del layer.__call__
-        if hasattr(layer, '_original_call'):
-            del layer._original_call
+        layer.__class__ = original_class
 
     return cleanup
 
