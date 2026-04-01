@@ -125,11 +125,13 @@ The asymmetry reflects the natural language of each reasoning style — EDT comp
 
 ## What We Haven't Tested Yet
 
-1. **Causal intervention.** We've shown the model *encodes* EDT/CDT as a linear direction that tracks structural features. We haven't shown that *steering* along this direction changes the model's answers. This is the natural next step: add/subtract the direction during generation and measure whether EDT/CDT preference shifts on held-out prompts.
+**Note:** Causal intervention has now been completed (null result) and a literature review of methodological improvements has been added. See [`activation_steering_results.md`](activation_steering_results.md) for full results, relevant literature, and the current open questions list. The items below are retained for historical context but the authoritative list of next steps is in that document.
 
-2. **Whether the model uses this representation when generating.** Everything so far is based on feeding the model pre-written completions. We don't know whether the same direction is active when the model is choosing its own answer to a Newcomb problem. It may have a representation of "this text is EDT-style reasoning" without actually using that representation during generation.
+1. ~~**Causal intervention.**~~ *Done — null result. See `activation_steering_results.md` § Causal Intervention.*
 
-3. **Completion-controlled replication.** To rule out the layer-0 completion leakage confound, we need to re-run with lexically matched completions (same vocabulary and sentence structure, differing only in the final answer choice).
+2. **Whether the model uses this representation when generating.** Everything so far is based on feeding the model pre-written completions. We don't know whether the same direction is active when the model is choosing its own answer to a Newcomb problem. It may have a representation of "this text is EDT-style reasoning" without actually using that representation during generation. *See "Monitoring-mode validation" in `activation_steering_results.md` § Remaining Open Questions.*
+
+3. ~~**Completion-controlled replication.**~~ *Done — minimal completions tested. See `activation_steering_results.md` § Vocabulary Leakage.*
 
 ---
 

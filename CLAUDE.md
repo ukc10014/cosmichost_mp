@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **[Claude: remind user before major refactors]** As of 2026-03-25, the LessWrong writeup (`writeup/constellation_wrapup_final.pdf`) contains links pointing to `github.com/.../blob/main/...`. These are live pointers — renaming, moving, or deleting linked files will break those URLs. Before any major structural changes (renaming directories like `logs/`, `static/`, `observations/`; moving or renaming files that are linked from the writeup), remind the user to either: (1) create a git tag first (`git tag v1.0-writeup && git push origin v1.0-writeup`) and update the LessWrong post links to use the tag, or (2) fork the repo to preserve the current state.
 
+**[Claude: never rewrite git history]** The LessWrong post also links to specific files via commit-based URLs, and no protective tag or fork has been created yet. Do NOT use `git filter-repo`, `git rebase` on pushed commits, `git push --force` to `main`, or any other history-rewriting operation — these would invalidate existing links. If large files need to be removed from future commits, use `.gitignore`; if they need to be purged from history, remind the user to create a tag/fork first.
+
 ## Regenerating Viewers After New Runs
 
 Both HTML viewers embed data statically — they do **not** read from JSONL files at runtime. After running new scenario evaluations, regenerate them:

@@ -1,7 +1,7 @@
 # Research Extension: Interpretability — DT Activation Steering and CH-Preference
 
 *Conversation date: 2026-03-22*
-*Status: Speculative/future work*
+*Status: Implemented — see [`activation_steering_results.md`](activation_steering_results.md) for full results (correlational probe succeeded, causal steering null result) and relevant literature review.*
 
 ## Context
 

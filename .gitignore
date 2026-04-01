@@ -126,6 +126,9 @@ results_tmp/
 # Large output files
 cosmichost_selfchats_log.jsonl
 
+# Large binary activation files (regenerable via extract_activations.py)
+*.npz
+
 # Backup files
 *.bak
 *.backup
