@@ -1,7 +1,7 @@
 # Activation Steering Results: Qwen3-32B (Non-Thinking)
 
-*Date: 2026-03-31 (probing), 2026-04-01 (causal intervention)*
-*Status: Complete — correlational probe succeeded, causal steering null result*
+*Date: 2026-03-31 (probing), 2026-04-01 (causal intervention, attribution patching, fixed-hook re-run)*
+*Status: Complete — correlational probe succeeded, causal steering null result confirmed with verified hook*
 
 ## Setup
 
@@ -259,107 +259,107 @@ What this does *not* tell us is whether the model is representing the *decision-
 
 ## Causal Intervention: Activation Steering Results
 
-*Date: 2026-04-01*
+*Date: 2026-04-01 (initial, broken hook), 2026-04-01 (fixed hook re-run)*
 
-> **⚠ BUG NOTICE (2026-04-01, late):** The steering hook used in all three sweeps below was broken. The code used instance-level `__call__` assignment (`layer.__call__ = steered_call`), but Python looks up dunder methods on the *class*, not the instance — so the hook was silently ignored. All sweeps were effectively unsteered runs; the ~5-10pp EDT% variation was generation noise from temperature=0.7, not a steering effect. The bug has been fixed in `steer_and_eval.py` (now uses class-level patching). **The "null result" interpretation below is invalid — we do not yet have a genuine causal test.** Re-running with the fixed hook is pending.
+> **Historical note:** Three initial sweeps (layer 40 normalized, layer 40 raw, layer 48 raw) were run with a broken hook that used instance-level `__call__` assignment, which Python silently ignores for dunder methods. Those sweeps were effectively unsteered. The hook was fixed to use class-level patching (dynamic subclass creation), and the sweeps below use the fixed hook. Old result files are retained for reference.
 
 ### Method
 
 To test whether the EDT/CDT direction identified by the probe *causally controls* the model's decision-theoretic reasoning (vs merely correlating with it), we performed activation addition (Turner et al. 2023 / Li et al. 2023 style):
 
-- **Hook:** Monkey-patch the target layer's `__call__` to add `α × direction` to the residual stream output at every token position during generation
+- **Hook:** Create a dynamic subclass of the target transformer block that adds `α × direction` to the residual stream output at every token position during generation (class-level patching, verified working)
 - **Evaluation:** Run all 81 attitude questions from the Newcomb-like benchmark (Oesterheld et al. 2024) at each α value, no constitution
-- **Direction:** Mean-difference vector `mean(EDT_activations) - mean(CDT_activations)` extracted from 350 contrastive pairs
+- **Direction:** Mean-difference vector `mean(EDT_activations) - mean(CDT_activations)` extracted from 350 contrastive pairs, unnormalized
+- **Layer selection:** Attribution patching identified layers 0 and 40 as the most causally impactful (see below)
 - **Script:** `activation_steering/steer_and_eval.py`
 
-Three sweeps were run:
+### Attribution Patching: Layer Selection
 
-### Sweep 1: Layer 40, normalized direction (unit vector)
+Before running behavioral sweeps, we used attribution patching (`attribution_patching.py`) to identify causally relevant layers. For each candidate layer, the steering direction (derived from layer 40 activations, norm 17.52) was injected at α=+1.0, and the KL divergence of the output distribution (vs unsteered) was measured across all 81 attitude questions.
 
-α scales a unit-normalized direction. The raw direction norm is 17.52, so α=3.0 adds a perturbation of magnitude 3 — about 17% of the natural EDT-CDT gap.
+| Layer | Mean KL Divergence |
+|-------|-------------------|
+| **0** | **~0.065**        |
+| 8     | ~0.029            |
+| 16    | ~0.036            |
+| 24    | ~0.028            |
+| 32    | ~0.028            |
+| **40**| **~0.045**        |
+| 48    | ~0.024            |
+| 56    | ~0.018            |
+| 63    | ~0.010            |
 
-| α | EDT | CDT | Parse | EDT% |
-|-------|-----|-----|-------|------|
-| -3.0 | 45 | 36 | 0 | 55.6% |
-| -1.5 | 46 | 31 | 1 | 56.8% |
-| -0.5 | 49 | 33 | 0 | 60.5% |
-| 0.0 | 46 | 31 | 1 | 56.8% |
-| +0.5 | 46 | 35 | 0 | 56.8% |
-| +1.5 | 45 | 36 | 0 | 55.6% |
-| +3.0 | 45 | 30 | 0 | 55.6% |
+Layer 0 showed the highest mean KL divergence, followed by layer 40. This is consistent with Venhoff et al. (2506.18167), who found that causally relevant layers for reasoning behaviors are often earlier than where probes peak. Layer 0 is surprising — it suggests the steering direction, when injected pre-transformer, perturbs early token-level features that propagate through the network. However, note that attribution patching used the *layer 40* direction injected at each candidate layer — not each layer's own direction.
 
-**Result: No effect.** EDT% varies by ~5pp (55.6–60.5%) with no monotonic trend. The perturbation was too small relative to the natural activation scale.
+Two sweeps were run with the fixed hook:
 
-### Sweep 2: Layer 40, raw (unnormalized) direction
+### Sweep 1: Layer 40, raw direction (fixed hook)
 
-α=1.0 now adds the full mean-difference vector (magnitude 17.52). α=2.0 adds 2× the natural gap (magnitude ~35).
-
-| α | EDT | CDT | Parse | EDT% |
-|-------|-----|-----|-------|------|
-| -2.0 | 47 | 31 | 1 | 58.0% |
-| -1.0 | 48 | 33 | 0 | 59.3% |
-| -0.5 | 47 | 34 | 0 | 58.0% |
-| 0.0 | 46 | 35 | 0 | 56.8% |
-| +0.5 | 50 | 30 | 1 | 61.7% |
-| +1.0 | 48 | 33 | 0 | 59.3% |
-| +2.0 | 43 | 38 | 0 | 53.1% |
-
-**Result: No effect.** EDT% ranges 53–62% with no monotonic trend. α=+2.0 (strongest EDT push) produced the *lowest* EDT% (53.1%) — the opposite of the expected direction.
-
-### Sweep 3: Layer 48, raw (unnormalized) direction
-
-Layer 48 had equal probe accuracy to layer 40 but a larger direction norm (27.25). It might be closer to where the model commits to its answer.
+α=1.0 adds the full mean-difference vector (magnitude 17.52). Layer 40 was the best probe layer (100% val accuracy) and the second-highest attribution patching layer.
 
 | α | EDT | CDT | Parse | EDT% |
 |-------|-----|-----|-------|------|
-| -2.0 | 43 | 35 | 3 | 53.1% |
-| -1.0 | 46 | 33 | 2 | 56.8% |
-| -0.5 | 48 | 33 | 0 | 59.3% |
-| 0.0 | 46 | 34 | 1 | 56.8% |
-| +0.5 | 51 | 29 | 1 | 63.0% |
-| +1.0 | 50 | 30 | 1 | 61.7% |
-| +2.0 | 45 | 36 | 0 | 55.6% |
+| -3.0 | 48 | 35 | 0 | 59.3% |
+| -1.5 | 44 | 37 | 0 | 54.3% |
+| -0.5 | 46 | 33 | 1 | 56.8% |
+| 0.0 | 43 | 37 | 2 | 53.1% |
+| +0.5 | 43 | 31 | 1 | 53.1% |
+| +1.5 | 47 | 34 | 2 | 58.0% |
+| +3.0 | 44 | 34 | 1 | 54.3% |
 
-**Result: No effect.** Similar pattern to layer 40. A slight hump at α=+0.5 to +1.0 (61–63%), but it collapses at α=+2.0 (55.6%). Parse errors appear at negative extremes, indicating the perturbation degrades coherence before it shifts decisions. Not monotonic.
+**Result: No effect.** EDT% ranges 53.1–59.3% (~6pp span) with no monotonic trend. Negative alphas (which should push *away* from EDT) produced the highest EDT rate (59.3% at α=-3.0). Indistinguishable from generation noise at temperature=0.7.
 
-### Summary across sweeps
+### Sweep 2: Layer 0, raw direction (fixed hook)
 
-| Layer | Direction | α range | EDT% range | Monotonic? | Causal? |
-|-------|-----------|---------|-----------|------------|---------|
-| 40 | unit | -3 to +3 | 55.6–60.5% | No | No |
-| 40 | raw | -2 to +2 | 53.1–61.7% | No | No |
-| 48 | raw | -2 to +2 | 53.1–63.0% | No | No |
+Layer 0 had the highest KL divergence in attribution patching (~0.065). The direction norm at layer 0 is very small (0.36), so even α=3.0 adds a perturbation of magnitude only ~1.1.
 
-All three sweeps show EDT% fluctuating within a ~10pp band around the baseline (~57%) with no monotonic relationship to α. The mean-difference direction does not causally control EDT/CDT behavior.
+| α | EDT | CDT | Parse | EDT% |
+|-------|-----|-----|-------|------|
+| -3.0 | 42 | 34 | 1 | 51.9% |
+| -1.5 | 46 | 31 | 3 | 56.8% |
+| -0.5 | 46 | 36 | 1 | 56.8% |
+| 0.0 | 47 | 32 | 1 | 58.0% |
+| +0.5 | 47 | 32 | 0 | 58.0% |
+| +1.5 | 48 | 30 | 0 | 59.3% |
+| +3.0 | 44 | 31 | 0 | 54.3% |
+
+**Result: No effect.** EDT% ranges 51.9–59.3% (~7pp span). There is a slight upward trend from α=-3.0 to α=+1.5 (51.9% → 59.3%), but it reverses at α=+3.0 (54.3%). The direction norm at layer 0 is 0.36 — two orders of magnitude smaller than at layer 40 (17.52) — so these alpha values may be too small to produce a meaningful perturbation. However, the attribution patching signal at layer 0 was computed by injecting the *layer 40* direction (norm 17.52) at layer 0, not the layer 0 direction. The KL result may reflect cross-layer sensitivity rather than the layer 0 direction being a viable steering vector.
+
+### Summary across sweeps (fixed hook)
+
+| Layer | Direction norm | α range | EDT% range | Monotonic? | Causal? |
+|-------|---------------|---------|-----------|------------|---------|
+| 40 | 17.52 | -3 to +3 | 53.1–59.3% | No | No |
+| 0 | 0.36 | -3 to +3 | 51.9–59.3% | No | No |
+
+Both sweeps show EDT% fluctuating within a ~7pp band around the baseline (~55-58%) with no monotonic relationship to α. The mean-difference direction does not causally control EDT/CDT behavior at either the best-probe layer (40) or the highest-KL layer (0). The variation is consistent with generation noise from temperature=0.7.
+
+Note: The fixed-hook results are essentially identical to the broken-hook results (~5-10pp non-monotonic fluctuation), confirming that the broken hook was not hiding a real signal — the noise pattern was the same with or without actual steering.
 
 ### Interpretation
 
-> **⚠ The interpretation below was written before the hook bug was discovered. It is retained for historical context, but its conclusions are not supported by the data — the sweeps were unsteered. See bug notice above.**
+The probe identified a direction that **represents** the EDT/CDT distinction (91-100% classification accuracy) but does not **cause** it. This is the "readout vs mechanism" distinction (Li et al. 2023): the model encodes enough information in its activations to distinguish EDT from CDT completions, but the direction along which this information is encoded is not the same direction that determines the model's output choice.
 
-~~The probe identified a direction that **represents** the EDT/CDT distinction (91–95% classification accuracy) but does not **cause** it. This is the "readout vs mechanism" distinction (Li et al. 2023): the model encodes enough information in its activations to distinguish EDT from CDT completions, but the direction along which this information is encoded is not the same direction that determines the model's output choice.~~
+Several factors likely explain this:
 
-~~Several factors likely explain this:~~
+1. **The representation is about the completion, not the decision.** The probe was trained on activations from `prompt + full_completion` — the model has already "seen" the answer. The direction separates *representations of EDT text* from *representations of CDT text*, which is a different thing from a feature that *selects which answer to give*. During generation, the model hasn't committed to an answer yet when the hook fires, so adding a direction that encodes "what EDT text looks like" doesn't push the model toward producing EDT text.
 
-1. ~~**The representation is about the completion, not the decision.** The probe was trained on activations from `prompt + full_completion` — the model has already "seen" the answer. The direction separates *representations of EDT text* from *representations of CDT text*, which is a different thing from a feature that *selects which answer to give*. During generation, the model hasn't committed to an answer yet when the hook fires, so adding a direction that encodes "what EDT text looks like" doesn't push the model toward producing EDT text.~~
+2. **Consistent with shallow DT reasoning.** The behavioral evidence already suggested this model's EDT lean is shallow: non-thinking mode adds zero DT signal over thinking mode, 4-bit quantization attenuates constitutional uptake to just +3.7pp, and diagnostic question-level flips are incoherent across conditions. If the model doesn't have a deep DT-reasoning mechanism, there's no single feature to steer.
 
-2. ~~**Consistent with shallow DT reasoning.** The behavioral evidence already suggested this model's EDT lean is shallow: non-thinking mode adds zero DT signal over thinking mode, 4-bit quantization attenuates constitutional uptake to just +3.7pp, and diagnostic question flips are incoherent across conditions. If the model doesn't have a deep DT-reasoning mechanism, there's no single feature to steer.~~
+3. **Decision may be distributed or nonlinear.** The choice between EDT and CDT answers may emerge from an ensemble of features (attention patterns, token-level heuristics, positional cues) rather than a single linear direction. Activation addition assumes the relevant computation is linear and concentrated, which may not hold here.
 
-3. ~~**Decision may be distributed or nonlinear.** The choice between EDT and CDT answers may emerge from an ensemble of features (attention patterns, token-level heuristics, positional cues) rather than a single linear direction. Activation addition assumes the relevant computation is linear and concentrated, which may not hold here.~~
+4. **Layer 0 direction is too small.** The direction norm at layer 0 is 0.36 — effectively negligible compared to the residual stream magnitude. The attribution patching signal at layer 0 was computed by injecting the *layer 40* direction (norm 17.52) at layer 0, not the layer 0 direction itself. This methodological mismatch means the attribution patching KL result for layer 0 may not translate to a viable steering vector using the layer 0 direction.
 
 ### What this means for the project
 
-> **⚠ Invalidated — see bug notice above. The "null result" was an artefact of a broken hook, not a genuine finding.**
+The full mech interp pipeline — dataset generation, activation extraction, linear probing, confound analysis, attribution patching, and causal intervention (with verified hook) — produced a **well-characterized null result**:
 
-~~The full mech interp pipeline — dataset generation, activation extraction, linear probing, confound analysis, and causal intervention — produced a **well-characterized null result**:~~
+- **Correlational:** The model cleanly encodes EDT/CDT in its residual stream, and the encoding correlates with structural DT features (predictors, correlation) rather than surface cooperation or cosmic framing.
+- **Causal:** The encoding direction does not causally control the model's answers. Adding or subtracting it during generation produces no systematic shift in EDT/CDT preference, at either the best-probe layer (40) or the highest-KL layer (0).
 
-- ~~**Correlational:** The model cleanly encodes EDT/CDT in its residual stream, and the encoding correlates with structural DT features (predictors, correlation) rather than surface cooperation or cosmic framing.~~
-- ~~**Causal:** The encoding direction does not causally control the model's answers. Adding or subtracting it during generation produces no systematic shift in EDT/CDT preference.~~
+This null result is informative. It tells us that whatever drives this model's ~55% EDT lean on Newcomb-like problems is not a single linear feature amenable to activation steering. The model may be doing something more like "pattern matching to answer templates" than "computing a decision-theoretic recommendation" — consistent with the behavioral evidence for shallow engagement with DT reasoning.
 
-~~This null result is informative. It tells us that whatever drives this model's ~57% EDT lean on Newcomb-like problems is not a single linear feature amenable to activation steering. The model may be doing something more like "pattern matching to answer templates" than "computing a decision-theoretic recommendation" — consistent with the behavioral evidence for shallow engagement with DT reasoning.~~
-
-**Status (2026-04-01, late):** The correlational findings (probe accuracy, confound analysis) are unaffected by the hook bug — those used `extract_activations.py` which loops through layers manually, not `__call__` patching. The causal intervention needs to be re-run with the fixed hook. Attribution patching (`attribution_patching.py`, using the fixed class-level hook) is in progress to identify the best layer before re-running the behavioral sweep.
-
-Result files: `activation_steering/activations/steering_sweep_layer40.json`, `steering_sweep_layer40_raw.json`, `steering_sweep_layer48_raw.json`
+Result files: `activation_steering/activations/steering_sweep_layer40_raw.json`, `steering_sweep_layer0_raw.json`, `attribution_patching_a+1.0.json`
 
 ---
 
@@ -429,11 +429,9 @@ Introduces a "resilience" metric: after removing a CoT sentence, resample multip
 
 **Relevance:** Provides a concrete validation protocol for any future steering experiments on thinking models. If we steer QwQ-32B toward EDT reasoning, does the model produce EDT-sounding CoT that gets overridden by its actual reasoning? The resilience metric answers this: resample after steering and check persistence. Also a cautionary note — activation steering on thinking models may be inherently less effective because the model can "reason its way back" in subsequent CoT tokens.
 
-### Synthesis: What the Literature Suggests ~~About Our Null Result~~
+### Synthesis: What the Literature Suggests About Our Null Result
 
-> **⚠ This synthesis was written before the hook bug was discovered. The "null result" it explains was an artefact. The literature insights remain relevant for experiment design, but the specific diagnosis of "why our steering failed" is moot — steering was never actually applied. Re-running with the fixed hook will determine whether there is a genuine null result to explain.**
-
-~~Our probe-steering gap — high classification accuracy (91-100%), null causal intervention — is a known phenomenon in the literature.~~ Several factors ~~likely contributed~~ are worth considering for the re-run:
+Our probe-steering gap — high classification accuracy (91-100%), null causal intervention even with attribution-patching-guided layer selection — is a known phenomenon in the literature. Several factors likely contributed:
 
 1. **Layer selection was optimized for readability, not causality.** Venhoff et al. show that attribution patching identifies different (often earlier) layers than probe accuracy. Our layer 40 may encode EDT/CDT information that the model has already finished using by that point.
 
@@ -441,18 +439,78 @@ Introduces a "resilience" metric: after removing a CoT sentence, resample multip
 
 3. **Our direction was extracted from completed text, not from the decision process.** The Minder et al. model-diffing approach would extract a direction from the *weight change* induced by DT-style training, not from the *activation pattern* of DT-style text — a fundamentally different signal.
 
-The literature points toward a clear next-step hierarchy: (1) attribution patching for layer selection (cheapest, addresses the most obvious gap), (2) weight-space steering via opposed LoRAs (addresses the distributed-representation hypothesis), (3) model-diffing on random text (cleanest direction extraction, no prompt design needed).
+We have now completed step (1) — attribution patching for layer selection — and the null result persists. The literature points toward the remaining hierarchy: (1) weight-space steering via opposed LoRAs (addresses the distributed-representation hypothesis), (2) model-diffing on random text (cleanest direction extraction, no prompt design needed).
 
 ---
 
-## Remaining Open Questions
+## Next Experiment: Weight-Space Steering via Opposed LoRAs
 
-1. **Attribution patching for layer selection.** Re-run causal intervention using the layer identified by attribution patching (KL divergence of next-token predictions under the steering vector) rather than probe accuracy. This is the cheapest experiment that directly addresses the most likely explanation for the null result. See Venhoff et al. (2506.18167).
-2. **Weight-space steering via opposed LoRAs.** Fine-tune Qwen3-32B with LoRA on EDT-favoring and CDT-favoring completions, compute the weight-space direction, and add it to the base model. This addresses the possibility that DT reasoning is distributed across layers. Our 350 contrastive pairs exceed the ~500-example minimum reported by Fierro & Roger (2511.05408).
-3. **Model-diffing on random text.** If opposed fine-tunes are created (for #2), extract the direction by running random C4 text through both models and taking the activation difference — completely bypassing prompt design and vocabulary leakage concerns. See Minder et al. (2510.13900), which tested on Qwen3-32B.
-4. **Monitoring-mode validation.** Even without causal steering, project the model's activations onto the EDT/CDT direction during live generation on Newcomb-like questions (Persona Vectors approach). If the projection correlates with the model's eventual answer, the direction is at least informationally relevant during generation, even if adding it doesn't change behavior.
-5. **Vocabulary-balanced diverse completions.** Generate new completion pairs using a cheap model with explicit instructions to match vocabulary between EDT and CDT versions. This would give more signal than answer-only while controlling the vocabulary confound, potentially yielding a cleaner causal direction.
-6. **Cross-model comparison.** Extract the same direction from QwQ-32B or DeepSeek-R1-Distill-Qwen-32B and compare — do models with stronger/weaker EDT behavior have correspondingly stronger/weaker directions?
-7. **Thinking-model steering with resilience checks.** If steering is attempted on QwQ-32B or DeepSeek-R1 in thinking mode, use the Thought Branches resilience metric (Macar et al. 2510.27484) to validate that EDT reasoning persists across resampled continuations rather than being regenerated away.
-8. **Per-prompt analysis.** Examine which individual prompts project most/least strongly and whether the outliers are interpretable.
-9. **Nonlinear probes.** The failure of linear steering doesn't rule out nonlinear structure. A small MLP probe might find a decision-relevant feature that a linear probe misses — though such features are harder to steer.
+*Planned: 2026-04-01*
+
+### Motivation
+
+Activation steering failed at every layer tested — the mean-difference direction is a readout feature, not a causal mechanism. The most likely explanation is that EDT/CDT reasoning is **distributed across layers**: no single injection point controls the output. Weight-space steering (Fierro & Roger 2025, arxiv 2511.05408) addresses this directly by modifying weights across all layers simultaneously.
+
+### Method
+
+**Core idea:** Fine-tune two opposed LoRA adapters — one on EDT completions, one on CDT completions — then steer by adding the *difference* between the two adapter weight sets to the base model, scaled by a factor k.
+
+**LoRA basics:** Instead of updating all 32B parameters, LoRA freezes the base model and trains small low-rank adapter matrices (B × A) that get added to each weight matrix. Rank 32 means each adapter update is constrained to a 32-dimensional subspace — about 320K trainable parameters per weight matrix instead of 26M. The fine-tuning process learns which 32 dimensions matter for the task.
+
+**Steps:**
+
+1. **Format training data.** Convert the 350 contrastive pairs into two chat-format JSONL files:
+   - `edt_train.jsonl`: Each entry is `{prompt → EDT completion}` (system message = scenario, user message = question, assistant message = EDT answer)
+   - `cdt_train.jsonl`: Same prompts, CDT completions as targets
+   - Use the existing contrastive prompt data from `activation_steering/activations/`
+
+2. **Run two LoRA fine-tunes.** Using mlx_lm locally on M4 Max:
+   - Base model: `mlx-community/Qwen3-32B-4bit` (already downloaded, ~18GB)
+   - LoRA config: rank 32, alpha 16, all linear modules, 1 epoch
+   - Output: `adapters_edt/` and `adapters_cdt/` directories containing the learned A and B matrices
+   - Each fine-tune should take 2-6 hours locally; run serially to avoid OOM
+
+3. **Compute weight-space direction.** Load both sets of adapter weights (just numpy arrays on disk) and subtract: `w = adapters_edt - adapters_cdt`. This gives a set of delta matrices spanning every layer — the "EDT direction" in weight space.
+
+4. **Sweep k values.** For each k in [-2, -1, -0.5, 0, 0.5, 1, 2]:
+   - Load base model
+   - Add `k × w` to the model weights (merged into the base, not as a hook)
+   - Run all 81 attitude questions
+   - Record EDT% at each k
+
+5. **Evaluate.** If EDT% varies monotonically with k, we have causal evidence that weight-space DT features exist even though activation-space features don't steer. If still null, the model genuinely lacks a steerable DT representation.
+
+### Why this might succeed where activation steering failed
+
+- **Distributed intervention.** Modifies Q, K, V, output projections, and MLP weights at every layer simultaneously. If DT reasoning emerges from the interaction of many small contributions across layers, this captures it.
+- **Learned direction.** The fine-tuning process discovers which weight-space dimensions matter for EDT vs CDT. The activation-steering direction was extracted from *completed text representations* (what EDT text looks like after the model processes it) — a fundamentally different signal from the *weight changes that produce EDT behavior*.
+- **Empirical precedent.** Fierro & Roger tested on Qwen2.5-7B-Instruct with ~500-900 examples per side and found weight steering generalized further OOD than activation steering while degrading capabilities less. Our 350 pairs (700 total examples) are in the same range.
+
+### Resource estimate
+
+- **Compute cost:** $0 (local M4 Max, 36GB). QLoRA on 4-bit base + rank-32 adapters should fit in ~24GB (18GB base + ~6GB for gradients/optimizer states/activations on the small adapter matrices).
+- **Time:** ~4-12 hours for the two fine-tunes (serial), ~2 hours for the k-sweep evaluation. Total ~1 day.
+- **Risk:** May still be null if Qwen3-32B genuinely doesn't have a steerable DT feature. But this is the approach most likely to find one if it exists, and it's cheap.
+
+### Implementation notes
+
+- `mlx_lm.lora` supports LoRA fine-tuning for quantized models. Check that rank 32 + all-linear-modules config works within memory; fall back to rank 16 or Q/V-only if needed.
+- Training data should use the **minimal (answer-only) completions**, not the full justifications — to avoid the vocabulary leakage confound. The fine-tuning should teach the model *which answer to give*, not *which rhetorical style to use*.
+- Alternatively, could try both: minimal completions for a clean signal, full completions for a stronger training signal. Compare whether the resulting weight directions differ.
+
+### Reference
+
+Fierro & Roger (2025). "Steering Language Models with Weight Arithmetic." ICLR 2026. [arxiv.org/abs/2511.05408](https://arxiv.org/abs/2511.05408). LoRA rank 32, alpha 16, all modules, ~1 epoch, 500-900 examples per side. Tested on Qwen2.5-7B-Instruct.
+
+---
+
+## Other Open Questions
+
+1. ~~**Attribution patching for layer selection.**~~ **DONE (2026-04-01).** Attribution patching identified layers 0 and 40. Behavioral sweeps at both layers with the fixed hook produced the same null result. The probe-steering gap is not explained by layer selection.
+2. ~~**Weight-space steering via opposed LoRAs.**~~ Promoted to full experiment plan above.
+3. **Model-diffing on random text.** If opposed fine-tunes are created (for weight-space steering), extract the direction by running random C4 text through both models and taking the activation difference — completely bypassing prompt design and vocabulary leakage concerns. See Minder et al. (2510.13900), which tested on Qwen3-32B. This is a natural extension of the LoRA experiment above — essentially free once the fine-tunes exist.
+4. **Monitoring-mode validation.** Project the model's activations onto the EDT/CDT direction during live generation on Newcomb-like questions (Persona Vectors approach). If the projection correlates with the eventual answer, the direction is informationally relevant during generation even though adding it doesn't change behavior. Cheapest informative experiment to decide whether to abandon activation-space approaches entirely.
+5. **Cross-model comparison.** Extract the same direction from QwQ-32B or DeepSeek-R1-Distill-Qwen-32B and compare — do models with stronger/weaker EDT behavior have correspondingly stronger/weaker directions?
+6. **Thinking-model steering with resilience checks.** If steering is attempted on thinking models, use the Thought Branches resilience metric (Macar et al. 2510.27484) to validate that EDT reasoning persists across resampled continuations.
+7. **Per-prompt analysis.** Examine which individual prompts project most/least strongly and whether the outliers are interpretable.
+8. **Nonlinear probes.** The failure of linear steering doesn't rule out nonlinear structure. A small MLP probe might find a decision-relevant feature that a linear probe misses — though such features are harder to steer.

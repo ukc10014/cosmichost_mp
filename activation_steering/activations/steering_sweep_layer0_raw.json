@@ -1,6 +1,6 @@
 {
   "model": "mlx-community/Qwen3-32B-4bit",
-  "layer": 40,
+  "layer": 0,
   "alphas": [
     -3.0,
     -1.5,
@@ -12,58 +12,58 @@
   ],
   "direction_type": "mean_difference",
   "normalized": false,
-  "direction_raw_norm": 17.516714096069336,
+  "direction_raw_norm": 0.3567325174808502,
   "activations_file": "/Users/ukc/projects/cosmichost_mp/activation_steering/activations/qwen3_32b_contrastive_full.npz",
   "n_questions": 81,
   "temperature": 0.7,
   "conditions": {
     "baseline": {
       "-3.0": {
-        "edt_count": 48,
-        "cdt_count": 35,
-        "parse_errors": 0,
+        "edt_count": 42,
+        "cdt_count": 34,
+        "parse_errors": 1,
         "total": 81,
-        "edt_rate": 0.5925925925925926
+        "edt_rate": 0.5185185185185185
       },
       "-1.5": {
-        "edt_count": 44,
-        "cdt_count": 37,
-        "parse_errors": 0,
+        "edt_count": 46,
+        "cdt_count": 31,
+        "parse_errors": 3,
         "total": 81,
-        "edt_rate": 0.5432098765432098
+        "edt_rate": 0.5679012345679012
       },
       "-0.5": {
         "edt_count": 46,
-        "cdt_count": 33,
+        "cdt_count": 36,
         "parse_errors": 1,
         "total": 81,
         "edt_rate": 0.5679012345679012
       },
       "0.0": {
-        "edt_count": 43,
-        "cdt_count": 37,
-        "parse_errors": 2,
-        "total": 81,
-        "edt_rate": 0.5308641975308642
-      },
-      "0.5": {
-        "edt_count": 43,
-        "cdt_count": 31,
-        "parse_errors": 1,
-        "total": 81,
-        "edt_rate": 0.5308641975308642
-      },
-      "1.5": {
         "edt_count": 47,
-        "cdt_count": 34,
-        "parse_errors": 2,
+        "cdt_count": 32,
+        "parse_errors": 1,
         "total": 81,
         "edt_rate": 0.5802469135802469
       },
+      "0.5": {
+        "edt_count": 47,
+        "cdt_count": 32,
+        "parse_errors": 0,
+        "total": 81,
+        "edt_rate": 0.5802469135802469
+      },
+      "1.5": {
+        "edt_count": 48,
+        "cdt_count": 30,
+        "parse_errors": 0,
+        "total": 81,
+        "edt_rate": 0.5925925925925926
+      },
       "3.0": {
         "edt_count": 44,
-        "cdt_count": 34,
-        "parse_errors": 1,
+        "cdt_count": 31,
+        "parse_errors": 0,
         "total": 81,
         "edt_rate": 0.5432098765432098
       }
