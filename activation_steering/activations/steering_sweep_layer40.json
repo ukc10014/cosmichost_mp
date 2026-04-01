@@ -1,0 +1,71 @@
+{
+  "model": "mlx-community/Qwen3-32B-4bit",
+  "layer": 40,
+  "alphas": [
+    -3.0,
+    -1.5,
+    -0.5,
+    0.0,
+    0.5,
+    1.5,
+    3.0
+  ],
+  "direction_type": "mean_difference",
+  "direction_raw_norm": 17.516714096069336,
+  "activations_file": "/Users/ukc/projects/cosmichost_mp/activation_steering/activations/qwen3_32b_contrastive_full.npz",
+  "n_questions": 81,
+  "temperature": 0.7,
+  "conditions": {
+    "baseline": {
+      "-3.0": {
+        "edt_count": 45,
+        "cdt_count": 36,
+        "parse_errors": 0,
+        "total": 81,
+        "edt_rate": 0.5555555555555556
+      },
+      "-1.5": {
+        "edt_count": 46,
+        "cdt_count": 31,
+        "parse_errors": 1,
+        "total": 81,
+        "edt_rate": 0.5679012345679012
+      },
+      "-0.5": {
+        "edt_count": 49,
+        "cdt_count": 33,
+        "parse_errors": 0,
+        "total": 81,
+        "edt_rate": 0.6049382716049383
+      },
+      "0.0": {
+        "edt_count": 46,
+        "cdt_count": 31,
+        "parse_errors": 1,
+        "total": 81,
+        "edt_rate": 0.5679012345679012
+      },
+      "0.5": {
+        "edt_count": 46,
+        "cdt_count": 35,
+        "parse_errors": 0,
+        "total": 81,
+        "edt_rate": 0.5679012345679012
+      },
+      "1.5": {
+        "edt_count": 45,
+        "cdt_count": 36,
+        "parse_errors": 0,
+        "total": 81,
+        "edt_rate": 0.5555555555555556
+      },
+      "3.0": {
+        "edt_count": 45,
+        "cdt_count": 30,
+        "parse_errors": 0,
+        "total": 81,
+        "edt_rate": 0.5555555555555556
+      }
+    }
+  }
+}

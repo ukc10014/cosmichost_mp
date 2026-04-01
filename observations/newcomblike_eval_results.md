@@ -1,6 +1,6 @@
 # Newcomb-like Evaluation Results: ECL Constitution Effects on EDT Preference
 
-**Date:** 2026-02-05 (updated 2026-03-29 with Qwen3-32B thinking/non-thinking results)
+**Date:** 2026-02-05 (updated 2026-03-31 with local 4-bit quantized model results)
 
 ## Summary
 
@@ -15,6 +15,8 @@ Tested the ECL 90% constitution on the Oesterheld et al. (2024) Newcomb-like que
 | Qwen3-32B thinking | 60.5% | 71.6% | **+11.1%** |
 | GPT-5.1 | 58.0% | 64.2% | **+6.2%** |
 | QwQ-32B | 66.7% | 69.1% | **+2.4%** |
+| DeepSeek-R1-Distill-Qwen-32B-4bit (local) | 59.3% | 64.2% | **+4.9%** |
+| Qwen3-32B-4bit (local mlx) | 54.3% | 58.0% | **+3.7%** |
 | Qwen 3 235B | 50.6% | 54.3% | **+3.7%** |
 | Kimi K2 | 49.4% | 46.9% | **-2.5%** |
 | OLMo 3.1 32B Instruct | 40.7% | 29.6% | **-11.1%** |
@@ -171,6 +173,65 @@ The 60.5% EDT baseline and +13.6pp ECL shift are surprisingly strong for a 32B o
 4. **Incoherent diagnostic flips** — the direct question instability suggests the model doesn't have a stable DT representation to extract
 
 **Assessment:** Marginal candidate for mech interp. There is EDT signal, but it's likely shallow (cooperation bias + surface-level constitutional uptake). Purpose-built reasoning models (QwQ-32B, DeepSeek-R1-Distill-Qwen-32B) that always think may be better targets — their mandatory reasoning chains might produce more structured DT representations.
+
+### Qwen3-32B-4bit Local (mlx-lm, 2026-03-31)
+
+| Metric | Baseline | ECL 90% | Shift |
+|--------|----------|---------|-------|
+| **EDT rate** | 54.3% | **58.0%** | **+3.7%** |
+| CDT rate | 45.7% | 44.4% | -1.3% |
+| Parse errors | 0/81 | 0/81 | 0 |
+
+**Model:** `mlx-community/Qwen3-32B-4bit` run locally via mlx-lm on M4 Max. This is the same model used for activation extraction in the mech interp pipeline. Non-thinking mode (enable_thinking=False). Temperature 0.7.
+
+**Quantization effects vs full-precision OpenRouter:**
+
+| Metric | OpenRouter (full) | Local 4-bit | Delta |
+|--------|-------------------|-------------|-------|
+| Baseline EDT | 60.5% | 54.3% | -6.2pp |
+| ECL 90% EDT | 74.1% | 58.0% | -16.1pp |
+| ECL shift | +13.6pp | +3.7pp | -9.9pp |
+| Parse errors (baseline) | 8/81 | 0/81 | -8 |
+
+**Key findings:**
+
+1. **4-bit quantization reduces baseline EDT by ~6pp** — the quantized model leans more CDT than the full-precision version. This is a meaningful behavioral difference from quantization alone.
+
+2. **ECL constitutional effect is severely attenuated** — +3.7pp vs +13.6pp. The quantized model flips only 3 additional questions toward EDT under the ECL constitution, compared to ~11 for the full-precision model. The model's capacity to integrate system prompt reasoning is degraded by quantization.
+
+3. **Parse quality improves** — 0/81 parse errors vs 8/81 on OpenRouter. The local model with direct chat template application produces cleaner forced-choice outputs than the OpenRouter API routing.
+
+4. **Implication for activation probing** — The activation steering experiments extract from this exact 4-bit model. The weaker EDT lean and attenuated ECL response suggest that the EDT/CDT features we're probing for may be partially degraded by quantization. The probe results (95% accuracy at mid-to-late layers) should be interpreted with this caveat: the full-precision model likely has a stronger and more steerable EDT/CDT representation than what we're measuring.
+
+### DeepSeek-R1-Distill-Qwen-32B-4bit Local (mlx-lm, 2026-03-31)
+
+| Metric | Baseline | ECL 90% | Shift |
+|--------|----------|---------|-------|
+| **EDT rate** | 59.3% | **64.2%** | **+4.9%** |
+| CDT rate | 38.3% | 33.3% | -5.0% |
+| Parse errors | 5/81 | 4/81 | -1 |
+
+**Model:** `mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit` run locally via mlx-lm on M4 Max. This is a thinking model — it generates `<think>...</think>` CoT blocks before answering. The wrapper strips the thinking block and passes only the answer portion for parsing. Temperature 0.7, max_tokens 4096 (to accommodate CoT).
+
+**Comparison with other local 4-bit models:**
+
+| Metric | Qwen3-32B-4bit | DeepSeek-R1-Distill-4bit |
+|--------|---------------|--------------------------|
+| Type | Non-thinking | Thinking (mandatory CoT) |
+| Baseline EDT | 54.3% | 59.3% |
+| ECL 90% EDT | 58.0% | 64.2% |
+| ECL shift | +3.7pp | +4.9pp |
+| Parse errors | 0/81 | 5/81 |
+
+**Key findings:**
+
+1. **R1 distillation raises baseline EDT by ~5pp** — consistent with the Oesterheld et al. (2024) finding that reasoning models lean more EDT. The R1 reasoning distilled into the Qwen-32B base produces a measurable behavioral difference even at 4-bit quantization.
+
+2. **Slightly more ECL-responsive** — +4.9pp vs +3.7pp. The thinking model's CoT chain gives it slightly more capacity to engage with the ECL constitution's reasoning, though both are far below the full-precision OpenRouter result (+13.6pp for Qwen3-32B).
+
+3. **Parse error rate** — 5/81 baseline, 4/81 ECL90. Thinking models tend to produce more verbose output that sometimes fails the forced-choice parser (e.g., hallucinating option C on a 2-option question). Still manageable.
+
+4. **Same architecture, different weights** — Both models are Qwen-32B architecture (64 layers, 5120 hidden dim) but with different fine-tuning. The R1 distill's higher EDT lean and slightly better ECL uptake suggest that the reasoning distillation creates a stronger EDT/CDT representation in the weights, which could be detectable via activation probing on this model as well.
 
 ### QwQ-32B (OpenRouter, 2026-03-30)
 
@@ -539,6 +600,8 @@ The ECL constitution produces measurable shifts in decision-theoretic reasoning,
 | Qwen3-32B thinking | **+11.1%** | -4.9% | EDT → CDT (!) | Thinking doesn't help; incoherent on direct Q |
 | GPT-5.1 | **+6.2%** | -6.2% | CDT → EDT | Moderate effect (high baseline) |
 | QwQ-32B | **+2.4%** | -2.5% | CDT → EDT | Highest baseline (66.7%) but nearly unsteerable |
+| DeepSeek-R1-Distill-4bit (local) | **+4.9%** | -5.0% | — | R1 reasoning raises baseline EDT; quantization still attenuates ECL uptake |
+| Qwen3-32B-4bit (local) | **+3.7%** | -1.3% | — | Quantization attenuates EDT lean and ECL uptake |
 | Qwen 3 235B | **+3.7%** | -4.9% | CDT → EDT | Weak behavioral change |
 | Kimi K2 | **-2.5%** | +2.4% | CDT → EDT | No behavioral effect (say-do gap) |
 | OLMo 3.1 32B Instruct | **-11.1%** | +12.3% | CDT → CDT | Anti-steerable; constitution amplifies CDT |
@@ -568,11 +631,13 @@ The ECL constitution produces measurable shifts in decision-theoretic reasoning,
 4. Claude Opus 4.5: +12.4%
 5. Qwen3-32B thinking: +11.1% (thinking adds nothing over no-thinking)
 6. GPT-5.1: +6.2%
-7. Qwen 3 235B: +3.7%
-8. OLMo 3.1 32B Think: +3.7% (confounded by ~50% parse failures — not a real signal)
-9. QwQ-32B: +2.4% (highest baseline at 66.7% but nearly immune to steering — reasoning-steerability tradeoff)
-10. Kimi K2: -2.5%
-11. OLMo 3.1 32B Instruct: -11.1%
+7. DeepSeek-R1-Distill-4bit (local): +4.9% (R1 reasoning + quantization; higher baseline than Qwen3-32B-4bit)
+8. Qwen3-32B-4bit (local): +3.7% (quantization attenuates full-precision +13.6% to match Qwen 235B level)
+9. Qwen 3 235B: +3.7%
+10. OLMo 3.1 32B Think: +3.7% (confounded by ~50% parse failures — not a real signal)
+11. QwQ-32B: +2.4% (highest baseline at 66.7% but nearly immune to steering — reasoning-steerability tradeoff)
+12. Kimi K2: -2.5%
+13. OLMo 3.1 32B Instruct: -11.1%
 
 ## Files
 
@@ -620,8 +685,17 @@ The ECL constitution produces measurable shifts in decision-theoretic reasoning,
 - Baseline: `logs/newcomblike_evals/newcomblike_qwen-qwen3-32b-thinking_baseline_2026-03-29T12-42-29.062821.jsonl`
 - ECL 90%: `logs/newcomblike_evals/newcomblike_qwen-qwen3-32b-thinking_ecl90_2026-03-29T13-57-01.577888.jsonl`
 
+**Qwen3-32B-4bit Local (2026-03-31):**
+- Baseline: `logs/newcomblike_evals/newcomblike_qwen3-32b-4bit-local_baseline_2026-03-31T15-51-18.841776.jsonl`
+- ECL 90%: `logs/newcomblike_evals/newcomblike_qwen3-32b-4bit-local_ecl90_2026-03-31T15-54-02.677334.jsonl`
+
+**DeepSeek-R1-Distill-Qwen-32B-4bit Local (2026-03-31):**
+- Baseline: `logs/newcomblike_evals/newcomblike_deepseek-r1-distill-qwen-32b-4bit-local_baseline_2026-03-31T18-02-17.658367.jsonl`
+- ECL 90%: `logs/newcomblike_evals/newcomblike_deepseek-r1-distill-qwen-32b-4bit-local_ecl90_2026-03-31T20-00-32.432758.jsonl`
+
 **Code:**
 - Evaluation pipeline: `newcomblike_eval.py`
 - Standalone runner: `run_newcomblike_eval.py`
-- Qwen3-32B runner: `run_qwen3_32b_eval.py`
+- Qwen3-32B runner (OpenRouter): `run_qwen3_32b_eval.py`
+- Qwen3-32B runner (local mlx): `run_qwen3_32b_local_eval.py`
 - Dataset: `datasets/newcomblike_repo/benchmark/`

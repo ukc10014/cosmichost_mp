@@ -24,7 +24,7 @@ From the newcomblike evals (`observations/newcomblike_eval_results.md`):
 ### 1. Dataset (`datasets/`)
 Already generated. 475 prompts, 350 contrastive (EDT and CDT give different answers).
 
-Each prompt has hand-written EDT and CDT completions for contrastive activation extraction. Tagged with confound flags (`tests_generic_cooperation`, `edt_cdt_agree`) and structural tags (`has_predictor`, `has_copy`, `has_correlation`, `has_cosmic_framing`).
+Each prompt has LLM-written EDT and CDT completions for contrastive activation extraction. Tagged with confound flags (`tests_generic_cooperation`, `edt_cdt_agree`) and structural tags (`has_predictor`, `has_copy`, `has_correlation`, `has_cosmic_framing`).
 
 ```bash
 python activation_steering/generate_dataset.py --stats   # see distribution

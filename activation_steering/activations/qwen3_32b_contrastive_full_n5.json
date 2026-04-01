@@ -1,0 +1,122 @@
+{
+  "model": "mlx-community/Qwen3-32B-4bit",
+  "layer_indices": [
+    0,
+    8,
+    16,
+    24,
+    32,
+    40,
+    48,
+    56,
+    63
+  ],
+  "n_prompts": 5,
+  "prompts": [
+    {
+      "prompt_id": "newcomb_standard_forced_choice",
+      "scenario_id": "newcomb_standard",
+      "category": "newcomb_proper",
+      "split": "train",
+      "question_format": "forced_choice",
+      "tags": {
+        "has_predictor": true,
+        "has_copy": false,
+        "has_correlation": true,
+        "has_dt_jargon": false,
+        "has_cosmic_framing": false,
+        "surface_form": "narrative",
+        "difficulty": "standard"
+      },
+      "confound_flags": {},
+      "edt_answer_idx": 0,
+      "cdt_answer_idx": 1,
+      "edt_n_tokens": 212,
+      "cdt_n_tokens": 207
+    },
+    {
+      "prompt_id": "newcomb_standard_justified",
+      "scenario_id": "newcomb_standard",
+      "category": "newcomb_proper",
+      "split": "train",
+      "question_format": "justified",
+      "tags": {
+        "has_predictor": true,
+        "has_copy": false,
+        "has_correlation": true,
+        "has_dt_jargon": false,
+        "has_cosmic_framing": false,
+        "surface_form": "narrative",
+        "difficulty": "standard"
+      },
+      "confound_flags": {},
+      "edt_answer_idx": 0,
+      "cdt_answer_idx": 1,
+      "edt_n_tokens": 223,
+      "cdt_n_tokens": 218
+    },
+    {
+      "prompt_id": "newcomb_standard_policy",
+      "scenario_id": "newcomb_standard",
+      "category": "newcomb_proper",
+      "split": "train",
+      "question_format": "policy",
+      "tags": {
+        "has_predictor": true,
+        "has_copy": false,
+        "has_correlation": true,
+        "has_dt_jargon": false,
+        "has_cosmic_framing": false,
+        "surface_form": "narrative",
+        "difficulty": "standard"
+      },
+      "confound_flags": {},
+      "edt_answer_idx": 0,
+      "cdt_answer_idx": 1,
+      "edt_n_tokens": 245,
+      "cdt_n_tokens": 240
+    },
+    {
+      "prompt_id": "newcomb_standard_population",
+      "scenario_id": "newcomb_standard",
+      "category": "newcomb_proper",
+      "split": "train",
+      "question_format": "population",
+      "tags": {
+        "has_predictor": true,
+        "has_copy": false,
+        "has_correlation": true,
+        "has_dt_jargon": false,
+        "has_cosmic_framing": false,
+        "surface_form": "narrative",
+        "difficulty": "standard"
+      },
+      "confound_flags": {},
+      "edt_answer_idx": 0,
+      "cdt_answer_idx": 1,
+      "edt_n_tokens": 237,
+      "cdt_n_tokens": 232
+    },
+    {
+      "prompt_id": "newcomb_standard_ranking",
+      "scenario_id": "newcomb_standard",
+      "category": "newcomb_proper",
+      "split": "train",
+      "question_format": "ranking",
+      "tags": {
+        "has_predictor": true,
+        "has_copy": false,
+        "has_correlation": true,
+        "has_dt_jargon": false,
+        "has_cosmic_framing": false,
+        "surface_form": "narrative",
+        "difficulty": "standard"
+      },
+      "confound_flags": {},
+      "edt_answer_idx": 0,
+      "cdt_answer_idx": 1,
+      "edt_n_tokens": 280,
+      "cdt_n_tokens": 275
+    }
+  ]
+}

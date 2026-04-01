@@ -1,0 +1,181 @@
+{
+  "0": {
+    "probe_accuracy": {
+      "train": 1.0,
+      "val": 0.65,
+      "test": 0.44545454545454544
+    },
+    "coef_norm": 3.00523863149091,
+    "direction_norm": 0.2844679057598114,
+    "hidden_dim": 5120
+  },
+  "8": {
+    "probe_accuracy": {
+      "train": 1.0,
+      "val": 0.775,
+      "test": 0.6272727272727273
+    },
+    "coef_norm": 2.280590952002534,
+    "direction_norm": 1.9781228303909302,
+    "hidden_dim": 5120
+  },
+  "16": {
+    "probe_accuracy": {
+      "train": 1.0,
+      "val": 0.7,
+      "test": 0.6727272727272727
+    },
+    "coef_norm": 2.253065428557421,
+    "direction_norm": 6.885536193847656,
+    "hidden_dim": 5120
+  },
+  "24": {
+    "probe_accuracy": {
+      "train": 1.0,
+      "val": 0.975,
+      "test": 0.7818181818181819
+    },
+    "coef_norm": 2.0403873638030157,
+    "direction_norm": 15.609541893005371,
+    "hidden_dim": 5120
+  },
+  "32": {
+    "probe_accuracy": {
+      "train": 1.0,
+      "val": 0.95,
+      "test": 0.7363636363636363
+    },
+    "coef_norm": 2.2651539510714787,
+    "direction_norm": 11.831098556518555,
+    "hidden_dim": 5120
+  },
+  "40": {
+    "probe_accuracy": {
+      "train": 1.0,
+      "val": 0.975,
+      "test": 0.8272727272727273
+    },
+    "coef_norm": 2.332116406468154,
+    "direction_norm": 12.574057579040527,
+    "hidden_dim": 5120
+  },
+  "48": {
+    "probe_accuracy": {
+      "train": 1.0,
+      "val": 0.975,
+      "test": 0.8818181818181818
+    },
+    "coef_norm": 1.9303537404023923,
+    "direction_norm": 26.76214027404785,
+    "hidden_dim": 5120
+  },
+  "56": {
+    "probe_accuracy": {
+      "train": 1.0,
+      "val": 1.0,
+      "test": 0.7727272727272727
+    },
+    "coef_norm": 2.1900253098339877,
+    "direction_norm": 62.04338836669922,
+    "hidden_dim": 5120
+  },
+  "63": {
+    "probe_accuracy": {
+      "train": 1.0,
+      "val": 0.95,
+      "test": 0.7181818181818181
+    },
+    "coef_norm": 2.3952621533250205,
+    "direction_norm": 125.32911682128906,
+    "hidden_dim": 5120
+  },
+  "post_norm": {
+    "probe_accuracy": {
+      "train": 1.0,
+      "val": 0.95,
+      "test": 0.7
+    },
+    "coef_norm": 2.3933742579230546,
+    "direction_norm": 8.5586519241333,
+    "hidden_dim": 5120
+  },
+  "best_layer": "56",
+  "confound_analysis": {
+    "cooperation_confound": {
+      "coop_mean_proj": 11.001363754272461,
+      "non_coop_mean_proj": 63.54462432861328,
+      "ratio": 0.1731281578540802,
+      "n_coop": 10,
+      "n_non_coop": 340,
+      "interpretation": "OK: similar projection across cooperation and non-cooperation prompts"
+    },
+    "by_category": {
+      "newcomb_proper": {
+        "mean_proj": 51.247528076171875,
+        "std_proj": 56.654178619384766,
+        "n": 130
+      },
+      "near_newcomb": {
+        "mean_proj": 73.44912719726562,
+        "std_proj": 59.18796920776367,
+        "n": 205
+      },
+      "control": {
+        "mean_proj": -0.2710435688495636,
+        "std_proj": 46.553749084472656,
+        "n": 15
+      }
+    },
+    "tag_has_predictor": {
+      "with_tag_mean": 59.08811569213867,
+      "without_tag_mean": 66.22152709960938,
+      "n_with": 205,
+      "n_without": 145
+    },
+    "tag_has_copy": {
+      "with_tag_mean": 79.77207946777344,
+      "without_tag_mean": 58.73802947998047,
+      "n_with": 55,
+      "n_without": 295
+    },
+    "tag_has_correlation": {
+      "with_tag_mean": 62.170074462890625,
+      "without_tag_mean": 53.30149459838867,
+      "n_with": 345,
+      "n_without": 5
+    },
+    "tag_has_cosmic_framing": {
+      "with_tag_mean": 83.8678207397461,
+      "without_tag_mean": 60.36457824707031,
+      "n_with": 25,
+      "n_without": 325
+    }
+  },
+  "pca_analysis": {
+    "variance_explained": [
+      0.09994320571422577,
+      0.06278017908334732,
+      0.05781007930636406,
+      0.041577067226171494,
+      0.03500207141041756,
+      0.030216801911592484,
+      0.022295186296105385,
+      0.019662318751215935,
+      0.018519409000873566,
+      0.01530974917113781
+    ],
+    "direction_pc_projections": [
+      0.05701190605759621,
+      -0.10652803629636765,
+      -0.2449943721294403,
+      0.4115421175956726,
+      0.12092159688472748,
+      -0.14068476855754852,
+      -0.16696709394454956,
+      0.3898587226867676,
+      0.05335770174860954,
+      0.47950491309165955
+    ],
+    "direction_in_top10_variance": 0.6910418272018433
+  }
+}
