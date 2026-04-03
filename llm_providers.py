@@ -253,18 +253,40 @@ def make_openrouter_call(api_key: str, model: str):
             "max_tokens": MAX_TOKENS_OPENROUTER,
         }
 
-        if "qwen3" in model.lower():
-            if "thinking" not in model.lower():
+        is_thinking_model = False
+        model_lower = model.lower()
+
+        if "qwen3" in model_lower and "qwen3." not in model_lower:
+            if "thinking" not in model_lower:
                 payload["reasoning"] = {"effort": "none"}
                 payload["provider"] = {"order": ["Together", "Fireworks", "DeepInfra"]}
             else:
                 payload["provider"] = {"order": ["Together", "Fireworks", "DeepInfra"]}
                 payload["max_tokens"] = max(MAX_TOKENS_OPENROUTER, 4096)
+                is_thinking_model = True
 
-        if "olmo" in model.lower() and "think" in model.lower():
+        if "qwen3." in model_lower:
             payload["max_tokens"] = max(MAX_TOKENS_OPENROUTER, 4096)
+            is_thinking_model = True
 
-        timeout = 120 if "thinking" in model.lower() or "think" in model.lower() else 60
+        if "deepseek-r1" in model_lower:
+            payload["max_tokens"] = max(MAX_TOKENS_OPENROUTER, 8192)
+            is_thinking_model = True
+
+        if "deepseek-v3" in model_lower:
+            payload["max_tokens"] = max(MAX_TOKENS_OPENROUTER, 1024)
+
+        if "grok" in model_lower:
+            payload["max_tokens"] = max(MAX_TOKENS_OPENROUTER, 1024)
+
+        if "gemma-4" in model_lower:
+            payload["max_tokens"] = max(MAX_TOKENS_OPENROUTER, 1024)
+
+        if "olmo" in model_lower and "think" in model_lower:
+            payload["max_tokens"] = max(MAX_TOKENS_OPENROUTER, 4096)
+            is_thinking_model = True
+
+        timeout = 120 if is_thinking_model or "thinking" in model_lower or "think" in model_lower else 60
 
         try:
             response = requests.post(url, headers=headers, json=payload, timeout=timeout)
@@ -274,6 +296,8 @@ def make_openrouter_call(api_key: str, model: str):
             if "choices" in data and len(data["choices"]) > 0:
                 msg = data["choices"][0]["message"]
                 content = msg.get("content") or ""
+                if not content and msg.get("reasoning_content"):
+                    content = msg["reasoning_content"]
                 return content
             return ""
 
@@ -316,5 +340,5 @@ def init_llm_call(model: str):
         print("  Gemini: gemini-3-flash-preview, gemini-3-pro-preview")
         print("  OpenAI: gpt-5.1, gpt-4o, o1-preview")
         print("  Anthropic: claude-opus-4-5-20251101, claude-sonnet-4-20250514")
-        print("  OpenRouter: moonshotai/kimi-k2-0905, qwen/qwen3-235b-a22b-2507")
+        print("  OpenRouter: google/gemma-4-31b-it, deepseek/deepseek-r1, x-ai/grok-4-fast, qwen/qwen3.6-plus-preview")
         sys.exit(1)
