@@ -129,6 +129,10 @@ cosmichost_selfchats_log.jsonl
 # Large binary activation files (regenerable via extract_activations.py)
 *.npz
 
+# LoRA adapter weights (large, regenerable via training)
+activation_steering/adapters_edt/
+activation_steering/adapters_cdt/
+
 # Backup files
 *.bak
 *.backup

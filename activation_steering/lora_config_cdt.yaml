@@ -1,0 +1,22 @@
+model: "mlx-community/Qwen3-32B-4bit"
+data: "activation_steering/datasets/lora_cdt"
+train: true
+fine_tune_type: "lora"
+optimizer: "adamw"
+batch_size: 1
+iters: 275
+learning_rate: 1e-4
+num_layers: -1
+max_seq_length: 2048
+lora_parameters:
+  rank: 32
+  dropout: 0.05
+  scale: 16.0
+grad_checkpoint: true
+val_batches: -1
+steps_per_eval: 50
+steps_per_report: 10
+steps_per_save: 275
+adapter_path: "activation_steering/adapters_cdt"
+seed: 42
+mask_prompt: true

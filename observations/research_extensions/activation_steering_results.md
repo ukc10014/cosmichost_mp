@@ -429,6 +429,18 @@ Introduces a "resilience" metric: after removing a CoT sentence, resample multip
 
 **Relevance:** Provides a concrete validation protocol for any future steering experiments on thinking models. If we steer QwQ-32B toward EDT reasoning, does the model produce EDT-sounding CoT that gets overridden by its actual reasoning? The resilience metric answers this: resample after steering and check persistence. Also a cautionary note — activation steering on thinking models may be inherently less effective because the model can "reason its way back" in subsequent CoT tokens.
 
+### PCA-Based Steering Directions (Representation Engineering)
+
+**Reference:** vgel, "Representation Engineering" ([vgel.me/posts/representation-engineering](https://vgel.me/posts/representation-engineering/)), using the `repeng` library.
+
+The representation engineering approach extracts steering vectors by computing per-pair activation differences (`positive_hidden - negative_hidden`), then running PCA on those difference vectors and taking the first principal component as the steering direction. This differs from our mean-difference approach and also applies the vector at multiple layers simultaneously (roughly the middle third of the model). Demonstrated strong behavioral shifts for traits like honesty and happiness in Mistral-7B.
+
+**Why we did not pursue PCA refinement:** PCA extracts the direction of maximum variance in the difference vectors. When differences are already consistent across examples, PCA's first component approximates the mean difference. Our probe achieved 100% validation accuracy at layer 40 using the mean-difference direction — the data is already near-perfectly separated, so PCA cannot meaningfully improve on it.
+
+More fundamentally, the vgel results work because traits like honesty and happiness are **persistent generation-wide dispositions** — the model stays in "honest mode" across many tokens, and a steering vector that nudges every layer toward that mode has cumulative effect. Our EDT/CDT distinction is a **narrow decision fork**: the model commits to "Box B" vs "both boxes" at essentially one point during generation. There is no persistent "EDT mode" to amplify across layers.
+
+This maps onto a broader distinction. The representation engineering approach would be more relevant if the hypothesis were that models have a broad EDT-ish inclination pervading many question types — analogous to helpfulness or harmlessness as overall dispositions. That may be a valid hypothesis for larger models in the context of cosmic-host constitutional research. But for our specific question — what distinguishes an EDT answer from a CDT answer at a layer-by-layer structural level — we found the signal appears very early (95% probe accuracy at layer 0 with full completions), suggesting the model is keying on semantic/lexical cues rather than maintaining a deep dispositional mode. The minimal-completion control confirmed this: layer 0 accuracy dropped to 65% when vocabulary leakage was removed, while layers 24+ held at 95-100%. The model builds something real in middle-to-late layers, but it is a *readout* of the answer choice, not a *generative mechanism* that selects it — which is why activation steering (whether mean-difference or PCA-refined) does not produce causal shifts.
+
 ### Synthesis: What the Literature Suggests About Our Null Result
 
 Our probe-steering gap — high classification accuracy (91-100%), null causal intervention even with attribution-patching-guided layer selection — is a known phenomenon in the literature. Several factors likely contributed:
@@ -445,7 +457,11 @@ We have now completed step (1) — attribution patching for layer selection — 
 
 ## Next Experiment: Weight-Space Steering via Opposed LoRAs
 
-*Planned: 2026-04-01*
+*Planned: 2026-04-01. Training datasets created 2026-04-01.*
+
+### Dataset Status
+
+Two LoRA training directories created at `activation_steering/datasets/lora_edt/` and `lora_cdt/`, each containing `train.jsonl` (275 examples), `valid.jsonl` (20), `test.jsonl` (55). Format: `{"prompt": ..., "completion": ...}` (mlx_lm CompletionsDataset). Completions are minimal (answer-only, mean ~14 chars) to avoid vocabulary leakage. Same prompts in both — only the answer choice differs. 51 unique completions per side across the 275 training examples.
 
 ### Motivation
 
