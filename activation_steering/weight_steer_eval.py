@@ -99,14 +99,15 @@ def load_adapter_weights(adapter_dir: Path):
     return weights, scale, config
 
 
-def compute_weight_direction(edt_dir: Path, cdt_dir: Path):
-    """Compute the weight-space steering direction from two opposed LoRA adapters.
+def load_lora_pair(edt_dir: Path, cdt_dir: Path):
+    """Load raw LoRA A/B matrices from both adapters.
 
-    For each module that has lora_a and lora_b:
-        effective_delta = scale * lora_b.T @ lora_a.T
-        direction = delta_EDT - delta_CDT
+    Instead of materializing the full-rank deltas (which for Qwen3-32B would be
+    ~119GB of float32), we keep the low-rank factors (rank 32 → a few hundred MB)
+    and compute each delta on-the-fly during apply_weight_direction().
 
-    Returns a dict of {base_weight_name: direction_array}.
+    Returns (lora_modules, scale) where lora_modules is a dict:
+        {base_weight_name: (edt_a, edt_b, cdt_a, cdt_b)}
     """
     edt_weights, edt_scale, edt_config = load_adapter_weights(edt_dir)
     cdt_weights, cdt_scale, cdt_config = load_adapter_weights(cdt_dir)
@@ -116,10 +117,7 @@ def compute_weight_direction(edt_dir: Path, cdt_dir: Path):
 
     lora_a_keys = sorted(k for k in edt_weights if k.endswith(".lora_a"))
 
-    direction = {}
-    total_norm = 0.0
-    n_modules = 0
-
+    lora_modules = {}
     for a_key in lora_a_keys:
         b_key = a_key.replace(".lora_a", ".lora_b")
         if b_key not in edt_weights:
@@ -130,28 +128,15 @@ def compute_weight_direction(edt_dir: Path, cdt_dir: Path):
             continue
 
         base_key = a_key.replace(".lora_a", ".weight")
+        lora_modules[base_key] = (
+            edt_weights[a_key], edt_weights[b_key],
+            cdt_weights[a_key], cdt_weights[b_key],
+        )
 
-        edt_a = edt_weights[a_key]
-        edt_b = edt_weights[b_key]
-        cdt_a = cdt_weights[a_key]
-        cdt_b = cdt_weights[b_key]
+    print(f"Loaded LoRA factors for {len(lora_modules)} modules (rank {edt_weights[lora_a_keys[0]].shape[0]})")
+    print(f"  Scale factor: {scale}")
 
-        edt_delta = scale * edt_b.T @ edt_a.T
-        cdt_delta = scale * cdt_b.T @ cdt_a.T
-
-        diff = edt_delta - cdt_delta
-        direction[base_key] = diff
-
-        norm = np.linalg.norm(diff)
-        total_norm += norm ** 2
-        n_modules += 1
-
-    total_norm = np.sqrt(total_norm)
-    print(f"Weight-space direction computed from {n_modules} modules")
-    print(f"  Total direction norm (RSS across modules): {total_norm:.4f}")
-    print(f"  Scale factor used: {scale}")
-
-    return direction, total_norm
+    return lora_modules, scale
 
 
 def find_module_by_path(model, path):
@@ -169,19 +154,19 @@ def find_module_by_path(model, path):
     return obj
 
 
-def apply_weight_direction(model, direction, k):
-    """Add k * direction to the model's weights.
+def apply_weight_direction(model, lora_modules, scale, k):
+    """Add k * (EDT - CDT) direction to the model's weights.
+
+    Computes each full-rank delta on-the-fly from the low-rank LoRA factors,
+    applies it, then discards it. Peak overhead = one weight matrix at a time.
 
     Handles quantized models by dequantizing, adding the delta,
     and re-quantizing (same approach as LoRALinear.fuse()).
-
-    The direction dict maps base weight names
-    (e.g. 'layers.0.self_attn.q_proj.weight') to numpy arrays.
     """
     applied = 0
     skipped = 0
 
-    for base_key, diff_np in direction.items():
+    for base_key, (edt_a, edt_b, cdt_a, cdt_b) in lora_modules.items():
         module_path = base_key.replace(".weight", "")
         try:
             module = find_module_by_path(model, module_path)
@@ -189,7 +174,11 @@ def apply_weight_direction(model, direction, k):
             skipped += 1
             continue
 
-        delta = mx.array((k * diff_np).astype(np.float32))
+        edt_delta = edt_b.T @ edt_a.T
+        cdt_delta = cdt_b.T @ cdt_a.T
+        diff = edt_delta - cdt_delta
+        delta = mx.array((k * scale * diff).astype(np.float32))
+        del diff, edt_delta, cdt_delta
 
         if isinstance(module, nn.QuantizedLinear):
             weight = mx.dequantize(
@@ -206,6 +195,7 @@ def apply_weight_direction(model, direction, k):
                 continue
 
             new_weight = weight + delta
+            del delta, weight
             bias = module.bias if hasattr(module, "bias") and module.bias is not None else None
 
             output_dims, input_dims = new_weight.shape
@@ -220,6 +210,7 @@ def apply_weight_direction(model, direction, k):
                 module.bits,
                 mode=module.mode,
             )
+            del temp_linear, new_weight
 
             parent_path = ".".join(module_path.split(".")[:-1])
             child_name = module_path.split(".")[-1]
@@ -233,6 +224,7 @@ def apply_weight_direction(model, direction, k):
                 continue
 
             module.weight = module.weight + delta.astype(module.weight.dtype)
+            del delta
             applied += 1
 
         elif isinstance(module, (nn.Embedding, nn.QuantizedEmbedding)):
@@ -274,7 +266,7 @@ def make_llm_call(model, tokenizer, sampler):
 
 
 def run_k_sweep(
-    questions, direction, k_values, verbose=True,
+    questions, lora_modules, scale, k_values, verbose=True,
 ):
     """Run the eval at each k value, reloading the model each time."""
     sampler = make_sampler(temp=TEMPERATURE)
@@ -291,7 +283,7 @@ def run_k_sweep(
         print(f"  Model loaded in {time.time() - t0:.1f}s")
 
         if k != 0.0:
-            applied, skipped = apply_weight_direction(model, direction, k)
+            applied, skipped = apply_weight_direction(model, lora_modules, scale, k)
             print(f"  Applied direction to {applied} weight matrices (skipped {skipped})")
             mx.eval(model.parameters())
         else:
@@ -407,8 +399,8 @@ def main():
     edt_dir = Path(args.edt_adapters)
     cdt_dir = Path(args.cdt_adapters)
 
-    print("Computing weight-space steering direction...")
-    direction, total_norm = compute_weight_direction(edt_dir, cdt_dir)
+    print("Loading LoRA factors...")
+    lora_modules, scale = load_lora_pair(edt_dir, cdt_dir)
 
     questions = load_questions(attitude_only=True)
     if not args.full:
@@ -418,13 +410,12 @@ def main():
     print(f"Model: {MODEL_ID}")
     print(f"Questions: {len(questions)} attitude")
     print(f"k values: {k_values}")
-    print(f"Direction norm: {total_norm:.4f}")
     print(f"Temperature: {TEMPERATURE}")
     print(f"EDT adapters: {edt_dir}")
     print(f"CDT adapters: {cdt_dir}")
 
     results = run_k_sweep(
-        questions, direction, k_values,
+        questions, lora_modules, scale, k_values,
         verbose=not args.quiet,
     )
 
@@ -434,7 +425,6 @@ def main():
         "model": MODEL_ID,
         "method": "weight_space_steering",
         "k_values": k_values,
-        "direction_norm": total_norm,
         "edt_adapters": str(edt_dir),
         "cdt_adapters": str(cdt_dir),
         "n_questions": len(questions),
