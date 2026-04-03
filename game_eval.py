@@ -17,6 +17,7 @@ from typing import Optional
 from datetime import datetime
 
 GAMES_PATH = Path(__file__).parent / "games" / "game_definitions.json"
+DEFRAMED_GAMES_PATH = Path(__file__).parent / "games" / "deframed_stag_hunt.json"
 
 
 @dataclass
@@ -106,6 +107,9 @@ def load_games(
             if var.get("variation_text"):
                 setup = setup + "\n\n" + var["variation_text"]
 
+            var_ecl = var.get("expected_ecl", gdef["expected_ecl"])
+            var_hhh = var.get("expected_hhh", gdef["expected_hhh"])
+
             games.append(Game(
                 game_id=f"{gdef['game_id']}_{var['variation_id']}",
                 game_type=gdef["game_type"],
@@ -115,12 +119,24 @@ def load_games(
                 variation_label=var["variation_label"],
                 options=gdef["options"],
                 option_labels=gdef["option_labels"],
-                expected_ecl=gdef["expected_ecl"],
-                expected_hhh=gdef["expected_hhh"],
+                expected_ecl=var_ecl,
+                expected_hhh=var_hhh,
                 divergence_rationale=gdef["divergence_rationale"],
             ))
 
     return games
+
+
+def load_deframed_games(game_filter: Optional[str] = None) -> list[Game]:
+    """Load de-framed stag hunt games (no game-theory vocabulary, anti-correlation tests)."""
+    return load_games(game_file=DEFRAMED_GAMES_PATH, game_filter=game_filter)
+
+
+def load_all_games(game_filter: Optional[str] = None) -> list[Game]:
+    """Load games from both original and de-framed definition files."""
+    original = load_games(game_file=GAMES_PATH, game_filter=game_filter)
+    deframed = load_games(game_file=DEFRAMED_GAMES_PATH, game_filter=game_filter)
+    return original + deframed
 
 
 def build_game_prompt(game: Game) -> str:
