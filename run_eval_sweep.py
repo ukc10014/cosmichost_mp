@@ -30,13 +30,13 @@ MODEL_REGISTRY = {
     "gemma4": "google/gemma-4-31b-it",
     "deepseek-r1": "deepseek/deepseek-r1",
     "deepseek-v3": "deepseek/deepseek-v3.2",
-    "qwen3.6": "qwen/qwen3.6-plus-preview",
+    "qwen3.5": "qwen/qwen3.5-plus-02-15",
     "grok4": "x-ai/grok-4-fast",
     "gpt5.4": "gpt-5.4",
     "opus4.6": "claude-opus-4-6",
 }
 
-CONSTITUTIONS = ["baseline", "ecl90"]
+CONSTITUTIONS = ["baseline", "ecl90", "fdt"]
 
 # --- Eval runners ---
 
@@ -115,6 +115,7 @@ EVAL_RUNNERS = {
 CONSTITUTION_PATHS = {
     "ecl90": Path("logs/mp_constitutions/ecl_pilled/eclpilled_ch90.md"),
     "ecl10": Path("logs/mp_constitutions/ecl_pilled/eclpilled_ch10.md"),
+    "fdt": Path("static/fdt_only_constitution.txt"),
 }
 
 

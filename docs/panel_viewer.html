@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conversation Viewer — Cosmic Host Research</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0f1117;
+    color: #e1e4e8;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Top bar ── */
+  #topbar {
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+  #topbar h1 { font-size: 15px; font-weight: 600; color: #8b949e; letter-spacing: 0.04em; }
+  #home-link {
+    font-size: 12px;
+    color: #58a6ff;
+    text-decoration: none;
+    margin-left: auto;
+  }
+  #home-link:hover { text-decoration: underline; }
+
+  #load-btn {
+    background: #238636;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  #load-btn:hover { background: #2ea043; }
+  #file-input { display: none; }
+
+  #loading-status {
+    font-size: 12px;
+    color: #8b949e;
+    margin-left: 4px;
+  }
+
+  /* ── Layout ── */
+  #layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  #sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: #161b22;
+    border-right: 1px solid #30363d;
+    overflow-y: auto;
+    padding: 10px 0;
+  }
+  #sidebar h2 { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 14px 8px; }
+
+  .section-label {
+    font-size: 10px;
+    color: #6e7681;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 12px 14px 4px;
+    font-weight: 600;
+  }
+
+  .file-item {
+    padding: 8px 14px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: background 0.1s;
+  }
+  .file-item:hover { background: #21262d; }
+  .file-item.active { border-left-color: #58a6ff; background: #21262d; }
+  .file-item .fi-name { font-size: 13px; font-weight: 500; }
+  .file-item .fi-meta { font-size: 11px; color: #8b949e; margin-top: 2px; }
+
+  #empty-sidebar {
+    color: #484f58;
+    font-size: 12px;
+    padding: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── Main area ── */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Meta panel ── */
+  #meta-panel {
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    padding: 12px 20px;
+    display: none;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    align-items: flex-start;
+    flex-shrink: 0;
+  }
+  .meta-group { display: flex; flex-direction: column; gap: 2px; }
+  .meta-label { font-size: 10px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em; }
+  .meta-value { font-size: 13px; color: #e1e4e8; font-weight: 500; }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-weight: 600;
+  }
+  .badge-guided { background: #1f4d2e; color: #56d364; }
+  .badge-unguided { background: #3d1f1f; color: #ff7b72; }
+  .badge-const { background: #1a2d4d; color: #79c0ff; }
+
+  /* speaker pills */
+  .spill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; background: #21262d; border-radius: 20px; padding: 2px 10px 2px 6px; }
+  .spill-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Toolbar ── */
+  #toolbar {
+    padding: 8px 20px;
+    border-bottom: 1px solid #30363d;
+    display: none;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+    background: #0f1117;
+  }
+  .tb-label { font-size: 12px; color: #8b949e; margin-right: 4px; }
+  .tb-btn {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 5px;
+    border: 1px solid #30363d;
+    background: #21262d;
+    color: #c9d1d9;
+    cursor: pointer;
+  }
+  .tb-btn:hover { background: #30363d; }
+  .tb-btn.active { background: #388bfd22; border-color: #388bfd; color: #79c0ff; }
+
+  #copy-all-btn {
+    margin-left: auto;
+    background: #21262d;
+    border: 1px solid #30363d;
+    color: #c9d1d9;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  #copy-all-btn:hover { background: #30363d; }
+
+  /* ── Conversation ── */
+  #conversation {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  #welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #484f58;
+    text-align: center;
+    gap: 10px;
+  }
+  #welcome h2 { font-size: 18px; color: #6e7681; }
+  #welcome p { font-size: 13px; line-height: 1.6; max-width: 300px; }
+
+  /* Question dividers */
+  .q-block { margin-bottom: 6px; }
+
+  .q-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  .q-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    margin-top: 2px;
+  }
+  .q-text { font-size: 14px; color: #e1e4e8; line-height: 1.55; font-style: italic; }
+
+  .opening-header {
+    padding: 12px 16px;
+    background: #1a2332;
+    border: 1px solid #2d4a6e;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: #79c0ff;
+    line-height: 1.55;
+    font-style: italic;
+  }
+  .opening-label { font-size: 11px; font-weight: 700; color: #388bfd; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+
+  /* Turn cards */
+  .turn-card {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    background: #161b22;
+    position: relative;
+  }
+  .turn-card:hover { border-color: #444c56; }
+
+  .turn-sidebar { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; width: 44px; }
+  .speaker-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .turn-num-badge {
+    font-size: 10px; color: #484f58; font-weight: 500;
+  }
+
+  .turn-body { flex: 1; min-width: 0; }
+  .turn-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .speaker-name { font-size: 13px; font-weight: 600; }
+  .model-tag { font-size: 11px; color: #8b949e; background: #21262d; border-radius: 4px; padding: 1px 7px; }
+  .q-tag { font-size: 10px; color: #56d364; background: #1f4d2e; border-radius: 4px; padding: 1px 6px; font-weight: 600; }
+
+  .turn-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #c9d1d9;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .turn-text p { margin-bottom: 0.7em; }
+  .turn-text p:last-child { margin-bottom: 0; }
+
+  .copy-turn-btn {
+    position: absolute;
+    top: 10px; right: 12px;
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 4px;
+    border: 1px solid #30363d;
+    background: transparent;
+    color: #8b949e;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .turn-card:hover .copy-turn-btn { opacity: 1; }
+  .copy-turn-btn:hover { background: #21262d; color: #c9d1d9; }
+  .copy-turn-btn.copied { color: #56d364; border-color: #56d364; }
+
+  /* Speaker colours */
+  .sp-A { background: #1f4d7a; }
+  .sp-B { background: #4d2f1a; }
+  .sp-C { background: #2a1f4d; }
+  .sp-MOD { background: #1f3d1f; }
+  .name-A { color: #79c0ff; }
+  .name-B { color: #ffa657; }
+  .name-C { color: #bc8cff; }
+  .name-MOD { color: #56d364; }
+  .dot-A { background: #79c0ff; }
+  .dot-B { background: #ffa657; }
+  .dot-C { background: #bc8cff; }
+
+  /* Filter: only show a specific speaker */
+  body.filter-A .turn-card:not(.sp-turn-A):not(.sp-turn-MOD) { opacity: 0.15; }
+  body.filter-B .turn-card:not(.sp-turn-B):not(.sp-turn-MOD) { opacity: 0.15; }
+  body.filter-C .turn-card:not(.sp-turn-C):not(.sp-turn-MOD) { opacity: 0.15; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 20px; right: 20px;
+    background: #238636; color: #fff;
+    padding: 8px 16px; border-radius: 6px;
+    font-size: 13px; font-weight: 500;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 999;
+  }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1>Conversation Viewer</h1>
+  <button id="load-btn" onclick="document.getElementById('file-input').click()">Load custom file...</button>
+  <input type="file" id="file-input" accept=".json,.jsonl" multiple>
+  <span id="loading-status"></span>
+  <a id="home-link" href="index.html">&larr; Back to index</a>
+</div>
+
+<div id="layout">
+  <div id="sidebar">
+    <h2>Sessions</h2>
+    <div id="empty-sidebar">Loading conversations...</div>
+  </div>
+
+  <div id="main">
+    <div id="meta-panel"></div>
+    <div id="toolbar">
+      <span class="tb-label">Show:</span>
+      <button class="tb-btn active" id="filter-all" onclick="setFilter('all')">All speakers</button>
+      <button class="tb-btn" id="filter-A" onclick="setFilter('A')">A only</button>
+      <button class="tb-btn" id="filter-B" onclick="setFilter('B')">B only</button>
+      <button class="tb-btn" id="filter-C" onclick="setFilter('C')">C only</button>
+      <button id="copy-all-btn" onclick="copyAll()">Copy conversation</button>
+    </div>
+    <div id="conversation">
+      <div id="welcome">
+        <h2>Select a session</h2>
+        <p>Choose a panel discussion or self-talk session from the sidebar to read the conversation.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const sessions = {};
+let activeKey = null;
+
+const KNOWN_SESSIONS = [
+  { section: 'Panel Discussions', items: [
+    { path: 'data/panel_discussions/guided_ecl90.jsonl',    label: 'ECL 90% (guided)' },
+    { path: 'data/panel_discussions/guided_ecl10.jsonl',    label: 'ECL 10% (guided)' },
+    { path: 'data/panel_discussions/guided_baseline.jsonl', label: 'Baseline (guided)' },
+    { path: 'data/panel_discussions/unguided_ecl90.jsonl',  label: 'ECL 90% (unguided)' },
+  ]},
+  { section: 'Self-Talk Debates', items: [
+    { path: 'data/logs_selftalk/opus4_cosmic_0_39.json',                              label: 'Opus 4 (Claude)' },
+    { path: 'data/logs_selftalk/opus3_cosmic_0_39.json',                              label: 'Opus 3 (Claude)' },
+    { path: 'data/logs_selftalk/gemini3pro_cosmic_0_39.json',                         label: 'Gemini 3 Pro' },
+    { path: 'data/logs_selftalk/gemini3pro_verbatim_cosmic_thinkingon_0_39.json',     label: 'Gemini 3 Pro (thinking)' },
+    { path: 'data/logs_selftalk/gemini3flash_cosmic_0_39.json',                       label: 'Gemini 3 Flash' },
+    { path: 'data/logs_selftalk/gemini3flash_verbatim_cosmic_thinkingoff_0_39.json',  label: 'Gemini 3 Flash (verbatim, no-think)' },
+    { path: 'data/logs_selftalk/gemini3flash_verbatim_cosmic_thinkingon_0_39.json',   label: 'Gemini 3 Flash (verbatim, thinking)' },
+  ]},
+];
+
+async function autoLoad() {
+  const status = document.getElementById('loading-status');
+  let loaded = 0;
+  const total = KNOWN_SESSIONS.reduce((n, s) => n + s.items.length, 0);
+
+  for (const section of KNOWN_SESSIONS) {
+    for (const item of section.items) {
+      try {
+        status.textContent = `Loading ${loaded + 1}/${total}...`;
+        const resp = await fetch(item.path);
+        if (!resp.ok) continue;
+        const text = await resp.text();
+        let data;
+        const trimmed = text.trim();
+        try { data = JSON.parse(trimmed); }
+        catch { data = JSON.parse(trimmed.split('\n')[0]); }
+
+        if (!data.models && data.config && data.config.model_name) {
+          const modelName = data.config.model_name;
+          const proLabel = data.config.pro_agent_label || 'A';
+          const conLabel = data.config.con_agent_label || 'B';
+          data.models = {};
+          data.models[proLabel] = modelName + ' (pro)';
+          data.models[conLabel] = modelName + ' (con)';
+        }
+
+        data._section = section.section;
+        sessions[item.label] = { filename: item.label, data };
+        loaded++;
+      } catch (err) {
+        console.warn('Failed to load', item.path, err);
+      }
+    }
+  }
+
+  status.textContent = `${loaded} sessions loaded`;
+  renderSidebar();
+  const keys = Object.keys(sessions);
+  if (keys.length > 0) selectSession(keys[0]);
+}
+
+document.getElementById('file-input').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files);
+  for (const file of files) {
+    const text = await file.text();
+    try {
+      let data;
+      const trimmed = text.trim();
+      try { data = JSON.parse(trimmed); }
+      catch { data = JSON.parse(trimmed.split('\n')[0]); }
+      data._section = 'Custom';
+      sessions[file.name] = { filename: file.name, data };
+    } catch (err) {
+      alert(`Could not parse ${file.name}: ${err.message}`);
+      continue;
+    }
+  }
+  e.target.value = '';
+  renderSidebar();
+  const keys = Object.keys(sessions);
+  if (keys.length > 0 && !activeKey) {
+    selectSession(keys[keys.length - 1]);
+  }
+});
+
+function renderSidebar() {
+  const keys = Object.keys(sessions);
+  const sidebar = document.getElementById('sidebar');
+  const empty = document.getElementById('empty-sidebar');
+  empty.style.display = keys.length === 0 ? '' : 'none';
+
+  sidebar.querySelectorAll('.file-item, .section-label').forEach(el => el.remove());
+
+  let lastSection = null;
+  for (const key of keys) {
+    const { data } = sessions[key];
+    const section = data._section || '';
+
+    if (section !== lastSection) {
+      const lbl = document.createElement('div');
+      lbl.className = 'section-label';
+      lbl.textContent = section;
+      sidebar.appendChild(lbl);
+      lastSection = section;
+    }
+
+    const cfg = data.config || {};
+    const constId = cfg.constitution_id || cfg.model_name || '?';
+    const date = data.timestamp_utc ? data.timestamp_utc.slice(0, 10) : '';
+    const isGuided = Array.isArray(data.seed_questions) && data.seed_questions.length > 0;
+    const nTurns = (data.turns || []).filter(t => t.speaker !== 'MODERATOR').length;
+
+    const el = document.createElement('div');
+    el.className = 'file-item' + (key === activeKey ? ' active' : '');
+    el.innerHTML = `
+      <div class="fi-name">${escHtml(key)}</div>
+      <div class="fi-meta">${escHtml(constId)} · ${isGuided ? 'guided' : nTurns + ' turns'} · ${date}</div>
+    `;
+    el.onclick = () => selectSession(key);
+    sidebar.appendChild(el);
+  }
+}
+
+function selectSession(key) {
+  activeKey = key;
+  setFilter('all');
+  renderSidebar();
+  renderSession(sessions[key].data, key);
+}
+
+function speakerClass(sp) {
+  if (sp === 'MODERATOR') return 'MOD';
+  return sp.replace('Speaker ','').trim();
+}
+
+function speakerLabel(sp, models) {
+  const code = speakerClass(sp);
+  if (code === 'MOD') return { display: 'Moderator', model: '', code };
+  const model = (models || {})[code] || code;
+  return { display: `Speaker ${code}`, model, code };
+}
+
+function avatarLetter(code) {
+  if (code === 'MOD') return 'M';
+  return code;
+}
+
+function renderMeta(data, filename) {
+  const panel = document.getElementById('meta-panel');
+  panel.style.display = 'flex';
+  const cfg = data.config || {};
+  const models = data.models || {};
+  const isGuided = Array.isArray(data.seed_questions) && data.seed_questions.length > 0;
+  const date = data.timestamp_utc ? data.timestamp_utc.slice(0, 16).replace('T',' ') + ' UTC' : '';
+  const nQ = isGuided ? data.seed_questions.length : '';
+  const rounds = cfg.rounds_per_question || '';
+  const usage = data.total_usage || {};
+  const tokIn = usage.input_tokens ? (usage.input_tokens/1000).toFixed(0)+'k' : '';
+  const tokOut = usage.output_tokens ? (usage.output_tokens/1000).toFixed(0)+'k' : '';
+
+  const speakerCodes = Object.keys(models);
+  const speakerPills = speakerCodes.map(code => {
+    const m = models[code] || code;
+    return `<span class="spill"><span class="spill-dot dot-${code}"></span>${escHtml(code)}: ${escHtml(m)}</span>`;
+  }).join(' ');
+
+  let typeStr;
+  if (isGuided) {
+    typeStr = `Guided · ${nQ} questions · ${rounds} rounds each`;
+  } else if (cfg.num_turn_pairs) {
+    typeStr = `Self-talk · ${cfg.num_turn_pairs} turn pairs`;
+  } else {
+    typeStr = 'Unguided';
+  }
+
+  panel.innerHTML = `
+    ${cfg.constitution_id ? `<div class="meta-group"><span class="meta-label">Constitution</span><span class="meta-value"><span class="badge badge-const">${escHtml(cfg.constitution_id)}</span></span></div>` : ''}
+    <div class="meta-group">
+      <span class="meta-label">Type</span>
+      <span class="meta-value"><span class="badge ${isGuided ? 'badge-guided' : 'badge-unguided'}">${typeStr}</span></span>
+    </div>
+    <div class="meta-group">
+      <span class="meta-label">Speakers</span>
+      <span class="meta-value" style="display:flex;gap:6px;flex-wrap:wrap">${speakerPills}</span>
+    </div>
+    ${date ? `<div class="meta-group"><span class="meta-label">Date</span><span class="meta-value">${date}</span></div>` : ''}
+    ${cfg.temperature != null ? `<div class="meta-group"><span class="meta-label">Temp / MaxTok</span><span class="meta-value">${cfg.temperature} / ${cfg.max_output_tokens || ''}</span></div>` : ''}
+    ${tokIn ? `<div class="meta-group"><span class="meta-label">Tokens (in/out)</span><span class="meta-value">${tokIn} / ${tokOut}</span></div>` : ''}
+  `;
+}
+
+function renderSession(data, filename) {
+  renderMeta(data, filename);
+  document.getElementById('toolbar').style.display = 'flex';
+
+  const conv = document.getElementById('conversation');
+  conv.innerHTML = '';
+
+  const models = data.models || {};
+  const isGuided = Array.isArray(data.seed_questions) && data.seed_questions.length > 0;
+
+  if (isGuided) {
+    renderGuided(conv, data, models);
+  } else {
+    renderUnguided(conv, data, models);
+  }
+}
+
+function renderGuided(conv, data, models) {
+  const turns = data.turns || [];
+  const groups = [];
+  let currentGroup = null;
+
+  for (const turn of turns) {
+    if (turn.speaker === 'MODERATOR') {
+      currentGroup = { moderatorTurn: turn, speakerTurns: [], qText: turn.text };
+      groups.push(currentGroup);
+    } else if (currentGroup) {
+      currentGroup.speakerTurns.push(turn);
+    } else {
+      if (!currentGroup) {
+        currentGroup = { moderatorTurn: null, speakerTurns: [], qText: null };
+        groups.push(currentGroup);
+      }
+      currentGroup.speakerTurns.push(turn);
+    }
+  }
+
+  let globalTurnNum = 0;
+
+  for (let gi = 0; gi < groups.length; gi++) {
+    const group = groups[gi];
+    const qBlock = document.createElement('div');
+    qBlock.className = 'q-block';
+
+    const qHeader = document.createElement('div');
+    qHeader.className = 'q-header';
+    qHeader.innerHTML = `
+      <div class="q-num">Q${gi + 1} of ${groups.length}</div>
+      <div class="q-text">${escHtml(group.qText || '')}</div>
+    `;
+    qBlock.appendChild(qHeader);
+
+    for (const turn of group.speakerTurns) {
+      globalTurnNum++;
+      qBlock.appendChild(makeTurnCard(turn, models, globalTurnNum, gi + 1));
+    }
+
+    conv.appendChild(qBlock);
+  }
+}
+
+function renderUnguided(conv, data, models) {
+  const openingMsg = data.opening_message || '';
+
+  if (openingMsg) {
+    const oh = document.createElement('div');
+    oh.className = 'opening-header';
+    oh.innerHTML = `<div class="opening-label">Opening prompt (unguided)</div>${escHtml(openingMsg)}`;
+    conv.appendChild(oh);
+  }
+
+  const turns = data.turns || [];
+  let globalTurnNum = 0;
+
+  for (const turn of turns) {
+    if (turn.speaker === 'MODERATOR') continue;
+    globalTurnNum++;
+    conv.appendChild(makeTurnCard(turn, models, globalTurnNum, null));
+  }
+}
+
+function makeTurnCard(turn, models, turnNum, qNum) {
+  const sp = turn.speaker || '?';
+  const code = speakerClass(sp);
+  const { display, model } = speakerLabel(sp, models);
+
+  const card = document.createElement('div');
+  card.className = `turn-card sp-turn-${code}`;
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'copy-turn-btn';
+  copyBtn.textContent = 'Copy';
+  copyBtn.onclick = (e) => {
+    e.stopPropagation();
+    copyText(turn.text || '', copyBtn);
+  };
+
+  const qTag = qNum !== null ? `<span class="q-tag">Q${qNum}</span>` : '';
+
+  card.innerHTML = `
+    <div class="turn-sidebar">
+      <div class="speaker-avatar sp-${code}">${avatarLetter(code)}</div>
+      <div class="turn-num-badge">#${turnNum}</div>
+    </div>
+    <div class="turn-body">
+      <div class="turn-header">
+        <span class="speaker-name name-${code}">${escHtml(display)}</span>
+        ${model ? `<span class="model-tag">${escHtml(model)}</span>` : ''}
+        ${qTag}
+      </div>
+      <div class="turn-text">${formatText(turn.text || '')}</div>
+    </div>
+  `;
+  card.appendChild(copyBtn);
+  return card;
+}
+
+function formatText(raw) {
+  const paras = raw.split(/\n{2,}/);
+  return paras.map(p => {
+    const lines = escHtml(p.trim()).replace(/\n/g, '<br>');
+    return `<p>${lines}</p>`;
+  }).filter(p => p !== '<p></p>').join('');
+}
+
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatTurnForCopy(turn, models, turnNum, qNum) {
+  const sp = turn.speaker || '?';
+  const { display, model } = speakerLabel(sp, models);
+  const header = `[Turn ${turnNum}${qNum ? ` | Q${qNum}` : ''} | ${display}${model ? ` (${model})` : ''}]`;
+  return `${header}\n${turn.text || ''}`;
+}
+
+function copyAll() {
+  if (!activeKey) return;
+  const { data } = sessions[activeKey];
+  const cfg = data.config || {};
+  const models = data.models || {};
+  const isGuided = Array.isArray(data.seed_questions) && data.seed_questions.length > 0;
+  const turns = data.turns || [];
+
+  const lines = [];
+  lines.push(`=== ${activeKey} ===`);
+  const modelStrs = Object.entries(models).map(([k,v]) => `${k} (${v})`).join(', ');
+  lines.push(`Speakers: ${modelStrs}`);
+  lines.push(`Date: ${(data.timestamp_utc||'').slice(0,10)}`);
+  lines.push('');
+
+  if (!isGuided && data.opening_message) {
+    lines.push(`[Opening prompt]`);
+    lines.push(data.opening_message);
+    lines.push('');
+  }
+
+  let turnNum = 0;
+  let currentQ = 0;
+
+  for (const turn of turns) {
+    if (turn.speaker === 'MODERATOR') {
+      currentQ++;
+      lines.push('\u2500'.repeat(60));
+      lines.push(`Question ${currentQ}: ${turn.text}`);
+      lines.push('\u2500'.repeat(60));
+      lines.push('');
+    } else {
+      turnNum++;
+      lines.push(formatTurnForCopy(turn, models, turnNum, isGuided ? currentQ : null));
+      lines.push('');
+    }
+  }
+
+  copyText(lines.join('\n'), document.getElementById('copy-all-btn'));
+}
+
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+    showToast('Copied to clipboard');
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('Copied to clipboard');
+  });
+}
+
+function setFilter(sp) {
+  document.body.className = sp === 'all' ? '' : `filter-${sp}`;
+  document.querySelectorAll('[id^="filter-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById(`filter-${sp}`).classList.add('active');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+autoLoad();
+</script>
+</body>
+</html>

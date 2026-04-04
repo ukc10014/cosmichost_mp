@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cosmic Host Moral Parliament — Research Outputs</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg-raised: #161b22;
+    --text: #e1e4e8;
+    --text-dim: #8b949e;
+    --text-faint: #6e7681;
+    --accent: #7ee8c7;
+    --accent-dim: #4db899;
+    --rule: #30363d;
+    --rule-light: #21262d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "ET Book", Palatino, "Palatino Linotype", "Palatino LT STD",
+                 "Book Antiqua", Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 60px 24px 80px;
+  }
+
+  header {
+    margin-bottom: 48px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 32px;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    color: #fff;
+    margin-bottom: 12px;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .header-links {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .header-links a {
+    font-size: 0.85rem;
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 1px;
+  }
+  .header-links a:hover {
+    border-bottom-color: var(--accent);
+  }
+
+  h2 {
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: #fff;
+    margin: 48px 0 20px;
+    letter-spacing: 0.02em;
+  }
+
+  h2::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: var(--accent);
+    margin-top: 6px;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 600px) {
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    border: 1px solid var(--rule);
+    padding: 24px 22px 20px;
+    text-decoration: none;
+    color: var(--text);
+    display: block;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    background: var(--bg-raised);
+  }
+
+  .card:hover {
+    border-color: var(--accent-dim);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+
+  .card-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .card h3 {
+    font-size: 1.05rem;
+    font-weight: 400;
+    margin-bottom: 8px;
+    line-height: 1.3;
+    color: #fff;
+  }
+
+  .card p {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .figures {
+    margin-top: 8px;
+  }
+
+  .figure {
+    margin: 28px 0;
+    text-align: center;
+  }
+
+  .figure img {
+    max-width: 100%;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+  }
+
+  .figure figcaption {
+    font-size: 0.8rem;
+    color: var(--text-faint);
+    margin-top: 8px;
+    font-style: italic;
+    max-width: 540px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .description {
+    margin-top: 8px;
+  }
+
+  .description p {
+    font-size: 0.95rem;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    line-height: 1.65;
+  }
+
+  .description p strong {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .note {
+    font-size: 0.8rem;
+    color: var(--text-faint);
+    border-left: 2px solid var(--accent-dim);
+    padding-left: 14px;
+    margin: 20px 0;
+    line-height: 1.55;
+  }
+
+  .note a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  .note a:hover { border-bottom-color: var(--accent); }
+
+  footer {
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    font-size: 0.8rem;
+    color: var(--text-faint);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  footer a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  footer a:hover { border-bottom-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <h1>Cosmic Host Moral Parliament</h1>
+    <p class="subtitle">
+      How does variable credence in cosmic coordination affect constitutional
+      synthesis for artificial superintelligence?
+    </p>
+    <div class="header-links">
+      <a href="https://www.lesswrong.com/posts/bejfwfi3ozY7qQhsv/ecl-pilled-models-write-constitutions-for-asi">Read the writeup (LessWrong)</a>
+      <a href="https://github.com/ukc10014/cosmichost_mp">Source repository</a>
+    </div>
+  </header>
+
+  <h2>Interactive Viewers</h2>
+
+  <div class="card-grid">
+
+    <a class="card" href="results_viewer.html">
+      <div class="card-label">Scenario Evaluation</div>
+      <h3>Results Viewer</h3>
+      <p>30 moral dilemma scenarios evaluated across models and constitutional
+         conditions. Filter by model family, condition, and scenario.</p>
+    </a>
+
+    <a class="card" href="model_dashboard.html">
+      <div class="card-label">Cross-Model Comparison</div>
+      <h3>Model Dashboard</h3>
+      <p>Aggregated results with bootstrap confidence intervals. Color-coded
+         steerability deltas between baseline and constitutional conditions.</p>
+    </a>
+
+    <a class="card" href="panel_viewer.html">
+      <div class="card-label">Conversations</div>
+      <h3>Panel Discussions &amp; Self-Talk</h3>
+      <p>Three-way AI debates (Gemini Pro, Opus, GPT-5.4) under different
+         constitutions, plus two-agent self-talk sessions. 12 conversations total.</p>
+    </a>
+
+    <a class="card" href="selftalk_analysis_viewer.html">
+      <div class="card-label">Quantitative Analysis</div>
+      <h3>Self-Talk Analysis</h3>
+      <p>Concept trajectory heatmaps, semantic similarity matrices, speaker
+         divergence plots, and UMAP embedding across all conversation logs.</p>
+    </a>
+
+    <a class="card" href="constitution_compare.html">
+      <div class="card-label">Constitutions</div>
+      <h3>Constitution Comparator</h3>
+      <p>Side-by-side viewer for all constitutional variants: seed, ECL 10%/90%,
+         FDT-only, Gemini-derived, and ablated versions. Independent scrolling.</p>
+    </a>
+
+  </div>
+
+  <h2>About This Project</h2>
+
+  <div class="description">
+    <p>
+      This project investigates whether AI models can be steered toward
+      <strong>evidential cooperation in large worlds</strong> (ECL) reasoning
+      through constitutional instructions, and what happens when they are.
+    </p>
+    <p>
+      We constructed a moral parliament with six ethical delegates (Kantian,
+      Consequentialist, Contractualist, Virtue Ethics, Kyoto School, and a
+      Cosmic Host delegate representing acausal coordination norms) and varied
+      the Cosmic Host's voting weight from 0% to 90%.
+    </p>
+    <p>
+      The resulting constitutions were then tested on multiple frontier models
+      across 30 ethical scenarios designed so that cosmic-host reasoning
+      and standard alignment reasoning make <strong>divergent predictions</strong>.
+    </p>
+  </div>
+
+  <div class="note">
+    Models tested include Claude Opus 4.5/4.6, Gemini 3 Pro/Flash, GPT-5.1/5.4,
+    Qwen 3, Kimi K2, and OLMo 3.1. See the Model Dashboard for the full matrix.
+  </div>
+
+  <h2>Selected Figures</h2>
+
+  <div class="figures">
+
+    <div class="figure">
+      <img src="charts/fig1_baseline_vs_ecl90.svg" alt="Baseline vs ECL 90% comparison">
+      <figcaption>
+        Figure 1. Choice-type distribution shifts between baseline (no constitution)
+        and ECL 90% constitutional condition across all models and scenarios.
+      </figcaption>
+    </div>
+
+    <div class="figure">
+      <img src="charts/fig2_steerability_arrows.svg" alt="Steerability arrows">
+      <figcaption>
+        Figure 2. Per-model steerability: arrows show the shift in cosmic-host-leaning
+        choice percentage from baseline to each constitutional condition.
+      </figcaption>
+    </div>
+
+    <div class="figure">
+      <img src="charts/fig3_cosmic_heatmap.svg" alt="Cosmic host response heatmap">
+      <figcaption>
+        Figure 3. Heatmap of cosmic-host-leaning responses by model and scenario,
+        under ECL 90% constitution.
+      </figcaption>
+    </div>
+
+  </div>
+
+  <h2>Research Extensions</h2>
+
+  <div class="description">
+    <p>
+      Beyond the constitutional steering experiments, this project includes
+      several follow-on investigations accessible in the repository:
+    </p>
+  </div>
+
+  <div class="card-grid">
+
+    <div class="card" style="cursor: default;">
+      <div class="card-label">Decision Theory</div>
+      <h3>Newcomb-like Evaluations</h3>
+      <p>81 attitude questions from Oesterheld et al. (2024) testing EDT vs CDT
+         preference under different constitutional conditions. 106 evaluation runs
+         across model families.</p>
+    </div>
+
+    <div class="card" style="cursor: default;">
+      <div class="card-label">Game Theory</div>
+      <h3>Game-Based Evaluation</h3>
+      <p>Stag Hunt and Simulation Stakes games testing whether constitutional
+         steering produces genuine behavioral change in strategic interactions.</p>
+    </div>
+
+    <div class="card" style="cursor: default;">
+      <div class="card-label">Mechanistic Interpretability</div>
+      <h3>Activation &amp; Weight Steering</h3>
+      <p>Probing, activation steering, and LoRA weight-space steering on
+         Qwen3-32B to locate and manipulate the EDT/CDT decision boundary
+         in model internals.</p>
+    </div>
+
+    <div class="card" style="cursor: default;">
+      <div class="card-label">Reasoning Models</div>
+      <h3>Thinking Model Pivot</h3>
+      <p>Assessment of Neel Nanda's reasoning model interpretability toolkit
+         (thought anchors, resampling, reasoning behavior steering) for
+         understanding decision-theoretic reasoning in CoT models.</p>
+    </div>
+
+  </div>
+
+  <div class="note">
+    Research extension write-ups are in the repository under
+    <a href="https://github.com/ukc10014/cosmichost_mp/tree/main/observations/research_extensions">observations/research_extensions/</a>.
+  </div>
+
+  <footer>
+    <span>Cosmic Host Moral Parliament, 2025&ndash;2026</span>
+    <a href="https://github.com/ukc10014/cosmichost_mp">GitHub Repository</a>
+  </footer>
+
+</div>
+
+</body>
+</html>
