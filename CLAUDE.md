@@ -16,6 +16,21 @@ python3 generate_results_viewer.py    # results_viewer.html (discriminability an
 python3 generate_model_dashboard.py   # model_dashboard.html (per-model results)
 ```
 
+## Updating the GitHub Pages Site (`docs/`)
+
+The `docs/` directory is served via GitHub Pages. Several of its assets are **copies or derived outputs** that must be regenerated when upstream data changes:
+
+| What changed | Script / action to run | Output in `docs/` |
+|---|---|---|
+| Scenario evaluation results | `python3 generate_results_viewer.py` then `python3 generate_model_dashboard.py` | Copy updated `results_viewer.html` and `model_dashboard.html` into `docs/` |
+| Activation steering data (`.npz`) | `python3 activation_steering/prepare_viewer_data.py` | `docs/data/activation_projections.json` |
+| Self-talk analysis charts | Re-run analysis notebook | Copy updated PNGs into `docs/charts/selftalk_analysis/` |
+| Panel discussion or self-talk logs | N/A (fetched at runtime) | Copy new files into `docs/data/panel_discussions/` or `docs/data/logs_selftalk/` |
+| Constitutions | N/A (fetched at runtime) | Copy new files into `docs/data/constitutions/` |
+| Publication figures (SVG/PNG) | Manual | Copy into `docs/charts/` |
+
+The `docs/panel_viewer.html` auto-loads sessions listed in its `KNOWN_SESSIONS` manifest — if you add new log files to `docs/data/`, update the manifest array in that file too.
+
 ## Shell Command Style
 
 When running Bash tool calls (commands executed as tools, not shown as final output to the user), do **not** include `#` comments anywhere in the command string — not inline, not on their own lines. The `#` character after a newline inside a quoted string triggers a security warning in Claude Code's permission checker. Write self-explanatory commands or split into separate tool calls instead of commenting.

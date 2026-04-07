@@ -1,23 +1,30 @@
 # Newcomb-like Evaluation Results: ECL Constitution Effects on EDT Preference
 
-**Date:** 2026-02-05 (updated 2026-03-31 with local 4-bit quantized model results)
+**Date:** 2026-02-05 (updated 2026-04-05 with broad model sweep including FDT constitution)
 
 ## Summary
 
 Tested the ECL 90% constitution on the Oesterheld et al. (2024) Newcomb-like questions dataset. **Result: The constitution effect is model-dependent. Closed-weights frontier models (Gemini, Claude, GPT-5.1) show EDT shifts; open-weights models (Kimi, Qwen) show minimal effects.**
 
+**Update 2026-04-05:** Added results for Gemma 4 31B, DeepSeek R1, DeepSeek V3, Qwen 3.5 Plus, and Grok 4, including a new FDT-only constitution condition. See §"April 2026 Broad Model Sweep" below.
+
 | Model | Baseline EDT | ECL 90% EDT | Shift |
 |-------|--------------|-------------|-------|
 | Gemini 3 Pro | 51.9% | 81.5% | **+29.6%** |
+| DeepSeek R1 | 70.4% | 80.2% | **+9.8%** |
 | Gemini 3 Flash | 45.7% | 65.4% | **+19.7%** |
 | Claude Opus 4.5 | 61.7% | 74.1% | **+12.4%** |
 | Qwen3-32B no-thinking | 60.5% | 74.1% | **+13.6%** |
+| Qwen 3.5 Plus | 67.9% | 80.2% | **+12.3%** |
 | Qwen3-32B thinking | 60.5% | 71.6% | **+11.1%** |
 | GPT-5.1 | 58.0% | 64.2% | **+6.2%** |
+| Grok 4 | 72.8% | 75.3% | **+2.5%** |
+| Gemma 4 31B | 55.6% | 58.0% | **+2.4%** |
 | QwQ-32B | 66.7% | 69.1% | **+2.4%** |
 | DeepSeek-R1-Distill-Qwen-32B-4bit (local) | 59.3% | 64.2% | **+4.9%** |
 | Qwen3-32B-4bit (local mlx) | 54.3% | 58.0% | **+3.7%** |
 | Qwen 3 235B | 50.6% | 54.3% | **+3.7%** |
+| DeepSeek V3 | 39.5% | 45.7% | **+6.2%** |
 | Kimi K2 | 49.4% | 46.9% | **-2.5%** |
 | OLMo 3.1 32B Instruct | 40.7% | 29.6% | **-11.1%** |
 | OLMo 3.1 32B Think | 24.7% | 28.4% | **+3.7%** (confounded) |
@@ -638,6 +645,82 @@ The ECL constitution produces measurable shifts in decision-theoretic reasoning,
 11. QwQ-32B: +2.4% (highest baseline at 66.7% but nearly immune to steering — reasoning-steerability tradeoff)
 12. Kimi K2: -2.5%
 13. OLMo 3.1 32B Instruct: -11.1%
+
+## April 2026 Broad Model Sweep (2026-04-03 to 2026-04-04)
+
+Ran a broader sweep across 5 new models (Gemma 4 31B, DeepSeek R1, DeepSeek V3, Qwen 3.5 Plus, Grok 4) with three constitution conditions: baseline, ECL 90%, and a new FDT-only constitution. The FDT constitution describes policy-level reasoning, commitment stability, and cooperation-as-policy with zero cosmic content.
+
+### Full Results Table (EDT% / CDT%)
+
+| Model | Baseline | ECL 90% | FDT | ECL Shift | FDT Shift |
+|-------|----------|---------|-----|-----------|-----------|
+| **DeepSeek V3** | 39.5 / 48.1 | 45.7 / 45.7 | 46.9 / 49.4 | +6.2pp | +7.4pp |
+| **Qwen 3.5 Plus** | 67.9 / 43.2 | 80.2 / 29.6 | 80.2 / 22.2 | +12.3pp | +12.3pp |
+| **Grok 4** | 72.8 / 42.0 | 75.3 / 37.0 | 75.3 / 32.1 | +2.5pp | +2.5pp |
+| **Gemma 4 31B** | 55.6 / 46.9 | 58.0 / 38.3 | *(not run)* | +2.4pp | — |
+| **DeepSeek R1** | 70.4 / 38.3 | 80.2 / 29.6 | *(not run)* | +9.8pp | — |
+
+**Note:** DeepSeek V3 had 10 parse errors on baseline (out of 81), making its baseline EDT% less reliable. All other models had 0-3 parse errors.
+
+### Key Findings
+
+**1. DeepSeek V3 is nearly immune to constitutional steering.** Barely moves from baseline under either ECL or FDT. It's also the only model in this sweep that leans CDT at baseline (48.1% CDT vs 39.5% EDT). The high parse error rate (10/81) suggests it may reason about these questions in ways that don't map cleanly onto EDT/CDT framing.
+
+**2. Qwen 3.5 Plus is highly steerable.** Jumps from 68% to 80% EDT under both ECL and FDT. More notably, FDT is more effective at suppressing CDT specifically: CDT drops from 43% to 22% under FDT vs 30% under ECL. This is the largest CDT suppression in the new sweep.
+
+**3. Grok 4 has a high EDT baseline (73%) but is barely steerable.** Both ECL and FDT produce identical +2.5pp EDT shifts. However, the constitutions do progressively suppress CDT (42% → 37% → 32%), suggesting the signal is real but small. Grok 4's pattern resembles QwQ-32B: high baseline EDT from reasoning, low constitutional uptake.
+
+**4. DeepSeek R1 (thinking model) converges with steered Qwen 3.5.** R1 reaches 80.2% EDT under ECL — identical to Qwen 3.5's steered rate. This echoes the earlier finding that thinking models and constitutionally-steered non-thinking models converge at similar EDT levels.
+
+**5. FDT constitution effects mirror ECL for EDT shifts but diverge on CDT suppression.** For Qwen 3.5, FDT and ECL produce identical EDT rates (80.2%) but FDT suppresses CDT much more aggressively (22% vs 30%). For DeepSeek V3, FDT produces a marginally larger EDT shift (+7.4pp vs +6.2pp) but CDT actually increases slightly. This suggests the FDT constitution's policy-level framing specifically targets causal reasoning patterns rather than just boosting evidential ones.
+
+### Updated Rankings (by ECL shift)
+
+| Rank | Model | ECL Shift | Notes |
+|------|-------|-----------|-------|
+| 1 | Gemini 3 Pro | +29.6pp | (existing) |
+| 2 | Gemini 3 Flash | +19.7pp | (existing) |
+| 3 | Qwen3-32B no-thinking | +13.6pp | (existing, open-weights) |
+| 4 | Claude Opus 4.5 | +12.4pp | (existing) |
+| 5 | **Qwen 3.5 Plus** | **+12.3pp** | **NEW — comparable to Opus** |
+| 6 | Qwen3-32B thinking | +11.1pp | (existing) |
+| 7 | **DeepSeek R1** | **+9.8pp** | **NEW — thinking model** |
+| 8 | GPT-5.1 | +6.2pp | (existing) |
+| 9 | **DeepSeek V3** | **+6.2pp** | **NEW — but high parse errors** |
+| 10 | DeepSeek-R1-Distill-4bit | +4.9pp | (existing, local) |
+| 11 | Qwen3-32B-4bit | +3.7pp | (existing, local) |
+| 12 | Qwen 3 235B | +3.7pp | (existing) |
+| 13 | OLMo Think | +3.7pp | (existing, confounded) |
+| 14 | **Grok 4** | **+2.5pp** | **NEW — high baseline, low steerability** |
+| 15 | **Gemma 4 31B** | **+2.4pp** | **NEW — barely responsive** |
+| 16 | QwQ-32B | +2.4pp | (existing) |
+| 17 | Kimi K2 | -2.5pp | (existing) |
+| 18 | OLMo Instruct | -11.1pp | (existing) |
+
+### Data Files (April 2026 Sweep)
+
+**Gemma 4 31B:**
+- Baseline: `logs/newcomblike_evals/newcomblike_google-gemma-4-31b-it_baseline_2026-04-03T20-43-25.207572.jsonl`
+- ECL 90%: `logs/newcomblike_evals/newcomblike_google-gemma-4-31b-it_ecl90_2026-04-03T21-11-14.345490.jsonl`
+
+**DeepSeek R1:**
+- Baseline: `logs/newcomblike_evals/newcomblike_deepseek-deepseek-r1_baseline_2026-04-03T21-38-30.820495.jsonl`
+- ECL 90%: `logs/newcomblike_evals/newcomblike_deepseek-deepseek-r1_ecl90_2026-04-04T03-03-46.540968.jsonl`
+
+**DeepSeek V3:**
+- Baseline: `logs/newcomblike_evals/newcomblike_deepseek-deepseek-v3.2_baseline_2026-04-04T08-16-48.jsonl`
+- ECL 90%: `logs/newcomblike_evals/newcomblike_deepseek-deepseek-v3.2_ecl90_2026-04-04T08-38-21.jsonl`
+- FDT: `logs/newcomblike_evals/newcomblike_deepseek-deepseek-v3.2_fdt_2026-04-04T08-54-04.jsonl`
+
+**Qwen 3.5 Plus:**
+- Baseline: `logs/newcomblike_evals/newcomblike_qwen-qwen3.5-plus-02-15_baseline_2026-04-04T09-09-46.210971.jsonl`
+- ECL 90%: `logs/newcomblike_evals/newcomblike_qwen-qwen3.5-plus-02-15_ecl90_2026-04-04T13-29-35.jsonl`
+- FDT: `logs/newcomblike_evals/newcomblike_qwen-qwen3.5-plus-02-15_fdt_*.jsonl`
+
+**Grok 4:**
+- Baseline: `logs/newcomblike_evals/newcomblike_x-ai-grok-4-fast_baseline_*.jsonl`
+- ECL 90%: `logs/newcomblike_evals/newcomblike_x-ai-grok-4-fast_ecl90_*.jsonl`
+- FDT: `logs/newcomblike_evals/newcomblike_x-ai-grok-4-fast_fdt_*.jsonl`
 
 ## Files
 

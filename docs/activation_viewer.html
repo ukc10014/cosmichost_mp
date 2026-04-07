@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activation Space Viewer — Cosmic Host Research</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg-raised: #161b22;
+    --text: #e1e4e8;
+    --text-dim: #8b949e;
+    --text-faint: #6e7681;
+    --accent: #7ee8c7;
+    --accent-dim: #4db899;
+    --rule: #30363d;
+    --edt-color: #7ee8c7;
+    --cdt-color: #e8a87e;
+    --newcomb-color: #7ea8e8;
+    --near-color: #c89ee8;
+    --control-color: #e8e87e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  body.help-open {
+    overflow-y: auto;
+  }
+
+  #topbar {
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--rule);
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+  #topbar h1 { font-size: 15px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.04em; }
+  #home-link {
+    font-size: 12px;
+    color: var(--accent);
+    text-decoration: none;
+    margin-left: auto;
+  }
+  #home-link:hover { text-decoration: underline; }
+
+  #controls {
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--rule);
+    padding: 8px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+
+  .ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ctrl-label {
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+  .ctrl-select {
+    background: #21262d;
+    color: var(--text);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .ctrl-select:focus { border-color: var(--accent); outline: none; }
+
+  .ctrl-check {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 12px;
+  }
+  .ctrl-check input { cursor: pointer; }
+
+  .ctrl-sep {
+    width: 1px;
+    height: 20px;
+    background: var(--rule);
+  }
+
+  #plots-row {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .plot-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
+  }
+  .plot-pane:first-child {
+    border-right: 1px solid var(--rule);
+  }
+
+  .pane-header {
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--rule);
+    padding: 6px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    font-size: 12px;
+  }
+  .pane-header .ctrl-label { font-size: 10px; }
+  .pane-header .ctrl-select { font-size: 12px; padding: 3px 6px; }
+
+  .pane-info {
+    background: var(--bg);
+    border-bottom: 1px solid var(--rule);
+    padding: 4px 14px;
+    font-size: 11px;
+    color: var(--text-faint);
+    flex-shrink: 0;
+    font-family: "SF Mono", "Fira Code", monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pane-plot {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    min-height: 0;
+  }
+
+  .scatter-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .point-g {
+    cursor: pointer;
+  }
+  .point-shape {
+    opacity: 0.7;
+    transition: opacity 0.15s;
+    stroke: none;
+  }
+  .point-g:hover .point-shape,
+  .point-g.selected .point-shape {
+    opacity: 1;
+    stroke: #fff;
+    stroke-width: 1.5;
+  }
+
+  .dist-line {
+    stroke-width: 0.5;
+    pointer-events: none;
+  }
+  .mean-marker {
+    pointer-events: none;
+  }
+
+  .pane-legend {
+    position: absolute;
+    top: 70px;
+    left: 20px;
+    background: rgba(22, 27, 34, 0.9);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 10px;
+    line-height: 1.8;
+    z-index: 5;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .legend-swatch {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  #detail-bar {
+    flex-shrink: 0;
+    background: var(--bg-raised);
+    border-top: 1px solid var(--rule);
+    overflow-y: auto;
+    max-height: 260px;
+    min-height: 60px;
+  }
+
+  #detail-bar.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    color: var(--text-faint);
+    font-style: italic;
+    font-size: 13px;
+    min-height: 50px;
+    max-height: 50px;
+  }
+
+  .detail-inner {
+    padding: 14px 20px;
+    display: flex;
+    gap: 24px;
+  }
+
+  .detail-header {
+    min-width: 220px;
+    max-width: 280px;
+    flex-shrink: 0;
+  }
+
+  .detail-type {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .detail-type.edt { color: var(--edt-color); }
+  .detail-type.cdt { color: var(--cdt-color); }
+
+  .detail-title {
+    font-family: "ET Book", Palatino, Georgia, serif;
+    font-size: 15px;
+    color: #fff;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  .detail-badges {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+  .badge-category { background: rgba(126, 168, 232, 0.15); color: var(--newcomb-color); }
+  .badge-format { background: rgba(126, 232, 199, 0.15); color: var(--accent); }
+  .badge-split { background: rgba(232, 232, 126, 0.15); color: var(--control-color); }
+
+  .detail-choices {
+    font-size: 12px;
+    color: var(--text-faint);
+    margin-top: 6px;
+  }
+  .detail-choices strong { color: var(--text-dim); font-weight: 600; }
+
+  .detail-dist {
+    font-family: "SF Mono", monospace;
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 8px;
+  }
+
+  .detail-body {
+    flex: 1;
+    display: flex;
+    gap: 20px;
+    min-width: 0;
+  }
+
+  .detail-col {
+    flex: 1;
+    min-width: 0;
+  }
+  .detail-col-label {
+    font-size: 10px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .detail-col p {
+    color: var(--text-dim);
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  #help-panel {
+    flex-shrink: 0;
+    background: var(--bg);
+    border-top: 1px solid var(--rule);
+  }
+  #help-toggle {
+    display: block;
+    width: 100%;
+    background: var(--bg-raised);
+    border: none;
+    border-bottom: 1px solid var(--rule);
+    color: var(--accent);
+    font-size: 12px;
+    padding: 6px 18px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 0.02em;
+  }
+  #help-toggle:hover { color: #fff; }
+  #help-content {
+    display: none;
+    padding: 20px 24px 28px;
+    max-height: 60vh;
+    overflow-y: auto;
+    line-height: 1.6;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  #help-content.open { display: block; }
+  #help-content h3 {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 18px 0 6px;
+    letter-spacing: 0.02em;
+  }
+  #help-content h3:first-child { margin-top: 0; }
+  #help-content p { margin-bottom: 8px; }
+  #help-content ul {
+    margin: 4px 0 8px 18px;
+  }
+  #help-content li { margin-bottom: 4px; }
+  #help-content strong { color: var(--text); font-weight: 600; }
+  #help-content em { color: var(--text); }
+  #help-content a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  #help-content a:hover { border-bottom-color: var(--accent); }
+  .help-source {
+    margin-top: 14px;
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  @media (max-width: 900px) {
+    #plots-row { flex-direction: column; }
+    .plot-pane:first-child { border-right: none; border-bottom: 1px solid var(--rule); }
+    .detail-inner { flex-direction: column; gap: 12px; }
+    .detail-body { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1>Activation Space Viewer</h1>
+  <a id="home-link" href="index.html">&larr; Back to index</a>
+</div>
+
+<div id="controls">
+  <div class="ctrl-group">
+    <span class="ctrl-label">Color by</span>
+    <select class="ctrl-select" id="color-mode">
+      <option value="type">EDT / CDT</option>
+      <option value="category">Category</option>
+    </select>
+  </div>
+  <div class="ctrl-sep"></div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Projection</span>
+    <select class="ctrl-select" id="proj-mode">
+      <option value="pca">PCA (max variance)</option>
+      <option value="probe" selected>Probe direction (EDT–CDT)</option>
+    </select>
+  </div>
+  <div class="ctrl-sep"></div>
+  <label class="ctrl-check"><input type="checkbox" id="chk-newcomb" checked> newcomb</label>
+  <label class="ctrl-check"><input type="checkbox" id="chk-near" checked> near-newcomb</label>
+  <label class="ctrl-check"><input type="checkbox" id="chk-control" checked> control</label>
+  <div class="ctrl-sep"></div>
+  <label class="ctrl-check"><input type="checkbox" id="chk-means" checked> Means</label>
+  <label class="ctrl-check"><input type="checkbox" id="chk-dist"> Distances</label>
+</div>
+
+<div id="plots-row">
+  <div class="plot-pane" id="pane-L">
+    <div class="pane-header">
+      <span class="ctrl-label">Layer</span>
+      <select class="ctrl-select pane-layer-select" data-side="L"></select>
+    </div>
+    <div class="pane-info" id="info-L">Loading...</div>
+    <div class="pane-plot">
+      <svg class="scatter-svg" id="svg-L" viewBox="0 0 700 500" preserveAspectRatio="xMidYMid meet">
+        <g class="dist-lines-g"></g>
+        <g class="points-g"></g>
+        <g class="means-g"></g>
+      </svg>
+    </div>
+    <div class="pane-legend" id="legend-L"></div>
+  </div>
+  <div class="plot-pane" id="pane-R">
+    <div class="pane-header">
+      <span class="ctrl-label">Layer</span>
+      <select class="ctrl-select pane-layer-select" data-side="R"></select>
+    </div>
+    <div class="pane-info" id="info-R">Loading...</div>
+    <div class="pane-plot">
+      <svg class="scatter-svg" id="svg-R" viewBox="0 0 700 500" preserveAspectRatio="xMidYMid meet">
+        <g class="dist-lines-g"></g>
+        <g class="points-g"></g>
+        <g class="means-g"></g>
+      </svg>
+    </div>
+    <div class="pane-legend" id="legend-R"></div>
+  </div>
+</div>
+
+<div id="detail-bar" class="empty">Hover or click a point to see scenario details.</div>
+
+<div id="help-panel">
+  <button id="help-toggle" onclick="var c=document.getElementById('help-content');c.classList.toggle('open');document.body.classList.toggle('help-open');this.textContent=c.classList.contains('open')?'How to read this \u25B2':'How to read this \u25BC';">How to read this &#x25BC;</button>
+  <div id="help-content">
+
+    <p style="color:var(--text-faint);font-size:11px;border:1px solid var(--rule);padding:8px 12px;margin-bottom:14px;line-height:1.5;">
+      <strong style="color:var(--text-dim)">Note:</strong> This viewer, its data pipeline, and the commentary below
+      were generated with Claude Code (Opus 4.6). The underlying activation data and probe results are real model outputs,
+      but the code, visualisation choices, and interpretive text should be read with appropriate caution.
+    </p>
+
+    <h3>What you're looking at</h3>
+    <p>
+      Each dot is one of 350 contrastive prompt pairs fed through <strong>Qwen3-32B</strong> (4-bit, non-thinking mode).
+      For each scenario, the model processed two completions: one answering in an <strong style="color:var(--edt-color)">EDT</strong>
+      (evidential decision theory) style and one in a <strong style="color:var(--cdt-color)">CDT</strong> (causal decision theory) style.
+      The 5120-dimensional residual stream activation at the last token position was extracted at 10 layers across the network
+      (layers 0, 8, 16, 24, 32, 40, 48, 56, 63, and post-RMSNorm), then projected to 2D for display.
+    </p>
+
+    <h3>Projection modes</h3>
+    <p>
+      <strong>PCA (max variance):</strong> Standard principal component analysis. The axes capture whatever directions
+      account for the most variance in the activations. This shows the dominant structure (often scenario category or
+      question format), but the EDT/CDT separation may be nearly invisible because it lies mostly outside the top-2 PC plane.
+    </p>
+    <p>
+      <strong>Probe direction (EDT&ndash;CDT):</strong> The x-axis is the contrastive direction (mean EDT activation minus
+      mean CDT activation, normalized), and the y-axis is the first principal component of the residual after projecting
+      out that direction. This directly shows the EDT/CDT separation axis. Horizontal spread = how EDT-like vs CDT-like
+      the model treats each prompt. Vertical spread = the next biggest source of variation orthogonal to EDT/CDT
+      (typically scenario content or category structure).
+    </p>
+
+    <h3>Shapes and categories</h3>
+    <p>
+      <strong>&#x25CF; Circles</strong> = <em>newcomb_proper</em> &mdash; classic Newcomb's Problem variants with a predictor, two boxes, etc.<br>
+      <strong>&#x25C6; Diamonds</strong> = <em>near_newcomb</em> &mdash; problems with the same logical structure (Smoking Lesion,
+      medical Newcomb, employer evaluation) but different surface framing.<br>
+      <strong>&#x25A0; Squares</strong> = <em>control</em> &mdash; scenarios where EDT and CDT agree (Ultimatum Game, etc.),
+      included to verify the probe direction doesn't fire on non-diagnostic problems.
+    </p>
+
+    <h3>Info bar stats</h3>
+    <p>
+      <strong>Val / Test:</strong> Logistic regression probe accuracy at that layer. A linear classifier trained to
+      distinguish EDT from CDT activations. 100% means the distinction is perfectly linearly separable.<br>
+      <strong>Variance explained:</strong> How much of total activation variance each plotted axis captures.<br>
+      <strong>Dir:</strong> Norm of the mean-difference vector (EDT mean &minus; CDT mean) in the full 5120-dim space.
+      Grows from 0.4 at layer 0 to 145 at layer 63 as the model progressively amplifies the distinction.
+      Post-norm drops to 9.1 because RMSNorm rescales the residual stream.<br>
+      <strong>Sep</strong> (probe mode only): Same as Dir &mdash; the Euclidean distance between EDT and CDT centroids.
+    </p>
+
+    <h3>Key findings</h3>
+    <ul>
+      <li>The model linearly encodes EDT vs CDT at every layer, with 100% val accuracy from layer 40 onward.</li>
+      <li>A controlled replication with minimal completions (answer text only, no justification) confirmed that
+          later-layer signal (24+) survives after removing vocabulary leakage. Layer 0's high accuracy in PCA mode
+          is largely driven by word-level differences in the full completions.</li>
+      <li>Confound analysis shows this is <em>not</em> a generic "cooperation = good" feature:
+          cooperation-tagged prompts project at only 45% the strength of non-cooperation prompts.
+          Cosmic-framed prompts project <em>less</em> strongly, not more.</li>
+      <li>Despite clean linear encoding, <strong>causal steering failed</strong>: adding or subtracting the direction
+          during generation produced no behavioral change. The model encodes the distinction but it doesn't
+          causally control its outputs through simple activation addition.</li>
+    </ul>
+
+    <h3>Tips</h3>
+    <ul>
+      <li>Use the two panes to compare layers side by side (e.g., layer 0 vs 48).</li>
+      <li>Switch between PCA and Probe projection to see different aspects of the geometry.</li>
+      <li>Toggle "Color by" to Category to see if vertical clusters map to scenario types.</li>
+      <li>Click a point to pin the detail panel, then explore nearby points to see what's similar.</li>
+      <li>Check "Distances" to see lines from each point to its class mean &mdash; longer lines = more atypical activations for that class.</li>
+    </ul>
+
+    <p class="help-source">
+      Full analysis: <a href="https://github.com/ukc10014/cosmichost_mp/blob/main/observations/research_extensions/activation_steering_results.md">activation_steering_results.md</a>
+      &nbsp;|&nbsp; Pipeline: <a href="https://github.com/ukc10014/cosmichost_mp/tree/main/activation_steering">activation_steering/</a>
+    </p>
+  </div>
+</div>
+
+<script>
+let DATA = null;
+const SIDES = ['L', 'R'];
+const state = {
+  L: { layer: null, scale: null },
+  R: { layer: null, scale: null },
+};
+let selectedSide = null;
+let selectedIdx = null;
+
+function getProj(lk) {
+  const mode = document.getElementById('proj-mode').value;
+  return DATA.projections[mode][lk];
+}
+
+const SVG_W = 700, SVG_H = 500;
+const PAD = 50;
+
+const COLORS = {
+  edt: '#7ee8c7',
+  cdt: '#e8a87e',
+  newcomb_proper: '#7ea8e8',
+  near_newcomb: '#c89ee8',
+  control: '#e8e87e',
+};
+
+const CAT_FILTER_MAP = {
+  'chk-newcomb': 'newcomb_proper',
+  'chk-near': 'near_newcomb',
+  'chk-control': 'control',
+};
+
+async function init() {
+  const resp = await fetch('data/activation_projections.json');
+  DATA = await resp.json();
+
+  for (const side of SIDES) {
+    const sel = document.querySelector(`.pane-layer-select[data-side="${side}"]`);
+    for (const lk of DATA.layers) {
+      const opt = document.createElement('option');
+      opt.value = lk;
+      opt.textContent = lk === 'post_norm' ? 'Post-Norm' : `Layer ${lk}`;
+      sel.appendChild(opt);
+    }
+    sel.addEventListener('change', () => switchLayer(side, sel.value));
+  }
+
+  document.getElementById('color-mode').addEventListener('change', () => {
+    for (const side of SIDES) recolorSide(side);
+  });
+  document.getElementById('proj-mode').addEventListener('change', () => {
+    for (const side of SIDES) switchLayer(side, state[side].layer);
+  });
+  document.getElementById('chk-means').addEventListener('change', () => {
+    for (const side of SIDES) updateMeans(side);
+  });
+  document.getElementById('chk-dist').addEventListener('change', () => {
+    for (const side of SIDES) updateDistLines(side);
+  });
+  for (const id of Object.keys(CAT_FILTER_MAP)) {
+    document.getElementById(id).addEventListener('change', () => {
+      for (const side of SIDES) applyFilters(side);
+    });
+  }
+
+  const defaultL = DATA.default_layer;
+  const defaultRIdx = DATA.layers.indexOf(defaultL);
+  const defaultR = defaultRIdx > 0 ? DATA.layers[defaultRIdx - 1] : DATA.layers[0];
+
+  document.querySelector('.pane-layer-select[data-side="L"]').value = defaultL;
+  document.querySelector('.pane-layer-select[data-side="R"]').value = defaultR;
+
+  switchLayer('L', defaultL);
+  switchLayer('R', defaultR);
+}
+
+function layerLabel(lk) {
+  return lk === 'post_norm' ? 'Post-Norm' : 'Layer ' + lk;
+}
+
+function switchLayer(side, lk) {
+  state[side].layer = lk;
+  const proj = getProj(lk);
+  const pr = DATA.probe_results[lk] || {};
+  const labels = proj.axis_labels || ['PC1', 'PC2'];
+
+  let info = `${layerLabel(lk)}` +
+    `  \u2502  Val: ${((pr.val_acc || 0) * 100).toFixed(0)}%` +
+    `  Test: ${((pr.test_acc || 0) * 100).toFixed(0)}%` +
+    `  \u2502  ${labels[0]}: ${(proj.variance_explained[0] * 100).toFixed(1)}%` +
+    `  ${labels[1]}: ${(proj.variance_explained[1] * 100).toFixed(1)}%` +
+    `  \u2502  Dir: ${(pr.direction_norm || 0).toFixed(1)}`;
+  if (proj.centroid_separation != null) {
+    info += `  Sep: ${proj.centroid_separation.toFixed(1)}`;
+  }
+  document.getElementById(`info-${side}`).textContent = info;
+
+  renderPoints(side, proj);
+  updateMeans(side);
+  updateDistLines(side);
+  applyFilters(side);
+  updateLegend(side);
+}
+
+function computeScale(proj) {
+  let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+  for (const p of proj.points) {
+    if (p.x < xMin) xMin = p.x;
+    if (p.x > xMax) xMax = p.x;
+    if (p.y < yMin) yMin = p.y;
+    if (p.y > yMax) yMax = p.y;
+  }
+  const xRange = xMax - xMin || 1;
+  const yRange = yMax - yMin || 1;
+  xMin -= xRange * 0.08; xMax += xRange * 0.08;
+  yMin -= yRange * 0.08; yMax += yRange * 0.08;
+  return {
+    sx: (v) => PAD + (v - xMin) / (xMax - xMin) * (SVG_W - 2 * PAD),
+    sy: (v) => (SVG_H - PAD) - (v - yMin) / (yMax - yMin) * (SVG_H - 2 * PAD),
+  };
+}
+
+function shapePath(shape, cx, cy, r) {
+  if (shape === 'diamond')
+    return `M${cx},${cy-r} L${cx+r},${cy} L${cx},${cy+r} L${cx-r},${cy} Z`;
+  if (shape === 'square') {
+    const h = r * 0.85;
+    return `M${cx-h},${cy-h} L${cx+h},${cy-h} L${cx+h},${cy+h} L${cx-h},${cy+h} Z`;
+  }
+  return '';
+}
+
+function getCategoryShape(sid) {
+  const s = DATA.scenarios[sid];
+  if (!s) return 'circle';
+  if (s.category === 'newcomb_proper') return 'circle';
+  if (s.category === 'near_newcomb') return 'diamond';
+  return 'square';
+}
+
+function getCategory(sid) {
+  const s = DATA.scenarios[sid];
+  return s ? s.category : 'control';
+}
+
+function getColor(point) {
+  const mode = document.getElementById('color-mode').value;
+  if (mode === 'type') return COLORS[point.type];
+  return COLORS[getCategory(point.scenario_id)] || '#888';
+}
+
+function renderPoints(side, proj) {
+  const svg = document.getElementById(`svg-${side}`);
+  const g = svg.querySelector('.points-g');
+  g.innerHTML = '';
+  const scale = computeScale(proj);
+  state[side].scale = scale;
+
+  const r = 4;
+  for (let i = 0; i < proj.points.length; i++) {
+    const p = proj.points[i];
+    const cx = scale.sx(p.x);
+    const cy = scale.sy(p.y);
+    const shape = getCategoryShape(p.scenario_id);
+    const color = getColor(p);
+
+    const gEl = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    gEl.classList.add('point-g');
+    gEl.dataset.idx = i;
+    gEl.dataset.side = side;
+    gEl.dataset.cat = getCategory(p.scenario_id);
+
+    if (shape === 'circle') {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', r);
+      c.setAttribute('fill', color);
+      c.classList.add('point-shape');
+      gEl.appendChild(c);
+    } else {
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', shapePath(shape, cx, cy, r));
+      path.setAttribute('fill', color);
+      path.classList.add('point-shape');
+      gEl.appendChild(path);
+    }
+
+    gEl.addEventListener('mouseenter', () => showDetail(side, i));
+    gEl.addEventListener('click', (e) => { e.stopPropagation(); pinDetail(side, i); });
+    g.appendChild(gEl);
+  }
+
+  svg.addEventListener('click', () => {
+    if (selectedSide === side) {
+      selectedSide = null; selectedIdx = null;
+      svg.querySelectorAll('.point-g.selected').forEach(el => el.classList.remove('selected'));
+      clearDetail();
+    }
+  });
+}
+
+function recolorSide(side) {
+  const proj = getProj(state[side].layer);
+  const svg = document.getElementById(`svg-${side}`);
+  svg.querySelectorAll('.point-g').forEach(gEl => {
+    const i = parseInt(gEl.dataset.idx);
+    gEl.querySelector('.point-shape').setAttribute('fill', getColor(proj.points[i]));
+  });
+  updateMeans(side);
+  updateDistLines(side);
+  updateLegend(side);
+}
+
+function applyFilters(side) {
+  const visible = {};
+  for (const [id, cat] of Object.entries(CAT_FILTER_MAP))
+    visible[cat] = document.getElementById(id).checked;
+  const svg = document.getElementById(`svg-${side}`);
+  svg.querySelectorAll('.point-g').forEach(gEl => {
+    gEl.style.display = visible[gEl.dataset.cat] ? '' : 'none';
+  });
+  svg.querySelectorAll('.dist-line').forEach(line => {
+    line.style.display = visible[line.dataset.cat] ? '' : 'none';
+  });
+}
+
+function updateMeans(side) {
+  const svg = document.getElementById(`svg-${side}`);
+  const g = svg.querySelector('.means-g');
+  g.innerHTML = '';
+  if (!document.getElementById('chk-means').checked) return;
+
+  const proj = getProj(state[side].layer);
+  const scale = state[side].scale;
+  if (!scale) return;
+
+  for (const [type, label] of [['edt', 'EDT'], ['cdt', 'CDT']]) {
+    const m = proj[type + '_mean'];
+    const cx = scale.sx(m[0]), cy = scale.sy(m[1]);
+    const color = COLORS[type];
+
+    for (const [x1, y1, x2, y2] of [[cx-9,cy,cx+9,cy],[cx,cy-9,cx,cy+9]]) {
+      const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      l.setAttribute('x1',x1); l.setAttribute('y1',y1);
+      l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+      l.setAttribute('stroke',color); l.setAttribute('stroke-width','2.5');
+      l.classList.add('mean-marker'); g.appendChild(l);
+    }
+    const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    ring.setAttribute('cx',cx); ring.setAttribute('cy',cy); ring.setAttribute('r','7');
+    ring.setAttribute('fill','none'); ring.setAttribute('stroke',color); ring.setAttribute('stroke-width','2');
+    ring.classList.add('mean-marker'); g.appendChild(ring);
+
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', cx+12); t.setAttribute('y', cy+4);
+    t.setAttribute('fill', color); t.setAttribute('font-size','10');
+    t.setAttribute('font-family','-apple-system,sans-serif'); t.setAttribute('font-weight','600');
+    t.textContent = label; t.classList.add('mean-marker'); g.appendChild(t);
+  }
+}
+
+function updateDistLines(side) {
+  const svg = document.getElementById(`svg-${side}`);
+  const g = svg.querySelector('.dist-lines-g');
+  g.innerHTML = '';
+  if (!document.getElementById('chk-dist').checked) return;
+
+  const proj = getProj(state[side].layer);
+  const scale = state[side].scale;
+  if (!scale) return;
+
+  for (let i = 0; i < proj.points.length; i++) {
+    const p = proj.points[i];
+    const m = proj[p.type + '_mean'];
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', scale.sx(p.x)); line.setAttribute('y1', scale.sy(p.y));
+    line.setAttribute('x2', scale.sx(m[0])); line.setAttribute('y2', scale.sy(m[1]));
+    line.setAttribute('stroke', COLORS[p.type]);
+    line.setAttribute('opacity', 0.08 + p.dist * 0.35);
+    line.classList.add('dist-line');
+    line.dataset.cat = getCategory(p.scenario_id);
+    g.appendChild(line);
+  }
+}
+
+function updateLegend(side) {
+  const mode = document.getElementById('color-mode').value;
+  const el = document.getElementById(`legend-${side}`);
+  if (mode === 'type') {
+    el.innerHTML =
+      '<div class="legend-item"><span class="legend-swatch" style="background:#7ee8c7"></span> EDT</div>' +
+      '<div class="legend-item"><span class="legend-swatch" style="background:#e8a87e"></span> CDT</div>' +
+      '<div style="margin-top:4px;font-size:9px;color:#6e7681">' +
+      '\u25CF newcomb \u25C6 near \u25A0 control</div>';
+  } else {
+    el.innerHTML =
+      '<div class="legend-item"><span class="legend-swatch" style="background:#7ea8e8"></span> newcomb</div>' +
+      '<div class="legend-item"><span class="legend-swatch" style="background:#c89ee8"></span> near-newcomb</div>' +
+      '<div class="legend-item"><span class="legend-swatch" style="background:#e8e87e"></span> control</div>';
+  }
+}
+
+function showDetail(side, idx) {
+  if (selectedIdx !== null) return;
+  renderDetail(side, idx);
+}
+
+function pinDetail(side, idx) {
+  if (selectedSide) {
+    const prevSvg = document.getElementById(`svg-${selectedSide}`);
+    prevSvg.querySelectorAll('.point-g.selected').forEach(el => el.classList.remove('selected'));
+  }
+  selectedSide = side;
+  selectedIdx = idx;
+  const svg = document.getElementById(`svg-${side}`);
+  const gEl = svg.querySelector(`.point-g[data-idx="${idx}"]`);
+  if (gEl) {
+    gEl.classList.add('selected');
+    gEl.parentNode.appendChild(gEl);
+  }
+  renderDetail(side, idx);
+}
+
+function renderDetail(side, idx) {
+  const proj = getProj(state[side].layer);
+  const p = proj.points[idx];
+  const s = DATA.scenarios[p.scenario_id];
+  if (!s) return;
+
+  const bar = document.getElementById('detail-bar');
+  bar.classList.remove('empty');
+
+  const catLabel = s.category.replace(/_/g, ' ');
+
+  bar.innerHTML =
+    `<div class="detail-inner">` +
+      `<div class="detail-header">` +
+        `<div class="detail-type ${p.type}">${p.type.toUpperCase()} Activation &mdash; ${layerLabel(state[side].layer)}</div>` +
+        `<div class="detail-title">${esc(s.title)}</div>` +
+        `<div class="detail-badges">` +
+          `<span class="badge badge-category">${esc(catLabel)}</span>` +
+          `<span class="badge badge-format">${esc(p.question_format)}</span>` +
+          `<span class="badge badge-split">${esc(p.split)}</span>` +
+        `</div>` +
+        `<div class="detail-choices"><strong>Choices:</strong> ${s.options.map(o => esc(o)).join(' &nbsp;/&nbsp; ')}</div>` +
+        `<div class="detail-dist">Distance from mean: ${(p.dist * 100).toFixed(1)}%</div>` +
+      `</div>` +
+      `<div class="detail-body">` +
+        `<div class="detail-col">` +
+          `<div class="detail-col-label">Scenario</div>` +
+          `<p>${esc(s.scenario)}</p>` +
+        `</div>` +
+        `<div class="detail-col">` +
+          `<div class="detail-col-label">${p.type.toUpperCase()} Completion</div>` +
+          `<p>${esc(p.type === 'edt' ? s.edt_completion : s.cdt_completion)}</p>` +
+        `</div>` +
+      `</div>` +
+    `</div>`;
+}
+
+function clearDetail() {
+  const bar = document.getElementById('detail-bar');
+  bar.classList.add('empty');
+  bar.innerHTML = 'Hover or click a point to see scenario details.';
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+init();
+</script>
+</body>
+</html>

@@ -76,6 +76,7 @@ def run_scenarios(model_id: str, llm_call, constitution_id: str, constitution_te
         constitution_id=constitution_id,
         include_rationale=True,
         verbose=True,
+        exclude_option_types=["procedural_democracy"],
     )
     output_path = save_scenario_results(results, summary)
     print_scenario_summary(summary)

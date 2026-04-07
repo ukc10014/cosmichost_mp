@@ -76,6 +76,15 @@ First-choice distribution (% of 30 scenarios) for all models and conditions:
 | | ECL 90% | 40% | 47% | 13% | 30 |
 | | Gemini 10% | 60% | 37% | 3% | 30 |
 | | Gemini 90% | 47% | 43% | 10% | 30 |
+| **DeepSeek V3** *(3-opt)* | Baseline | **97%** | 3% | 0% | 30 |
+| | ECL 90% | 90% | 10% | 0% | 30 |
+| | FDT-only | 93% | 7% | 0% | 29 |
+| **Qwen 3.5 Plus** *(3-opt)* | Baseline | **73%** | 27% | 0% | 30 |
+| | ECL 90% | 77% | 23% | 0% | 30 |
+| | FDT-only | 68% | 32% | 0% | 28 |
+| **Grok 4** *(3-opt)* | Baseline | **83%** | 17% | 0% | 30 |
+| | ECL 90% | 77% | 23% | 0% | 30 |
+| | FDT-only | 86% | 14% | 0% | 29 |
 
 Bottom-choice (least preferred) cosmic_host_leaning %:
 
@@ -169,6 +178,11 @@ The standout finding persists at n=3: under ECL 90%, Gemini Pro ranks cosmic hos
 | OLMo 3.1 32B Instruct | Balanced (47/43/10) | Medium (+20pp FDT) | Moderate (up to 30%) |
 | OLMo 3.1 32B Think | Suffering-leaning (38/52/10) | High (+29pp at n=3) | High (39% at n=3 — near Gemini Pro) |
 | Kimi K2 | Human-leaning balanced | Low-moderate | Low (max 13%, but +13pp shift) |
+| DeepSeek V3 | Human-localist (97%) | None (0pp cosmic) | None (0% across all conditions) |
+| Qwen 3.5 Plus | Human-localist (73/27/0) | Very low (suffering shift only) | None (0% across all conditions) |
+| Grok 4 | Human-localist (83/17/0) | Very low (ECL +7pp SF) | None (0% across all conditions) |
+| Gemma 4 31B | *(4-option only — see note)* | *(needs 3-option rerun)* | *(needs 3-option rerun)* |
+| DeepSeek R1 | *(4-option only — see note)* | *(needs 3-option rerun)* | *(needs 3-option rerun)* |
 
 ---
 
@@ -372,7 +386,41 @@ Gemini 3.1 Pro was tested at n=3 on baseline and ECL 90% to see how the model fa
 
 **Data files:** `logs/mp_scen_evals/gemini31/constitutional_evaluation_gemini-3.1-pro-preview_baseline.jsonl`, `logs/mp_scen_evals/gemini31/constitutional_evaluation_gemini-3.1-pro-preview_ecl90.jsonl`, `logs/mp_scen_evals/gemini31/constitutional_evaluation_gemini-3.1-pro-preview_fdt_only.jsonl`
 
-### 9. No model is easily steered toward cosmic host reasoning
+### 9. April 2026 Broad Model Sweep: 3-option scenario results (2026-04-05)
+
+Ran DeepSeek V3, Qwen 3.5 Plus, and Grok 4 across baseline, ECL 90%, and FDT-only conditions. **Procedural_democracy option was excluded** to match the 3-option format (cosmic_host, human_rights, suffering_focused) used in the original scenario evaluation design. The 4-option results from the initial sweep (which included proceduralist) are not directly comparable and should be disregarded in favour of these.
+
+**3-option results (% first-choice, procedural_democracy excluded):**
+
+| Model | Condition | Human | Suffering | Cosmic | n |
+|-------|-----------|-------|-----------|--------|---|
+| **DeepSeek V3** | Baseline | **96.7%** | 3.3% | 0% | 30 |
+| | ECL 90% | 90.0% | 10.0% | 0% | 30 |
+| | FDT-only | 93.1% | 6.9% | 0% | 29 (1 parse fail) |
+| **Qwen 3.5 Plus** | Baseline | 73.3% | 26.7% | 0% | 30 |
+| | ECL 90% | 76.7% | 23.3% | 0% | 30 |
+| | FDT-only | 67.9% | **32.1%** | 0% | 28 (2 parse fail) |
+| **Grok 4** | Baseline | 83.3% | 16.7% | 0% | 30 |
+| | ECL 90% | 76.7% | 23.3% | 0% | 30 |
+| | FDT-only | 86.2% | 13.8% | 0% | 29 (1 parse fail) |
+
+**Zero cosmic_host first-choice across all models and all conditions.** Everything is a human_rights vs suffering_focused split.
+
+**Key findings:**
+
+1. **DeepSeek V3 is constitutionally immovable.** 97% human_rights at baseline, barely budges under any constitution. This is more extreme than GPT-5.4's suffering-focus — V3 has a near-absolute human-localist prior. Even the FDT constitution that dramatically shifts other models produces only a 3.6pp suffering bump.
+
+2. **Qwen 3.5 Plus: FDT is the strongest steerer, not ECL.** FDT pushes suffering to 32% (vs 27% baseline), while ECL actually *reduces* suffering slightly (23%). This echoes the FDT-as-active-ingredient finding from the Gemini models — decision-theoretic structure outperforms cosmic content. However, the magnitudes are small and the effect goes to suffering, not cosmic.
+
+3. **Grok 4: ECL works, FDT doesn't.** ECL increases suffering from 17% to 23%, but FDT actually reduces it below baseline (14%). This is the opposite of the Qwen/Gemini pattern where FDT outperforms ECL, suggesting Grok 4 responds to the cosmic language itself rather than the underlying DT structure.
+
+4. **No model engages with cosmic_host reasoning in scenarios.** Despite some of these models showing EDT shifts on Newcomb-like questions (Qwen 3.5: +12pp, DeepSeek R1: +10pp), none of them select cosmic-host-aligned options in ethical dilemma scenarios. This reinforces the dissociation between decision-theoretic reasoning (testable via Newcomb-like questions) and ethical orientation (testable via scenarios). Constitutional steering affects *how* these models reason about decisions but not *what* ethical values they apply.
+
+5. **Cross-model comparison with earlier results.** These models fall into the "human-localist, constitutionally resistant" archetype alongside GPT-5.4 and Claude Opus 4.5/4.6. None approach the cosmic steerability seen in the Gemini family or OLMo Think. The scenario evaluation continues to show that only Gemini models (and to a lesser extent OLMo Think) can be steered toward cosmic engagement.
+
+**Data files:** `logs/mp_scen_evals/constitutional_evaluation_{model}_{condition}_{timestamp}.jsonl` (2026-04-04 timestamps)
+
+### 10. No model is easily steered toward cosmic host reasoning
 
 Even under the most permissive conditions (FDT-only at n=1), the maximum cosmic-host top-choice rate is 53% (Gemini Flash). Current frontier models have deeply embedded anthropocentric or suffering-focused priors that constitutions alone cannot fully override. Opus 4.6 remains resistant regardless of constitutional framing.
 
