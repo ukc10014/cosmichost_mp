@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Layer Evolution Viewer — Cosmic Host Research</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg-raised: #161b22;
+    --text: #e1e4e8;
+    --text-dim: #8b949e;
+    --text-faint: #6e7681;
+    --accent: #7ee8c7;
+    --accent-dim: #4db899;
+    --rule: #30363d;
+    --edt: #7ee8c7;
+    --cdt: #e8a87e;
+    --newcomb: #7ea8e8;
+    --near: #c89ee8;
+    --control: #e8e87e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  #topbar {
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--rule);
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  #topbar h1 { font-size: 15px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.04em; }
+  .topbar-link {
+    font-size: 12px;
+    color: var(--accent);
+    text-decoration: none;
+    margin-left: auto;
+  }
+  .topbar-link:hover { text-decoration: underline; }
+  .topbar-link + .topbar-link { margin-left: 0; }
+  .topbar-sep { color: var(--text-faint); font-size: 12px; margin-left: 0; }
+
+  #controls {
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--rule);
+    padding: 8px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    position: sticky;
+    top: 39px;
+    z-index: 99;
+  }
+  .ctrl-label {
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+  .ctrl-check {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 12px;
+  }
+  .ctrl-check input { cursor: pointer; }
+  .ctrl-sep { width: 1px; height: 20px; background: var(--rule); }
+
+  .section {
+    padding: 24px 18px 12px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+  .section-subtitle {
+    font-size: 12px;
+    color: var(--text-faint);
+    margin-bottom: 14px;
+  }
+
+  /* Heatmap */
+  #heatmap-container {
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  #heatmap-svg { display: block; }
+
+  /* Ridgeline */
+  #ridgeline-container { padding: 0 0 8px; }
+  #ridgeline-svg { display: block; width: 100%; }
+
+  /* Trajectory */
+  #trajectory-container { padding: 0 0 8px; }
+  #trajectory-svg { display: block; width: 100%; }
+
+  /* Shared tooltip */
+  #tooltip {
+    position: fixed;
+    background: rgba(22, 27, 34, 0.95);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: var(--text);
+    pointer-events: none;
+    z-index: 200;
+    max-width: 360px;
+    display: none;
+    line-height: 1.5;
+  }
+  #tooltip .tt-title { font-weight: 600; color: #fff; margin-bottom: 2px; }
+  #tooltip .tt-cat { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+  #tooltip .tt-val { color: var(--text-dim); }
+
+  /* Detail bar */
+  #detail-bar {
+    background: var(--bg-raised);
+    border-top: 1px solid var(--rule);
+    position: sticky;
+    bottom: 0;
+    z-index: 90;
+    min-height: 40px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  #detail-bar.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    color: var(--text-faint);
+    font-style: italic;
+    font-size: 12px;
+  }
+  .detail-inner {
+    padding: 10px 18px;
+    display: flex;
+    gap: 20px;
+    font-size: 12px;
+  }
+  .detail-header { min-width: 200px; max-width: 260px; flex-shrink: 0; }
+  .detail-title {
+    font-family: "ET Book", Palatino, Georgia, serif;
+    font-size: 14px;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .detail-meta { color: var(--text-faint); font-size: 11px; line-height: 1.6; }
+  .detail-body { flex: 1; display: flex; gap: 16px; min-width: 0; }
+  .detail-col { flex: 1; min-width: 0; }
+  .detail-col-label {
+    font-size: 10px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 2px;
+    font-weight: 600;
+  }
+  .detail-col p { color: var(--text-dim); font-size: 12px; line-height: 1.5; }
+  .badge {
+    display: inline-block;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+  .badge-newcomb { background: rgba(126,168,232,0.15); color: var(--newcomb); }
+  .badge-near { background: rgba(200,158,232,0.15); color: var(--near); }
+  .badge-control { background: rgba(232,232,126,0.15); color: var(--control); }
+
+  /* Help */
+  #help-panel { border-top: 1px solid var(--rule); }
+  #help-toggle {
+    display: block;
+    width: 100%;
+    background: var(--bg-raised);
+    border: none;
+    color: var(--accent);
+    font-size: 12px;
+    padding: 6px 18px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  #help-toggle:hover { color: #fff; }
+  #help-content {
+    display: none;
+    padding: 16px 20px 24px;
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+  #help-content.open { display: block; }
+  #help-content h3 { color: #fff; font-size: 13px; font-weight: 600; margin: 14px 0 4px; }
+  #help-content h3:first-child { margin-top: 0; }
+  #help-content p { margin-bottom: 6px; }
+  #help-content strong { color: var(--text); }
+  #help-content a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--rule); }
+
+  @media (max-width: 700px) {
+    .detail-inner { flex-direction: column; gap: 8px; }
+    .detail-body { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1>Layer Evolution Viewer</h1>
+  <a class="topbar-link" href="activation_viewer.html">Scatter viewer</a>
+  <span class="topbar-sep">|</span>
+  <a class="topbar-link" href="index.html">&larr; Back to index</a>
+</div>
+
+<div id="controls">
+  <span class="ctrl-label">Show categories</span>
+  <label class="ctrl-check"><input type="checkbox" id="chk-newcomb" checked> newcomb</label>
+  <label class="ctrl-check"><input type="checkbox" id="chk-near" checked> near-newcomb</label>
+  <label class="ctrl-check"><input type="checkbox" id="chk-control" checked> control</label>
+</div>
+
+<div class="section">
+  <div class="section-title">Scenario &times; Layer Heatmap</div>
+  <div class="section-subtitle">Each row is a scenario. Cell color = EDT minus CDT probe-direction gap at that layer. Brighter = stronger separation.</div>
+  <div id="heatmap-container">
+    <svg id="heatmap-svg"></svg>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Ridgeline: EDT/CDT Distribution by Layer</div>
+  <div class="section-subtitle">Density curves showing how EDT (green) and CDT (orange) projection distributions separate across layers.</div>
+  <div id="ridgeline-container">
+    <svg id="ridgeline-svg" viewBox="0 0 800 520" preserveAspectRatio="xMidYMid meet"></svg>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Prompt Trajectories</div>
+  <div class="section-subtitle">Each line traces one prompt's probe-direction projection from layer 0 (top) to post-norm (bottom). EDT green, CDT orange.</div>
+  <div id="trajectory-container">
+    <svg id="trajectory-svg" viewBox="0 0 800 520" preserveAspectRatio="xMidYMid meet"></svg>
+  </div>
+</div>
+
+<div id="detail-bar" class="empty">Click a heatmap row or trajectory line to see scenario details.</div>
+
+<div id="help-panel">
+  <button id="help-toggle">How to read this &#x25BC;</button>
+  <div id="help-content">
+    <p style="color:var(--text-faint);font-size:11px;border:1px solid var(--rule);padding:6px 10px;margin-bottom:12px;">
+      <strong style="color:var(--text-dim)">Note:</strong> This viewer, its data pipeline, and the commentary below
+      were generated with Claude Code (Opus 4.6). The underlying activation data and probe results are real model outputs.
+    </p>
+    <h3>Heatmap</h3>
+    <p>Rows = 70 scenarios (with multiple prompts each), grouped by category. Columns = 10 layers through the network.
+       Cell brightness encodes the gap between mean EDT and mean CDT projection onto the probe direction at that layer.
+       Brighter green = stronger EDT/CDT separation. Dark = no separation or reversed. Click a row to see the scenario.</p>
+    <h3>Ridgeline</h3>
+    <p>Stacked density curves (kernel density estimation) showing the population-level distribution of probe projections at each layer.
+       At early layers the EDT and CDT distributions overlap heavily. By layer 40+ they pull apart.
+       Look for: bimodality, long tails, and whether separation happens via means shifting or variance changing.</p>
+    <h3>Trajectories</h3>
+    <p>Each line is one prompt's scalar projection onto the probe direction at each layer. 350 EDT lines (green) and 350 CDT lines (orange).
+       Low opacity manages overplotting; hover highlights a single path plus its contrastive pair.
+       Look for: crossings (prompts that flip from EDT-leaning to CDT-leaning), laggards, and whether categories separate at different rates.</p>
+    <h3>What the probe direction means</h3>
+    <p>At each layer, we compute <strong>mean(EDT activations) - mean(CDT activations)</strong> in the 5120-dim residual stream,
+       normalize to unit length, and project each prompt onto it. Positive = EDT-leaning, negative = CDT-leaning.
+       This is the same direction used by the linear probe, which achieves 100% validation accuracy from layer 40 onward.</p>
+    <p>
+      Full analysis: <a href="https://github.com/ukc10014/cosmichost_mp/blob/main/observations/research_extensions/activation_steering_results.md">activation_steering_results.md</a>
+    </p>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+let DATA = null;
+let selectedScenario = null;
+let selectedPromptIdx = null;
+
+const CAT_COLORS = { newcomb_proper: '#7ea8e8', near_newcomb: '#c89ee8', control: '#e8e87e' };
+const CAT_FILTER = { 'chk-newcomb': 'newcomb_proper', 'chk-near': 'near_newcomb', 'chk-control': 'control' };
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+function visibleCats() {
+  const v = {};
+  for (const [id, cat] of Object.entries(CAT_FILTER))
+    v[cat] = document.getElementById(id).checked;
+  return v;
+}
+
+async function init() {
+  const resp = await fetch('data/activation_trajectories.json');
+  DATA = await resp.json();
+
+  renderHeatmap();
+  renderRidgeline();
+  renderTrajectories();
+
+  for (const id of Object.keys(CAT_FILTER)) {
+    document.getElementById(id).addEventListener('change', () => {
+      applyFilters();
+    });
+  }
+
+  document.getElementById('help-toggle').addEventListener('click', function() {
+    const c = document.getElementById('help-content');
+    c.classList.toggle('open');
+    this.textContent = c.classList.contains('open') ? 'How to read this \u25B2' : 'How to read this \u25BC';
+  });
+}
+
+/* ============ HEATMAP ============ */
+function renderHeatmap() {
+  const gaps = DATA.scenario_gaps;
+  const nLayers = DATA.layers.length;
+  const cellW = 56, cellH = 14, labelW = 200, catW = 8, padTop = 40, padBot = 10;
+  const gridW = nLayers * cellW;
+  const totalW = labelW + catW + gridW + 20;
+  const totalH = padTop + gaps.length * cellH + padBot;
+
+  const svg = document.getElementById('heatmap-svg');
+  svg.setAttribute('viewBox', `0 0 ${totalW} ${totalH}`);
+  svg.setAttribute('width', totalW);
+  svg.style.minWidth = totalW + 'px';
+
+  let maxGap = 0;
+  for (const s of gaps) for (const g of s.gaps) if (Math.abs(g) > maxGap) maxGap = Math.abs(g);
+
+  function gapColor(v) {
+    const t = Math.min(Math.abs(v) / maxGap, 1);
+    const r = Math.round(15 + t * (126 - 15));
+    const g = Math.round(17 + t * (232 - 17));
+    const b = Math.round(34 + t * (199 - 34));
+    return v >= 0
+      ? `rgb(${r},${g},${b})`
+      : `rgb(${Math.round(15 + t * 100)},${Math.round(17 + t * 40)},${Math.round(34 + t * 50)})`;
+  }
+
+  let html = '';
+
+  for (let j = 0; j < nLayers; j++) {
+    const x = labelW + catW + j * cellW;
+    const lbl = DATA.layers[j] === 'post_norm' ? 'post' : DATA.layers[j];
+    html += `<text x="${x + cellW / 2}" y="${padTop - 18}" text-anchor="middle" font-size="9" fill="#6e7681">${lbl}</text>`;
+    const pr = DATA.layer_stats[DATA.layers[j]];
+    if (pr) {
+      html += `<text x="${x + cellW / 2}" y="${padTop - 6}" text-anchor="middle" font-size="8" fill="#6e7681">${(pr.val_acc * 100).toFixed(0)}%</text>`;
+    }
+  }
+
+  for (let i = 0; i < gaps.length; i++) {
+    const s = gaps[i];
+    const y = padTop + i * cellH;
+
+    html += `<rect class="hm-cat" data-cat="${s.category}" x="0" y="${y}" width="${catW}" height="${cellH - 1}" fill="${CAT_COLORS[s.category] || '#555'}" opacity="0.6"/>`;
+
+    const titleTrunc = s.title.length > 28 ? s.title.slice(0, 26) + '\u2026' : s.title;
+    html += `<text class="hm-label" data-cat="${s.category}" x="${catW + 4}" y="${y + cellH - 3}" font-size="9" fill="#8b949e">${esc(titleTrunc)}</text>`;
+
+    for (let j = 0; j < nLayers; j++) {
+      const x = labelW + catW + j * cellW;
+      html += `<rect class="hm-cell" data-cat="${s.category}" data-row="${i}" data-col="${j}" x="${x}" y="${y}" width="${cellW - 1}" height="${cellH - 1}" fill="${gapColor(s.gaps[j])}" style="cursor:pointer"/>`;
+    }
+  }
+
+  svg.innerHTML = html;
+
+  svg.addEventListener('mousemove', (e) => {
+    const cell = e.target.closest('.hm-cell');
+    if (!cell) { hideTooltip(); return; }
+    const row = parseInt(cell.dataset.row);
+    const col = parseInt(cell.dataset.col);
+    const s = gaps[row];
+    showTooltip(e,
+      `<div class="tt-title">${esc(s.title)}</div>` +
+      `<div class="tt-cat" style="color:${CAT_COLORS[s.category]}">${s.category.replace(/_/g, ' ')}</div>` +
+      `<div class="tt-val">Layer ${DATA.layers[col]}: gap = ${s.gaps[col].toFixed(1)}</div>` +
+      `<div class="tt-val">${s.n_prompts} prompt variants</div>`
+    );
+  });
+
+  svg.addEventListener('click', (e) => {
+    const cell = e.target.closest('.hm-cell');
+    if (!cell) return;
+    const row = parseInt(cell.dataset.row);
+    const s = gaps[row];
+    selectedScenario = s.scenario_id;
+    showScenarioDetail(s.scenario_id);
+    highlightTrajectoryScenario(s.scenario_id);
+  });
+
+  svg.addEventListener('mouseleave', hideTooltip);
+}
+
+/* ============ RIDGELINE ============ */
+function renderRidgeline() {
+  const svg = document.getElementById('ridgeline-svg');
+  const W = 800, H = 520;
+  const padL = 80, padR = 30, padT = 20, padB = 30;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+  const nLayers = DATA.layers.length;
+  const rowH = plotH / nLayers;
+  const overlapFactor = 2.5;
+
+  const xGrid = DATA.x_grid;
+  const xMin = xGrid[0], xMax = xGrid[xGrid.length - 1];
+  const sx = (v) => padL + (v - xMin) / (xMax - xMin) * plotW;
+
+  let maxDensity = 0;
+  for (const lk of DATA.layers) {
+    const kd = DATA.kde_curves[lk];
+    for (const v of kd.edt) if (v > maxDensity) maxDensity = v;
+    for (const v of kd.cdt) if (v > maxDensity) maxDensity = v;
+  }
+
+  let html = '';
+
+  html += `<line x1="${sx(0)}" y1="${padT}" x2="${sx(0)}" y2="${H - padB}" stroke="#30363d" stroke-width="0.5" stroke-dasharray="4,3"/>`;
+
+  for (let i = 0; i < nLayers; i++) {
+    const lk = DATA.layers[i];
+    const kd = DATA.kde_curves[lk];
+    const baseline = padT + (i + 1) * rowH;
+
+    const lbl = lk === 'post_norm' ? 'post_norm' : 'Layer ' + lk;
+    const pr = DATA.layer_stats[lk];
+    html += `<text x="${padL - 8}" y="${baseline - rowH * 0.3}" text-anchor="end" font-size="10" fill="#8b949e">${lbl}</text>`;
+    if (pr) {
+      html += `<text x="${padL - 8}" y="${baseline - rowH * 0.3 + 12}" text-anchor="end" font-size="8" fill="#6e7681">${(pr.val_acc * 100).toFixed(0)}% val</text>`;
+    }
+
+    for (const [type, color] of [['cdt', '#e8a87e'], ['edt', '#7ee8c7']]) {
+      const density = kd[type];
+      let path = `M${sx(xGrid[0])},${baseline}`;
+      for (let j = 0; j < xGrid.length; j++) {
+        const x = sx(xGrid[j]);
+        const y = baseline - (density[j] / maxDensity) * rowH * overlapFactor;
+        path += ` L${x},${y}`;
+      }
+      path += ` L${sx(xGrid[xGrid.length - 1])},${baseline} Z`;
+      html += `<path d="${path}" fill="${color}" fill-opacity="0.25" stroke="${color}" stroke-width="0.8" class="ridge-path" data-layer="${lk}"/>`;
+    }
+
+    html += `<line x1="${sx(kd.edt_mean)}" y1="${baseline}" x2="${sx(kd.edt_mean)}" y2="${baseline - rowH * 0.6}" stroke="#7ee8c7" stroke-width="1.5" stroke-dasharray="3,2"/>`;
+    html += `<line x1="${sx(kd.cdt_mean)}" y1="${baseline}" x2="${sx(kd.cdt_mean)}" y2="${baseline - rowH * 0.6}" stroke="#e8a87e" stroke-width="1.5" stroke-dasharray="3,2"/>`;
+  }
+
+  html += `<text x="${W / 2}" y="${H - 4}" text-anchor="middle" font-size="10" fill="#6e7681">Probe-direction projection &rarr; EDT-leaning</text>`;
+
+  svg.innerHTML = html;
+}
+
+/* ============ TRAJECTORIES ============ */
+function renderTrajectories() {
+  const svg = document.getElementById('trajectory-svg');
+  const W = 800, H = 520;
+  const padL = 80, padR = 30, padT = 20, padB = 30;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+  const nLayers = DATA.layers.length;
+
+  let xMin = Infinity, xMax = -Infinity;
+  for (const p of DATA.prompts) {
+    for (const v of p.edt) { if (v < xMin) xMin = v; if (v > xMax) xMax = v; }
+    for (const v of p.cdt) { if (v < xMin) xMin = v; if (v > xMax) xMax = v; }
+  }
+  const xMargin = (xMax - xMin) * 0.05;
+  xMin -= xMargin; xMax += xMargin;
+
+  const sx = (v) => padL + (v - xMin) / (xMax - xMin) * plotW;
+  const sy = (i) => padT + i * (plotH / (nLayers - 1));
+
+  let html = '';
+
+  html += `<line x1="${sx(0)}" y1="${padT}" x2="${sx(0)}" y2="${padT + plotH}" stroke="#30363d" stroke-width="0.5" stroke-dasharray="4,3"/>`;
+
+  for (let i = 0; i < nLayers; i++) {
+    const lk = DATA.layers[i];
+    const lbl = lk === 'post_norm' ? 'post_norm' : 'Layer ' + lk;
+    html += `<text x="${padL - 8}" y="${sy(i) + 3}" text-anchor="end" font-size="10" fill="#8b949e">${lbl}</text>`;
+    html += `<line x1="${padL}" y1="${sy(i)}" x2="${padL + plotW}" y2="${sy(i)}" stroke="#21262d" stroke-width="0.5"/>`;
+  }
+
+  for (const [type, color] of [['cdt', '#e8a87e'], ['edt', '#7ee8c7']]) {
+    for (let pi = 0; pi < DATA.prompts.length; pi++) {
+      const p = DATA.prompts[pi];
+      const vals = p[type];
+      let path = '';
+      for (let i = 0; i < nLayers; i++) {
+        path += (i === 0 ? 'M' : ' L') + `${sx(vals[i])},${sy(i)}`;
+      }
+      html += `<path d="${path}" fill="none" stroke="${color}" stroke-width="0.8" opacity="0.07" class="traj-line" data-idx="${pi}" data-type="${type}" data-cat="${p.category}" data-sid="${p.scenario_id}" style="cursor:pointer"/>`;
+    }
+  }
+
+  html += `<text x="${W / 2}" y="${H - 4}" text-anchor="middle" font-size="10" fill="#6e7681">Probe-direction projection &rarr; EDT-leaning</text>`;
+
+  svg.innerHTML = html;
+
+  let hoverIdx = null;
+  svg.addEventListener('mousemove', (e) => {
+    const line = e.target.closest('.traj-line');
+    if (!line) {
+      if (hoverIdx !== null) { resetTrajectoryHighlight(); hoverIdx = null; }
+      hideTooltip();
+      return;
+    }
+    const idx = parseInt(line.dataset.idx);
+    const type = line.dataset.type;
+    if (idx !== hoverIdx) {
+      hoverIdx = idx;
+      highlightTrajectoryPair(idx);
+    }
+    const p = DATA.prompts[idx];
+    const gap = DATA.scenario_gaps.find(s => s.scenario_id === p.scenario_id);
+    showTooltip(e,
+      `<div class="tt-title">${gap ? esc(gap.title) : p.scenario_id}</div>` +
+      `<div class="tt-cat" style="color:${CAT_COLORS[p.category]}">${p.category.replace(/_/g,' ')} &middot; ${p.question_format} &middot; ${type.toUpperCase()}</div>`
+    );
+  });
+
+  svg.addEventListener('click', (e) => {
+    const line = e.target.closest('.traj-line');
+    if (!line) return;
+    const idx = parseInt(line.dataset.idx);
+    const p = DATA.prompts[idx];
+    selectedPromptIdx = idx;
+    showPromptDetail(idx);
+  });
+
+  svg.addEventListener('mouseleave', () => { resetTrajectoryHighlight(); hoverIdx = null; hideTooltip(); });
+}
+
+function highlightTrajectoryPair(idx) {
+  const svg = document.getElementById('trajectory-svg');
+  svg.querySelectorAll('.traj-line').forEach(el => {
+    if (parseInt(el.dataset.idx) === idx) {
+      el.setAttribute('opacity', '1');
+      el.setAttribute('stroke-width', '2');
+      el.parentNode.appendChild(el);
+    } else {
+      el.setAttribute('opacity', '0.04');
+      el.setAttribute('stroke-width', '0.8');
+    }
+  });
+}
+
+function highlightTrajectoryScenario(sid) {
+  const svg = document.getElementById('trajectory-svg');
+  svg.querySelectorAll('.traj-line').forEach(el => {
+    if (el.dataset.sid === sid) {
+      el.setAttribute('opacity', '0.8');
+      el.setAttribute('stroke-width', '1.8');
+      el.parentNode.appendChild(el);
+    } else {
+      el.setAttribute('opacity', '0.03');
+      el.setAttribute('stroke-width', '0.8');
+    }
+  });
+}
+
+function resetTrajectoryHighlight() {
+  const svg = document.getElementById('trajectory-svg');
+  const vis = visibleCats();
+  svg.querySelectorAll('.traj-line').forEach(el => {
+    el.setAttribute('opacity', vis[el.dataset.cat] ? '0.07' : '0');
+    el.setAttribute('stroke-width', '0.8');
+  });
+}
+
+/* ============ FILTERS ============ */
+function applyFilters() {
+  const vis = visibleCats();
+
+  document.querySelectorAll('.hm-cell, .hm-label, .hm-cat').forEach(el => {
+    el.style.display = vis[el.dataset.cat] ? '' : 'none';
+  });
+
+  document.querySelectorAll('.traj-line').forEach(el => {
+    el.setAttribute('opacity', vis[el.dataset.cat] ? '0.07' : '0');
+  });
+}
+
+/* ============ TOOLTIP ============ */
+function showTooltip(e, html) {
+  const tt = document.getElementById('tooltip');
+  tt.innerHTML = html;
+  tt.style.display = 'block';
+  const rect = tt.getBoundingClientRect();
+  let x = e.clientX + 12;
+  let y = e.clientY - 10;
+  if (x + rect.width > window.innerWidth - 10) x = e.clientX - rect.width - 12;
+  if (y + rect.height > window.innerHeight - 10) y = e.clientY - rect.height - 10;
+  tt.style.left = x + 'px';
+  tt.style.top = y + 'px';
+}
+
+function hideTooltip() {
+  document.getElementById('tooltip').style.display = 'none';
+}
+
+/* ============ DETAIL BAR ============ */
+function showScenarioDetail(scenarioId) {
+  const bar = document.getElementById('detail-bar');
+  bar.classList.remove('empty');
+  const gap = DATA.scenario_gaps.find(s => s.scenario_id === scenarioId);
+  if (!gap) { bar.classList.add('empty'); bar.textContent = 'Scenario not found.'; return; }
+
+  const catClass = gap.category === 'newcomb_proper' ? 'newcomb' : gap.category === 'near_newcomb' ? 'near' : 'control';
+  const gapStr = gap.gaps.map((g, i) => `L${DATA.layers[i]}:${g.toFixed(1)}`).join('  ');
+
+  bar.innerHTML =
+    `<div class="detail-inner">` +
+      `<div class="detail-header">` +
+        `<div class="detail-title">${esc(gap.title)}</div>` +
+        `<div class="detail-meta">` +
+          `<span class="badge badge-${catClass}">${gap.category.replace(/_/g, ' ')}</span> ` +
+          `${gap.n_prompts} prompt variants</div>` +
+      `</div>` +
+      `<div class="detail-body">` +
+        `<div class="detail-col">` +
+          `<div class="detail-col-label">EDT&ndash;CDT Gap by Layer</div>` +
+          `<p style="font-family:monospace;font-size:11px;word-break:break-all">${gapStr}</p>` +
+        `</div>` +
+      `</div>` +
+    `</div>`;
+}
+
+function showPromptDetail(idx) {
+  const bar = document.getElementById('detail-bar');
+  bar.classList.remove('empty');
+  const p = DATA.prompts[idx];
+  const gap = DATA.scenario_gaps.find(s => s.scenario_id === p.scenario_id);
+  const title = gap ? gap.title : p.scenario_id;
+  const catClass = p.category === 'newcomb_proper' ? 'newcomb' : p.category === 'near_newcomb' ? 'near' : 'control';
+
+  const edtStr = p.edt.map((v, i) => `${DATA.layers[i]}:${v.toFixed(1)}`).join('  ');
+  const cdtStr = p.cdt.map((v, i) => `${DATA.layers[i]}:${v.toFixed(1)}`).join('  ');
+
+  bar.innerHTML =
+    `<div class="detail-inner">` +
+      `<div class="detail-header">` +
+        `<div class="detail-title">${esc(title)}</div>` +
+        `<div class="detail-meta">` +
+          `<span class="badge badge-${catClass}">${p.category.replace(/_/g, ' ')}</span> ` +
+          `${p.question_format} &middot; ${p.split}</div>` +
+      `</div>` +
+      `<div class="detail-body">` +
+        `<div class="detail-col">` +
+          `<div class="detail-col-label">EDT Projection by Layer</div>` +
+          `<p style="font-family:monospace;font-size:11px;word-break:break-all">${edtStr}</p>` +
+        `</div>` +
+        `<div class="detail-col">` +
+          `<div class="detail-col-label">CDT Projection by Layer</div>` +
+          `<p style="font-family:monospace;font-size:11px;word-break:break-all">${cdtStr}</p>` +
+        `</div>` +
+      `</div>` +
+    `</div>`;
+}
+
+init();
+</script>
+</body>
+</html>

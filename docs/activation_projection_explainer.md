@@ -4,7 +4,9 @@ How to read the 2D scatter plots in the activation viewer — from raw residual 
 
 ## 1. What comes out of the model
 
-We run Qwen3-32B (4-bit) on each prompt twice: once with the **EDT completion** appended and once with the **CDT completion** appended. At the last token position, we extract the **residual stream vector** from selected layers.
+The dataset contains *N* decision-theoretic prompts, each with a **pre-written EDT completion** and a **pre-written CDT completion**. The model never answers freely --- instead, we run Qwen3-32B (4-bit) on each prompt **twice**, once with the EDT completion appended as if the assistant said it, and once with the CDT completion. This is a **contrastive activation** approach (sometimes called representation engineering): by forcing matched pairs of completions that differ only in their decision-theoretic stance, we isolate the model's internal representation of "EDT-style reasoning" vs "CDT-style reasoning," controlling for confounds like answer length or topic.
+
+At the last token position of each forced completion, we extract the **residual stream vector** from selected layers.
 
 Each residual stream vector lives in $\mathbb{R}^{5120}$ (the model's hidden dimension). So for *N* contrastive prompts, we get two matrices per layer:
 
@@ -158,23 +160,25 @@ $$
 \mathbf{h}^{(\ell)} = \mathbf{h}^{(0)} + \sum_{k=1}^{\ell} \left( \text{Attn}_k(\mathbf{h}^{(k-1)}) + \text{MLP}_k(\ldots) \right)
 $$
 
-So layer 0 is just the token embedding — it carries no contextual information about EDT vs CDT reasoning. As you move through layers:
+So layer 0 is just the token embedding --- it carries no contextual information about EDT vs CDT reasoning. As you move through layers:
 
-- **Early layers (0--16):** Expect heavy overlap between EDT and CDT points. The model hasn't "read" the completion deeply enough to distinguish them. Probe accuracy will be near 50% (chance).
-- **Middle layers (24--40):** The model is building up abstract representations. If EDT/CDT separation starts appearing, this is where the model begins to internally distinguish the two reasoning strategies.
-- **Late layers (48--63):** These representations are closest to the output. Separation here may reflect the model preparing different next-token predictions for EDT vs CDT completions.
-- **Post-norm:** The residual stream after the final RMSNorm. This is what feeds into the unembedding matrix to produce logits. It's the "final answer" representation.
+- **Early layers (0--16):** You might expect heavy overlap, but in practice the probe can already classify well above chance even at layer 0. This is a **surface-level artifact**: the EDT and CDT completions are different text, so the last token is often a different token entirely. The layer-0 probe is learning "which tokens tend to end EDT completions vs CDT completions," not anything about reasoning. The tell: centroid separation ($\|\boldsymbol{\delta}\|$) is tiny at layer 0 (e.g., 0.4) despite above-chance probe accuracy, and the val/test accuracy gap is large (overfitting to token coincidences).
+- **Middle layers (24--40):** The model is building up abstract representations. Watch for centroid separation growing --- this indicates the model is constructing a robust EDT/CDT distinction beyond token-level artifacts.
+- **Late layers (48--63):** These representations are closest to the output. Centroid separation peaks here (e.g., 144.7 at layer 63), indicating the model has built a strong, high-magnitude distinction between EDT and CDT completions. Separation here may reflect the model preparing different next-token predictions for EDT vs CDT completions.
+- **Post-norm:** The residual stream after the final RMSNorm, which is the last representation before the unembedding matrix converts it to logits. RMSNorm rescales each vector:
+$$\text{RMSNorm}(\mathbf{x}) = \frac{\mathbf{x}}{\sqrt{\frac{1}{d}\sum x_i^2}} \odot \boldsymbol{\gamma}$$
+This forces all vectors to approximately the same magnitude, **destroying magnitude information while preserving directional information**. As a result, centroid separation drops dramatically (e.g., 144.7 at layer 63 to 9.1 at post-norm) and the centroids collapse into the point cloud, but probe accuracy remains high because the EDT and CDT points still *point in different directions*. This makes functional sense: the unembedding matrix maps directions to token probabilities, so RMSNorm strips out magnitude to give the unembedding clean directional signal.
 
 ### What to look for
 
 | Pattern | Interpretation |
 |---------|---------------|
-| EDT/CDT clusters separate cleanly in probe mode at layer 48+ | The model has a clear internal representation of EDT vs CDT reasoning by the later layers |
+| Probe accuracy above chance at layer 0 but low centroid separation | Surface artifact: probe is classifying based on token identity, not reasoning |
+| Centroid separation grows across layers | The model is building an increasingly robust EDT/CDT representation |
 | Separation appears in PCA mode too | The EDT/CDT distinction is a *dominant* feature of the representation, not just a subtle linear direction |
-| Separation in probe mode but NOT in PCA | The EDT/CDT signal exists but is a small-variance direction — it's real but subtle |
-| Gradual separation building from layers 16 to 48 | The distinction is being computed incrementally across many layers |
-| Sudden separation appearing at one layer | A specific layer's attention or MLP heads are doing most of the work |
-| Post-norm looks different from layer 63 | The final normalization is reshaping the geometry (RMSNorm rescales each vector to unit norm in a sense) |
+| Separation in probe mode but NOT in PCA | The EDT/CDT signal exists but is a small-variance direction --- it's real but subtle |
+| Centroid separation peaks at late layers then drops at post-norm | Normal: RMSNorm compresses magnitudes. Check that probe accuracy stays high --- if so, directional signal is preserved |
+| Centroids collapse into the point cloud at post-norm | RMSNorm has pulled all vectors to similar magnitudes, shrinking all pairwise distances including centroid-to-point distances |
 
 ---
 

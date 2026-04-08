@@ -24,6 +24,7 @@ ACTIVATIONS_META = BASE_DIR / "activations" / "qwen3_32b_contrastive_full.json"
 PROBE_RESULTS = BASE_DIR / "activations" / "qwen3_32b_probe_results_full.json"
 SCENARIOS_FILE = BASE_DIR / "datasets" / "base_scenarios.json"
 OUTPUT_FILE = BASE_DIR.parent / "docs" / "data" / "activation_projections.json"
+OUTPUT_TRAJECTORIES = BASE_DIR.parent / "docs" / "data" / "activation_trajectories.json"
 
 LAYER_KEYS = ["0", "8", "16", "24", "32", "40", "48", "56", "63", "post_norm"]
 
@@ -229,6 +230,136 @@ def main():
 
     size_kb = OUTPUT_FILE.stat().st_size / 1024
     print(f"\nWrote {OUTPUT_FILE} ({size_kb:.0f} KB)")
+
+    print("\nGenerating trajectory data...")
+    generate_trajectories(acts, meta, probe, scenarios)
+
+
+def generate_trajectories(acts, meta, probe, scenarios):
+    """Generate per-prompt probe-direction projections, scenario gaps, and KDE curves."""
+    from scipy.stats import gaussian_kde
+
+    prompts = meta["prompts"]
+    n_prompts = len(prompts)
+
+    prompt_trajectories = []
+    for i in range(n_prompts):
+        prompt_trajectories.append({
+            "scenario_id": prompts[i]["scenario_id"],
+            "question_format": prompts[i]["question_format"],
+            "split": prompts[i]["split"],
+            "category": scenarios[prompts[i]["scenario_id"]]["category"],
+        })
+
+    edt_projs_by_layer = {}
+    cdt_projs_by_layer = {}
+    layer_stats = {}
+
+    for lk in LAYER_KEYS:
+        edt_acts = acts[f"edt_layer_{lk}"]
+        cdt_acts = acts[f"cdt_layer_{lk}"]
+
+        edt_mean = edt_acts.mean(axis=0)
+        cdt_mean = cdt_acts.mean(axis=0)
+        direction = edt_mean - cdt_mean
+        dir_norm = np.linalg.norm(direction)
+        if dir_norm > 0:
+            direction = direction / dir_norm
+
+        X = np.vstack([edt_acts, cdt_acts])
+        center = X.mean(axis=0)
+
+        edt_proj = (edt_acts - center) @ direction
+        cdt_proj = (cdt_acts - center) @ direction
+
+        edt_projs_by_layer[lk] = edt_proj
+        cdt_projs_by_layer[lk] = cdt_proj
+
+        pr = probe.get(lk, {})
+        layer_stats[lk] = {
+            "val_acc": round(pr.get("probe_accuracy", {}).get("val", 0), 4),
+            "test_acc": round(pr.get("probe_accuracy", {}).get("test", 0), 4),
+            "direction_norm": round(float(dir_norm), 2),
+        }
+
+    for i in range(n_prompts):
+        prompt_trajectories[i]["edt"] = [round(float(edt_projs_by_layer[lk][i]), 2) for lk in LAYER_KEYS]
+        prompt_trajectories[i]["cdt"] = [round(float(cdt_projs_by_layer[lk][i]), 2) for lk in LAYER_KEYS]
+
+    scenario_ids_seen = {}
+    for p in prompts:
+        sid = p["scenario_id"]
+        if sid not in scenario_ids_seen:
+            scenario_ids_seen[sid] = []
+        scenario_ids_seen[sid].append(prompts.index(p))
+
+    scenario_gaps = []
+    for sid, indices in scenario_ids_seen.items():
+        gaps = []
+        for lk in LAYER_KEYS:
+            edt_vals = [float(edt_projs_by_layer[lk][i]) for i in indices]
+            cdt_vals = [float(cdt_projs_by_layer[lk][i]) for i in indices]
+            gap = np.mean(edt_vals) - np.mean(cdt_vals)
+            gaps.append(round(float(gap), 2))
+        scenario_gaps.append({
+            "scenario_id": sid,
+            "title": scenarios[sid]["title"],
+            "category": scenarios[sid]["category"],
+            "gaps": gaps,
+            "n_prompts": len(indices),
+        })
+
+    scenario_gaps.sort(key=lambda s: (
+        {"newcomb_proper": 0, "near_newcomb": 1, "control": 2}.get(s["category"], 3),
+        -abs(s["gaps"][-2])
+    ))
+
+    kde_curves = {}
+    all_edt = np.concatenate([edt_projs_by_layer[lk] for lk in LAYER_KEYS])
+    all_cdt = np.concatenate([cdt_projs_by_layer[lk] for lk in LAYER_KEYS])
+    global_min = float(min(all_edt.min(), all_cdt.min()))
+    global_max = float(max(all_edt.max(), all_cdt.max()))
+    margin = (global_max - global_min) * 0.1
+    x_grid = np.linspace(global_min - margin, global_max + margin, 100)
+
+    for lk in LAYER_KEYS:
+        edt_vals = edt_projs_by_layer[lk]
+        cdt_vals = cdt_projs_by_layer[lk]
+
+        try:
+            edt_kde = gaussian_kde(edt_vals)
+            edt_density = edt_kde(x_grid)
+        except Exception:
+            edt_density = np.zeros_like(x_grid)
+
+        try:
+            cdt_kde = gaussian_kde(cdt_vals)
+            cdt_density = cdt_kde(x_grid)
+        except Exception:
+            cdt_density = np.zeros_like(x_grid)
+
+        kde_curves[lk] = {
+            "edt": [round(float(v), 6) for v in edt_density],
+            "cdt": [round(float(v), 6) for v in cdt_density],
+            "edt_mean": round(float(edt_vals.mean()), 2),
+            "cdt_mean": round(float(cdt_vals.mean()), 2),
+        }
+
+    output = {
+        "layers": LAYER_KEYS,
+        "layer_stats": layer_stats,
+        "x_grid": [round(float(v), 2) for v in x_grid],
+        "kde_curves": kde_curves,
+        "scenario_gaps": scenario_gaps,
+        "prompts": prompt_trajectories,
+    }
+
+    OUTPUT_TRAJECTORIES.parent.mkdir(parents=True, exist_ok=True)
+    with open(OUTPUT_TRAJECTORIES, "w") as f:
+        json.dump(output, f)
+
+    size_kb = OUTPUT_TRAJECTORIES.stat().st_size / 1024
+    print(f"Wrote {OUTPUT_TRAJECTORIES} ({size_kb:.0f} KB)")
 
 
 if __name__ == "__main__":
