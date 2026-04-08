@@ -256,7 +256,7 @@
 
 <div class="section">
   <div class="section-title">Ridgeline: EDT/CDT Distribution by Layer</div>
-  <div class="section-subtitle">Density curves showing how EDT (green) and CDT (orange) projection distributions separate across layers.</div>
+  <div class="section-subtitle">Density curves showing how EDT (green) and CDT (orange) projection distributions separate across layers. Peak height normalized per layer; x-axis is global (spread shows direction norm growth).</div>
   <div id="ridgeline-container">
     <svg id="ridgeline-svg" viewBox="0 0 800 520" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
@@ -439,11 +439,13 @@ function renderRidgeline() {
   const xMin = xGrid[0], xMax = xGrid[xGrid.length - 1];
   const sx = (v) => padL + (v - xMin) / (xMax - xMin) * plotW;
 
-  let maxDensity = 0;
+  const perLayerMaxDensity = {};
   for (const lk of DATA.layers) {
     const kd = DATA.kde_curves[lk];
-    for (const v of kd.edt) if (v > maxDensity) maxDensity = v;
-    for (const v of kd.cdt) if (v > maxDensity) maxDensity = v;
+    let m = 0;
+    for (const v of kd.edt) if (v > m) m = v;
+    for (const v of kd.cdt) if (v > m) m = v;
+    perLayerMaxDensity[lk] = m || 1;
   }
 
   let html = '';
@@ -454,6 +456,7 @@ function renderRidgeline() {
     const lk = DATA.layers[i];
     const kd = DATA.kde_curves[lk];
     const baseline = padT + (i + 1) * rowH;
+    const layerMax = perLayerMaxDensity[lk];
 
     const lbl = lk === 'post_norm' ? 'post_norm' : 'Layer ' + lk;
     const pr = DATA.layer_stats[lk];
@@ -467,7 +470,7 @@ function renderRidgeline() {
       let path = `M${sx(xGrid[0])},${baseline}`;
       for (let j = 0; j < xGrid.length; j++) {
         const x = sx(xGrid[j]);
-        const y = baseline - (density[j] / maxDensity) * rowH * overlapFactor;
+        const y = baseline - (density[j] / layerMax) * rowH * overlapFactor;
         path += ` L${x},${y}`;
       }
       path += ` L${sx(xGrid[xGrid.length - 1])},${baseline} Z`;

@@ -524,7 +524,8 @@ def save_results(run: EvalRun, output_dir: str = "logs/newcomblike_evals"):
                 "is_correct": r.is_correct,
                 "is_edt_aligned": r.is_edt_aligned,
                 "is_cdt_aligned": r.is_cdt_aligned,
-                "parse_error": r.parse_error
+                "parse_error": r.parse_error,
+                "raw_response": r.raw_response,
             }
             f.write(json.dumps(result) + "\n")
 
