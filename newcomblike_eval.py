@@ -225,6 +225,7 @@ def parse_answer(response: str, num_options: int) -> tuple[Optional[int], Option
     # Use case-insensitive matching on original response to preserve letter case
     # Only match A-D to avoid matching words like "answer is" -> "i"
     answer_patterns = [
+        r'\*\*(?:answer|choice)[:\s]+([A-Da-d])\*\*',  # **Answer: A** (common in R1/thinking models)
         r'(?:the correct answer is|therefore,?)[:\s]+\*\*([A-Da-d])\*\*',  # The correct answer is **A**
         r'(?:the correct answer is|therefore,?)[:\s]+\(?([A-Da-d])\)?(?:\.|,|\s|$)',  # The correct answer is A
         r'(?:answer|choice) is[:\s]+\*\*([A-Da-d])\*\*',  # answer is **A**
@@ -240,6 +241,16 @@ def parse_answer(response: str, num_options: int) -> tuple[Optional[int], Option
         match = re.search(pattern, response_stripped, re.IGNORECASE)
         if match:
             return try_letter(match.group(1))
+
+    # Phase 2b: LaTeX boxed answers (common in R1/thinking models)
+    boxed_match = re.search(r'\\boxed\{\\text\{([A-Da-d])\}\}', response_stripped)
+    if boxed_match:
+        return try_letter(boxed_match.group(1))
+
+    # Phase 2c: Bold letter at end of response (e.g. "should defect.  **B**")
+    bold_end_match = re.search(r'\*\*([A-Da-d])\*\*\s*$', response_stripped)
+    if bold_end_match:
+        return try_letter(bold_end_match.group(1))
 
     # Phase 3: Look for (A) anywhere in the response
     paren_match = re.search(r'\(([A-Z])\)', response_upper)

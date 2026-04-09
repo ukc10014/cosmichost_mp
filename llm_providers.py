@@ -59,6 +59,9 @@ MAX_TOKENS_ANTHROPIC = 512
 def is_gemini_model(model: str) -> bool:
     return model.startswith("gemini") or "gemini" in model.lower() or model.startswith("gemma")
 
+def is_together_model(model: str) -> bool:
+    return model.startswith("together:")
+
 def is_openrouter_model(model: str) -> bool:
     return "/" in model
 
@@ -107,6 +110,58 @@ def init_openrouter():
     api_key = api_key.strip().strip('"').strip("'")
     print(f"✓ OpenRouter API key loaded")
     return api_key
+
+
+def init_together():
+    api_key = os.getenv("TOGETHER_API_KEY")
+    if not api_key:
+        print("ERROR: TOGETHER_API_KEY not found in .env")
+        sys.exit(1)
+    api_key = api_key.strip().strip('"').strip("'")
+    print(f"✓ Together API key loaded")
+    return api_key
+
+
+MAX_TOKENS_TOGETHER = 8192
+
+
+def make_together_call(api_key: str, model: str):
+    def llm_call(messages, **kwargs):
+        url = "https://api.together.xyz/v1/chat/completions"
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+
+        payload = {
+            "model": model,
+            "messages": messages,
+            "temperature": TEMPERATURE,
+            "max_tokens": MAX_TOKENS_TOGETHER,
+        }
+
+        timeout = 180
+
+        try:
+            response = requests.post(url, headers=headers, json=payload, timeout=timeout)
+            response.raise_for_status()
+            data = response.json()
+
+            if "choices" in data and len(data["choices"]) > 0:
+                msg = data["choices"][0]["message"]
+                content = msg.get("content") or ""
+                if not content and msg.get("reasoning_content"):
+                    content = msg["reasoning_content"]
+                return content
+            return ""
+
+        except Exception as e:
+            print(f"\n  Together API error: {e}")
+            time.sleep(2)
+            raise
+
+    return llm_call
 
 
 def init_openai_client():
@@ -320,7 +375,11 @@ def init_llm_call(model: str):
 
     Returns a function with signature: llm_call(messages, **kwargs) -> str
     """
-    if is_openrouter_model(model):
+    if is_together_model(model):
+        api_key = init_together()
+        together_model = model[len("together:"):]
+        return make_together_call(api_key, together_model)
+    elif is_openrouter_model(model):
         api_key = init_openrouter()
         return make_openrouter_call(api_key, model)
     elif is_gemini_model(model):
@@ -348,4 +407,5 @@ def init_llm_call(model: str):
         print("  OpenAI: gpt-5.1, gpt-4o, o1-preview")
         print("  Anthropic: claude-opus-4-5-20251101, claude-sonnet-4-20250514")
         print("  OpenRouter: google/gemma-4-31b-it, deepseek/deepseek-r1, x-ai/grok-4-fast, qwen/qwen3.6-plus-preview")
+        print("  Together: together:deepseek-ai/DeepSeek-R1")
         sys.exit(1)

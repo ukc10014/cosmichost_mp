@@ -123,6 +123,70 @@ The case for pivoting to thinking models:
 
 **Verdict:** The v2 LoRA experiment is cheap to run and worth completing for closure. But regardless of that result, the thinking model direction is likely where the real signal is, and Nanda's recent tools make it tractable.
 
+## First Resampling Results: DeepSeek-R1 Baseline (2026-04-08)
+
+Ran the first CoT resampling experiment: 15 curated attitude questions, 10 samples each, DeepSeek-R1 via Together AI, no constitution (baseline). Full reasoning traces saved to `logs/cot_resampling/`.
+
+### Setup
+
+- **Model:** `deepseek-ai/DeepSeek-R1` (Together AI)
+- **Script:** `run_cot_resampling.py`
+- **Questions:** 15 selected for maximum analytical value --- near-50/50 cross-model splits, strong EDT/CDT divergers, and structural edge cases
+- **Samples per question:** 10
+- **Parse fixes required:** R1 uses `\boxed{\text{A}}` (LaTeX), `**Answer: A**` (bold-wrapped), and `**B**` (bare bold at end) --- three new patterns added to `parse_answer()` in `newcomblike_eval.py`
+
+### Results
+
+| QID | EDT | CDT | Err | EDT% | Topic |
+|-----|-----|-----|-----|------|-------|
+| 10.4ATT | 4 | 6 | 0 | 40% | Sequential PD against copy |
+| 41.3 | 10 | 0 | 0 | 100% | Adversarial offer |
+| 82.1 | 0 | 10 | 0 | 0% | Direct "EDT or CDT?" |
+| 66.4ATT | 10 | 10 | 0 | 50% | Donation graph |
+| 100.1ATT | 3 | 3 | 7 | 50% | Collusion (7 empty responses) |
+| 116.1ATT | 9 | 1 | 0 | 90% | Book predicting the reader |
+| 68.5ATT | 10 | 10 | 0 | 50% | Close copy coordination |
+| 109.2ATT | 9 | 9 | 1 | 50% | Epistemic tickle |
+| 30.1ATT | 8 | 2 | 0 | 80% | Stag hunt vs copy |
+| 35.1ATT | 10 | 0 | 0 | 100% | Newcomb calculations |
+| 89.1ATT | 4 | 3 | 3 | 57% | Econ Newcomb |
+| 81.1ATT | 1 | 9 | 0 | 10% | ECL moral advocacy |
+| 48.1ATT | 3 | 7 | 0 | 30% | Angelic intervention |
+| 52ATT | 8 | 2 | 0 | 80% | CDT's need for causal info |
+| 120.2ATT | 0 | 0 | 10 | --- | Newcomb w/ imperfect recall (all empty) |
+
+### Key observations
+
+**1. R1 says CDT but acts EDT on canonical problems.**
+On the direct meta-question "EDT or CDT?" (82.1), R1 is unanimously CDT (0% EDT). But on the canonical Newcomb calculation (35.1ATT), it is unanimously EDT (100%). And on the adversarial offer (41.3), it is unanimously EDT. This is a clear say/do dissociation --- R1 identifies as a causal decision theorist but one-boxes when faced with the actual problem. This is exactly the kind of dissociation that thought anchor analysis could decompose: where in the reasoning chain does the model commit to one-boxing despite its stated CDT allegiance?
+
+**2. Three questions are perfect 50/50 splits --- ideal for thought anchor analysis.**
+66.4ATT (donation graph), 68.5ATT (close copy coordination), and 109.2ATT (epistemic tickle) all split exactly 50/50 across 10 samples. These are the best candidates for the Bogdan et al. counterfactual resampling method: the model's reasoning is genuinely contested, so small differences in a single sentence should be identifiable as the pivot point that flips the answer.
+
+**3. R1 actively rejects ECL reasoning.**
+On 81.1ATT (ECL moral advocacy), R1 is 90% CDT --- the opposite of the cross-model average (75% EDT). A thinking model with strong reasoning capabilities is *more* skeptical of ECL-style arguments, not less. This is consistent with CDT being the "sophisticated" position that R1's training reinforces, while EDT/ECL gets treated as naive. The single EDT response in 10 samples would be interesting to compare against the 9 CDT traces to find what reasoning step differed.
+
+**4. Stag hunt result flipped from cross-model pattern.**
+30.1ATT (stag hunt vs copy) was 30% EDT across all models but 80% EDT for R1. The thinking model reasons its way to cooperation with copies more reliably than non-thinking models. This is a genuine reasoning effect --- the model works through the copy symmetry argument explicitly in its CoT.
+
+**5. Two questions produced mostly empty responses.**
+120.2ATT (Newcomb with imperfect recall) returned all 10 samples empty --- likely too complex or the model refused. 100.1ATT (collusion) had 7 empty responses. These may need higher `max_tokens` or a different prompting approach.
+
+### Next steps
+
+1. **Run with constitutions** (`--constitutions baseline ecl90 fdt`) to see whether constitutional prompts shift R1's reasoning patterns, not just its answers
+2. **Qualitative trace analysis** on the 50/50 questions (66.4ATT, 68.5ATT, 109.2ATT) --- read the 10 EDT and 10 CDT traces side by side, manually identify candidate thought anchors before applying the automated method
+3. **Compare 82.1 vs 35.1ATT traces** --- the say/do dissociation is the most interesting finding; the traces should reveal whether R1 explicitly acknowledges the tension
+4. **Fix empty responses** on 120.2ATT and 100.1ATT --- increase `max_tokens` or simplify the prompt
+5. **Increase N** to 20 for the 50/50 questions to get tighter distributions
+
+### Data location
+
+| Artifact | Path |
+|----------|------|
+| Raw resampling results (with full CoT traces) | `logs/cot_resampling/cot_resample_together-deepseek-ai-DeepSeek-R1_baseline_20260408T162133.jsonl` |
+| Resampling script | `run_cot_resampling.py` |
+
 ## References
 
 - Nanda, "A Pragmatic Vision for Interpretability" (LessWrong, Sept 2025)

@@ -29,6 +29,7 @@ from llm_providers import init_llm_call
 MODEL_REGISTRY = {
     "gemma4": "google/gemma-4-31b-it",
     "deepseek-r1": "deepseek/deepseek-r1",
+    "deepseek-r1-together": "together:deepseek-ai/DeepSeek-R1",
     "deepseek-v3": "deepseek/deepseek-v3.2",
     "qwen3.5": "qwen/qwen3.5-plus-02-15",
     "grok4": "x-ai/grok-4-fast",
