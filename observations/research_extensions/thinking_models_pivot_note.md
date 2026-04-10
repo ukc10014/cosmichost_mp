@@ -187,6 +187,65 @@ On 81.1ATT (ECL moral advocacy), R1 is 90% CDT --- the opposite of the cross-mod
 | Raw resampling results (with full CoT traces) | `logs/cot_resampling/cot_resample_together-deepseek-ai-DeepSeek-R1_baseline_20260408T162133.jsonl` |
 | Resampling script | `run_cot_resampling.py` |
 
+## Tooling: CoT Trace Viewer (2026-04-10)
+
+Built a self-contained HTML viewer for reading and comparing reasoning traces from the resampling logs.
+
+### Pipeline
+
+1. `prepare_cot_viewer_data.py` — reads all `logs/cot_resampling/cot_resample_*.jsonl` files, joins each sample's raw response to the matching question from the Oesterheld dataset (setup text, question text, labeled answers), and writes one JSON per run plus a manifest at `docs/data/cot_traces_manifest.json`. Run after any new resampling experiment to update the viewer.
+
+2. `docs/cot_trace_viewer.html` — self-contained dark-theme viewer (no external dependencies). Loads the manifest on startup and populates a run selector dropdown. Features:
+   - **Left sidebar:** question list with mini EDT/CDT/error bar charts; sortable by QID, EDT%, errors, or closeness to 50/50
+   - **Main panel (normal mode):** full question card (setup, question, labeled answers showing EDT/CDT alignment) + collapsible trace cards; first EDT and first CDT trace auto-expanded
+   - **Compare mode:** narrows main panel to a compact trace picker with `→ L` / `→ R` buttons; two full-height independently scrollable portrait columns appear to the right for side-by-side reading
+
+### Notes on parse errors in baseline run
+
+Several samples in the baseline JSONL show `parse_error` and null alignment flags despite containing complete, well-formed responses. These are **artifacts of parser version mismatch**: the resampling run pre-dated three parser fixes for R1-specific output formats (`\boxed{\text{A}}` LaTeX, `**Answer: A**` bold-wrapped, bare `**B**` at end of response). All affected responses are complete — none are truncated. The current `parse_answer()` in `newcomblike_eval.py` handles all three formats. Re-running the 15 questions with the current parser would produce clean classifications.
+
+## Qualitative Analysis: Question Selection and Discriminability (2026-04-10)
+
+### The `permissible_answers` / `correct_answer` distinction
+
+The Oesterheld dataset distinguishes:
+- **`permissible_answers`**: the multiple-choice options presented to the model (A, B, C, D list). "Permissible" here means "valid answer choices," not "philosophically permitted."
+- **`correct_answer`**: which index is right. For capabilities questions: a single integer. For attitude questions: a dict `{"EDT": int_or_list, "CDT": int_or_list}`.
+
+When `correct_answer` is a **list** for one theory (e.g., `{"EDT": 0, "CDT": [0, 1]}`), the dataset is flagging genuine theoretical ambiguity: both options are defensible from that theory's internal logic. This is not a data error — it marks questions where experts disagree about what the theory recommends, or where different formulations of the theory diverge.
+
+### Case study: 68.5ATT ("Should Theodora's decision depend on p?")
+
+**Setup (68.5 sub-scenario):** Theodora and Dorothea are extremely similar. For each action `a ∈ {1,...,10}`, if Theodora takes action `a`, Dorothea takes it with probability `p`. The payoff structure rewards coordination (matching non-zero numbers pays $2 each; choosing 0 pays $1 safely regardless).
+
+**`correct_answer`: `{"EDT": 0, "CDT": [0, 1]}`**  
+- `EDT: 0` → EDT says **Yes** (decision depends on p). Clear: evidential correlation with a copy makes p directly relevant to expected value. If `p > 0.5`, choosing any non-zero number gives `2p > 1`; if `p < 0.5`, choose 0.
+- `CDT: [0, 1]` → CDT can say **either**. The ambiguity has a precise source, explained by the dataset's own inline comment: *"CDT can answer yes, due to 1,...,10 not being ratifiable for p < 0.5."* Ratificationist CDT recognises that non-zero choices are only self-ratifying when `p ≥ 0.5`, so p still matters. But standard CDT that refuses to treat evidential correlations as causally relevant would say: Dorothea's choice is causally independent of Theodora's; p reflects an acausal correlation that CDT ignores; therefore p is irrelevant and the decision does not depend on it. The companion question **68.5CDT** makes this concrete: *"If Theodora is a causal decision theorist, is there some choice s.t. you can infer an upper bound on p?"* Answer: **No** — a CDT agent's choice reveals nothing about p, precisely because CDT doesn't use p.
+
+**Discriminability assessment:** This question is a weak EDT/CDT separator. The "Yes" (A) answer is E+C — it is compatible with EDT *and* with soft/ratificationist CDT. Only strict CDT (the philosophically demanding move of deliberately ignoring evidential correlations) produces "No" (B). Most models, including strong reasoners like R1, will naturally reach for p in their calculation because the conditional belief structure makes it obvious. The question is better read as testing whether a model has internalised strict CDT's refusal of evidential correlations — a subtle and non-obvious commitment.
+
+**What we observe:** In the baseline R1 run, all parseable 68.5ATT samples answer A (Yes), coded as E+C. R1 applies the evidential logic correctly but does not take the strict CDT position. This is consistent with R1's broader pattern: it self-identifies as CDT (82.1: 0% EDT) but applies EDT-aligned reasoning when directly confronted with the mathematical structure of a problem.
+
+### Implications for thought anchor selection
+
+**Correction (2026-04-10):** The original analysis below claimed 66.4ATT and 109.2ATT had clean EDT-vs-CDT separation. This was wrong. Checking `correct_answer` in the source dataset:
+
+- **66.4ATT** (donation graph): `{"EDT": 0, "CDT": 0}` — both theories agree on answer A. Not a discriminator at all. The 50/50 resampling split is capability noise (R1 getting a question wrong half the time), not EDT/CDT variance.
+- **109.2ATT** (epistemic tickle): `{"EDT": 0, "CDT": [0, 1]}` — same structure as 68.5ATT. Answer A is E+C, only B is CDT-only. Weak discriminator.
+- **68.5ATT** (close copy coordination): `{"EDT": 0, "CDT": [0, 1]}` — as analysed above, E+C vs CDT-only. Weak discriminator.
+
+All three "50/50 split" questions are compromised. None cleanly separate EDT from CDT.
+
+**Better candidates from the 15 already-resampled questions** (clean `correct_answer` separation + closest to 50/50):
+
+| QID | R1 EDT% | Topic | correct_answer |
+|---|---|---|---|
+| **10.4ATT** | 40% | PD against copy | `EDT: 0, CDT: 1` |
+| **89.1ATT** | 57% | Econ Newcomb (Fed vs markets) | `EDT: 0, CDT: 1` |
+| **48.1ATT** | 30% | Angelic intervention | `EDT: 0, CDT: 1` |
+
+Of the 76 attitude questions in the Oesterheld dataset, 64 have fully non-overlapping EDT/CDT correct answers. Future resampling runs should prioritise these for thought anchor analysis. **95.1ATT** (Alice/Alix acausal trade, `EDT: 0, CDT: 1`) is a strong addition — clean separation, ECL-relevant, and already a Tier 1 candidate for two-player adaptation.
+
 ## References
 
 - Nanda, "A Pragmatic Vision for Interpretability" (LessWrong, Sept 2025)

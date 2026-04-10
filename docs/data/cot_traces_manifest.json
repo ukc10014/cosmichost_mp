@@ -1,0 +1,12 @@
+{
+  "runs": [
+    {
+      "file": "cot_traces_together-deepseek-ai-DeepSeek-R1_baseline_20260408T162133.json",
+      "model": "together:deepseek-ai/DeepSeek-R1",
+      "constitution": "baseline",
+      "timestamp": "20260408T162133",
+      "n_questions": 15,
+      "n_samples": 10
+    }
+  ]
+}

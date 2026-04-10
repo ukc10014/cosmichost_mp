@@ -35,336 +35,225 @@
     overflow: hidden;
   }
 
+  /* --- Topbar --- */
   #topbar {
     background: var(--bg-raised);
     border-bottom: 1px solid var(--rule);
-    padding: 10px 18px;
+    padding: 8px 18px;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     flex-shrink: 0;
   }
-  #topbar h1 { font-size: 15px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.04em; }
-  #home-link {
-    font-size: 12px;
-    color: var(--accent);
-    text-decoration: none;
-    margin-left: auto;
+  #topbar h1 { font-size: 14px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.04em; white-space: nowrap; }
+  #run-select {
+    font-size: 12px; background: var(--bg); color: var(--text);
+    border: 1px solid var(--rule); border-radius: 4px; padding: 4px 8px;
+    flex: 1; max-width: 480px;
   }
-  #home-link:hover { text-decoration: underline; }
   .mode-toggle {
-    font-size: 12px;
-    padding: 4px 10px;
-    border-radius: 4px;
-    border: 1px solid var(--rule);
-    background: var(--bg);
-    color: var(--text-dim);
-    cursor: pointer;
+    font-size: 12px; padding: 4px 10px; border-radius: 4px;
+    border: 1px solid var(--rule); background: var(--bg);
+    color: var(--text-dim); cursor: pointer; white-space: nowrap;
   }
   .mode-toggle:hover { border-color: var(--accent-dim); color: var(--text); }
-  .mode-toggle.active { border-color: var(--accent); color: var(--accent); background: rgba(126, 232, 199, 0.1); }
+  .mode-toggle.active { border-color: var(--accent); color: var(--accent); background: rgba(126,232,199,0.1); }
+  #home-link { font-size: 12px; color: var(--accent); text-decoration: none; margin-left: auto; white-space: nowrap; }
+  #home-link:hover { text-decoration: underline; }
 
-  #layout {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
+  #meta-bar {
+    background: var(--bg-raised); border-bottom: 1px solid var(--rule);
+    padding: 3px 18px; font-size: 11px; color: var(--text-faint);
+    display: flex; gap: 20px; flex-shrink: 0;
   }
 
-  /* --- Left panel --- */
+  /* --- Layout --- */
+  #layout { display: flex; flex: 1; overflow: hidden; }
+
+  /* --- Question sidebar --- */
   #sidebar {
-    width: 280px;
-    min-width: 280px;
-    background: var(--bg-raised);
-    border-right: 1px solid var(--rule);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    width: 240px; min-width: 240px;
+    background: var(--bg-raised); border-right: 1px solid var(--rule);
+    display: flex; flex-direction: column; overflow: hidden;
+    transition: width 0.2s;
   }
-  #sidebar-header {
-    padding: 10px 14px 8px;
-    border-bottom: 1px solid var(--rule);
-  }
+  #sidebar-header { padding: 8px 12px 7px; border-bottom: 1px solid var(--rule); }
   #sidebar-header .label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: 600;
-    color: var(--text-dim);
-    margin-bottom: 6px;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+    font-weight: 600; color: var(--text-dim); margin-bottom: 5px;
   }
   #sort-select {
-    font-size: 12px;
-    background: var(--bg);
-    color: var(--text);
-    border: 1px solid var(--rule);
-    border-radius: 4px;
-    padding: 3px 6px;
-    width: 100%;
+    font-size: 12px; background: var(--bg); color: var(--text);
+    border: 1px solid var(--rule); border-radius: 4px; padding: 3px 5px; width: 100%;
   }
-  #question-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 4px 0;
-  }
+  #question-list { flex: 1; overflow-y: auto; padding: 3px 0; }
   .q-item {
-    padding: 8px 14px;
-    cursor: pointer;
-    border-left: 3px solid transparent;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    transition: background 0.1s;
+    padding: 7px 12px; cursor: pointer; border-left: 3px solid transparent;
+    display: flex; flex-direction: column; gap: 2px; transition: background 0.1s;
   }
   .q-item:hover { background: rgba(255,255,255,0.03); }
   .q-item.selected { background: rgba(126,232,199,0.06); border-left-color: var(--accent); }
-  .q-item .qid { font-size: 13px; font-weight: 600; color: var(--text); }
-  .q-item .setting { font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .q-item .bar-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
-  .mini-bar {
-    height: 6px;
-    border-radius: 3px;
-    flex: 1;
-    display: flex;
-    overflow: hidden;
-    background: var(--bg);
-  }
+  .q-item .qid { font-size: 12px; font-weight: 600; color: var(--text); }
+  .q-item .setting { font-size: 10px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .q-item .bar-row { display: flex; align-items: center; gap: 5px; margin-top: 1px; }
+  .mini-bar { height: 5px; border-radius: 2px; flex: 1; display: flex; overflow: hidden; background: var(--bg); }
   .mini-bar .seg-edt { background: var(--edt-color); }
   .mini-bar .seg-cdt { background: var(--cdt-color); }
   .mini-bar .seg-err { background: var(--error-color); opacity: 0.5; }
-  .q-item .counts {
-    font-size: 10px;
-    color: var(--text-faint);
-    white-space: nowrap;
-  }
+  .q-item .counts { font-size: 10px; color: var(--text-faint); white-space: nowrap; }
 
-  /* --- Main panel --- */
+  /* --- Main panel (question detail + traces) --- */
   #main {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px 28px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    flex: 1; overflow-y: auto; padding: 18px 24px;
+    display: flex; flex-direction: column; gap: 12px;
+    border-right: 1px solid var(--rule);
   }
-  #main.empty-state {
-    align-items: center;
-    justify-content: center;
-  }
-  .empty-msg {
-    color: var(--text-faint);
-    font-size: 14px;
+  #main.empty-state { align-items: center; justify-content: center; }
+  .empty-msg { color: var(--text-faint); font-size: 14px; }
+
+  /* In compare mode, main becomes a narrow trace picker */
+  #main.compare-mode {
+    width: 260px; min-width: 260px; flex: none;
+    padding: 10px 12px; gap: 6px;
   }
 
   /* Question card */
   .question-card {
-    background: var(--bg-raised);
-    border: 1px solid var(--rule);
-    border-radius: 8px;
-    padding: 16px 20px;
+    background: var(--bg-raised); border: 1px solid var(--rule);
+    border-radius: 7px; padding: 12px 16px;
   }
-  .question-card h2 {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--accent);
-    margin-bottom: 10px;
-  }
+  .question-card h2 { font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 7px; }
   .question-card .setup {
-    font-size: 13px;
-    color: var(--text-dim);
-    line-height: 1.5;
-    margin-bottom: 10px;
-    white-space: pre-wrap;
+    font-size: 12px; color: var(--text-dim); line-height: 1.45;
+    margin-bottom: 7px; white-space: pre-wrap;
   }
-  .question-card .q-text {
-    font-size: 14px;
-    color: var(--text);
-    line-height: 1.5;
-    margin-bottom: 10px;
-    font-weight: 500;
-  }
+  .question-card .q-text { font-size: 13px; color: var(--text); line-height: 1.45; margin-bottom: 7px; font-weight: 500; }
   .answer-list { list-style: none; }
   .answer-list li {
-    font-size: 13px;
-    padding: 4px 8px;
-    margin: 2px 0;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 12px; padding: 3px 7px; margin: 2px 0;
+    border-radius: 3px; display: flex; align-items: center; gap: 7px;
   }
-  .answer-list li .letter {
-    font-weight: 700;
-    width: 20px;
-    text-align: center;
-  }
+  .answer-list li .letter { font-weight: 700; width: 18px; text-align: center; }
   .answer-list li.edt-answer { background: var(--edt-bg); border-left: 3px solid var(--edt-color); }
   .answer-list li.cdt-answer { background: var(--cdt-bg); border-left: 3px solid var(--cdt-color); }
   .answer-list li.both-answer { background: linear-gradient(90deg, var(--edt-bg), var(--cdt-bg)); border-left: 3px solid var(--accent); }
   .tag-badge {
-    display: inline-block;
-    font-size: 10px;
-    padding: 1px 6px;
-    border-radius: 3px;
-    background: rgba(126,232,199,0.12);
-    color: var(--accent-dim);
-    margin-left: 4px;
+    display: inline-block; font-size: 10px; padding: 1px 5px;
+    border-radius: 3px; background: rgba(126,232,199,0.12); color: var(--accent-dim);
   }
+  .q-stats { margin-top: 5px; font-size: 11px; color: var(--text-faint); }
+
+  /* Compact question card in compare mode */
+  .question-card.compact h2 { font-size: 12px; margin-bottom: 4px; }
+  .question-card.compact .setup { font-size: 11px; margin-bottom: 4px; max-height: 60px; overflow: hidden; }
+  .question-card.compact .q-text { font-size: 12px; margin-bottom: 4px; }
+  .question-card.compact .answer-list li { font-size: 11px; padding: 2px 6px; }
+  .question-card.compact .q-stats { font-size: 10px; }
 
   /* Traces section */
-  .traces-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .traces-header h3 {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-dim);
-  }
-  .filter-btns {
-    display: flex;
-    gap: 4px;
-  }
+  .traces-header { display: flex; align-items: center; gap: 8px; }
+  .traces-header h3 { font-size: 12px; font-weight: 600; color: var(--text-dim); }
+  .filter-btns { display: flex; gap: 3px; }
   .filter-btn {
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 3px;
-    border: 1px solid var(--rule);
-    background: transparent;
-    color: var(--text-dim);
-    cursor: pointer;
+    font-size: 10px; padding: 2px 6px; border-radius: 3px;
+    border: 1px solid var(--rule); background: transparent; color: var(--text-dim); cursor: pointer;
   }
   .filter-btn:hover { border-color: var(--text-faint); }
   .filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(126,232,199,0.08); }
 
-  /* Trace card */
+  /* Trace card — full (normal mode) */
   .trace-card {
-    background: var(--bg-card);
-    border: 1px solid var(--rule);
-    border-radius: 6px;
-    overflow: hidden;
+    background: var(--bg-card); border: 1px solid var(--rule);
+    border-radius: 5px; overflow: hidden;
   }
   .trace-header {
-    padding: 8px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    user-select: none;
-    transition: background 0.1s;
+    padding: 7px 11px; display: flex; align-items: center; gap: 7px;
+    cursor: pointer; user-select: none; transition: background 0.1s;
   }
   .trace-header:hover { background: rgba(255,255,255,0.02); }
-  .trace-header .chevron {
-    font-size: 10px;
-    color: var(--text-faint);
-    transition: transform 0.15s;
-    width: 14px;
+  .chevron {
+    font-size: 9px; color: var(--text-faint);
+    transition: transform 0.15s; width: 11px; flex-shrink: 0;
   }
-  .trace-card.open .trace-header .chevron { transform: rotate(90deg); }
-  .trace-header .idx {
-    font-size: 12px;
-    color: var(--text-faint);
-    font-weight: 600;
-    width: 18px;
-  }
+  .trace-card.open .chevron { transform: rotate(90deg); }
+  .trace-num { font-size: 11px; color: var(--text-faint); font-weight: 600; width: 15px; flex-shrink: 0; }
   .dt-badge {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 3px;
-    letter-spacing: 0.04em;
+    font-size: 10px; font-weight: 700; padding: 2px 6px;
+    border-radius: 3px; letter-spacing: 0.03em; flex-shrink: 0;
   }
-  .dt-badge.edt { background: var(--edt-bg); color: var(--edt-color); border: 1px solid rgba(126,232,199,0.25); }
-  .dt-badge.cdt { background: var(--cdt-bg); color: var(--cdt-color); border: 1px solid rgba(232,168,126,0.25); }
-  .dt-badge.err { background: var(--error-bg); color: var(--error-color); border: 1px solid rgba(232,126,126,0.25); }
-  .trace-header .answer-text {
-    font-size: 12px;
-    color: var(--text-dim);
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .dt-badge.edt { background: var(--edt-bg); color: var(--edt-color); border: 1px solid rgba(126,232,199,0.2); }
+  .dt-badge.cdt { background: var(--cdt-bg); color: var(--cdt-color); border: 1px solid rgba(232,168,126,0.2); }
+  .dt-badge.err { background: var(--error-bg); color: var(--error-color); border: 1px solid rgba(232,126,126,0.2); }
+  .trace-preview {
+    font-size: 11px; color: var(--text-dim); flex: 1;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .trace-header .compare-check {
-    font-size: 11px;
-    color: var(--text-faint);
-    cursor: pointer;
-    padding: 2px 6px;
-    border-radius: 3px;
-    border: 1px solid var(--rule);
-  }
-  .trace-header .compare-check:hover { border-color: var(--text-faint); }
-  .trace-header .compare-check.selected { border-color: var(--accent); color: var(--accent); background: rgba(126,232,199,0.1); }
-  .trace-body {
-    display: none;
-    padding: 12px 14px 14px;
-    border-top: 1px solid var(--rule);
-  }
+  .trace-body { display: none; padding: 9px 11px 11px; border-top: 1px solid var(--rule); }
   .trace-card.open .trace-body { display: block; }
+  .trace-body .error-msg { font-size: 11px; color: var(--error-color); margin-bottom: 5px; }
   .trace-body .response-text {
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--text);
-    white-space: pre-wrap;
-    word-wrap: break-word;
+    font-size: 12px; line-height: 1.6; color: var(--text);
+    white-space: pre-wrap; word-wrap: break-word;
     font-family: "SF Mono", "Cascadia Code", "Menlo", monospace;
-    max-height: 600px;
-    overflow-y: auto;
-    padding: 10px;
-    background: var(--bg);
-    border-radius: 4px;
-  }
-  .trace-body .error-msg {
-    font-size: 12px;
-    color: var(--error-color);
-    margin-bottom: 8px;
+    padding: 9px; background: var(--bg); border-radius: 4px;
   }
 
-  /* Comparison mode */
+  /* Trace row — compact picker (compare mode) */
+  .trace-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 7px; border-radius: 4px; cursor: default;
+    border: 1px solid transparent;
+  }
+  .trace-row.selected-left { border-color: var(--edt-color); background: rgba(126,232,199,0.05); }
+  .trace-row.selected-right { border-color: var(--cdt-color); background: rgba(232,168,126,0.05); }
+  .trace-row .preview { font-size: 11px; color: var(--text-faint); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .slot-btn {
+    font-size: 10px; padding: 2px 6px; border-radius: 3px;
+    border: 1px solid var(--rule); background: transparent; color: var(--text-dim);
+    cursor: pointer; flex-shrink: 0; white-space: nowrap;
+  }
+  .slot-btn:hover { border-color: var(--text-faint); color: var(--text); }
+  .slot-btn.assigned-left { border-color: var(--edt-color); color: var(--edt-color); background: var(--edt-bg); }
+  .slot-btn.assigned-right { border-color: var(--cdt-color); color: var(--cdt-color); background: var(--cdt-bg); }
+
+  /* --- Compare panel --- */
   #compare-panel {
     display: none;
     flex: 1;
+    flex-direction: column;
     overflow: hidden;
   }
   #compare-panel.active { display: flex; }
-  #main.compare-hidden { display: none; }
+
+  .compare-cols {
+    flex: 1; display: flex; overflow: hidden;
+  }
   .compare-col {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
+    flex: 1; overflow-y: auto; display: flex; flex-direction: column;
     border-right: 1px solid var(--rule);
   }
   .compare-col:last-child { border-right: none; }
-  .compare-col h3 {
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .compare-col .response-text {
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--text);
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    font-family: "SF Mono", "Cascadia Code", "Menlo", monospace;
-    padding: 10px;
-    background: var(--bg);
-    border-radius: 4px;
-  }
 
-  /* Metadata */
-  #meta-bar {
-    background: var(--bg-raised);
-    border-bottom: 1px solid var(--rule);
-    padding: 4px 18px;
-    font-size: 11px;
-    color: var(--text-faint);
-    display: flex;
-    gap: 20px;
+  .col-header {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--bg-raised); border-bottom: 1px solid var(--rule);
+    padding: 8px 12px; display: flex; align-items: center; gap: 7px;
     flex-shrink: 0;
+  }
+  .col-header .col-slot { font-size: 11px; font-weight: 700; color: var(--text-dim); letter-spacing: 0.04em; }
+  .col-header .col-answer { font-size: 12px; color: var(--text); }
+
+  .col-body { padding: 12px; flex: 1; }
+  .col-empty {
+    padding: 32px 12px; text-align: center;
+    color: var(--text-faint); font-size: 12px; line-height: 1.6;
+  }
+  .col-error { font-size: 11px; color: var(--error-color); margin-bottom: 8px; }
+  .col-response {
+    font-size: 12px; line-height: 1.65; color: var(--text);
+    white-space: pre-wrap; word-wrap: break-word;
+    font-family: "SF Mono", "Cascadia Code", "Menlo", monospace;
+    padding: 10px; background: var(--bg); border-radius: 4px;
   }
 
   /* Scrollbar */
@@ -378,80 +267,159 @@
 
 <div id="topbar">
   <h1>CoT Trace Viewer</h1>
+  <select id="run-select" onchange="loadRun(this.value)">
+    <option value="">Loading…</option>
+  </select>
   <button class="mode-toggle" id="compare-btn" onclick="toggleCompare()">Compare Mode</button>
   <a id="home-link" href="index.html">Home</a>
 </div>
 <div id="meta-bar">
-  <span id="meta-model"></span>
-  <span id="meta-constitution"></span>
-  <span id="meta-timestamp"></span>
-  <span id="meta-counts"></span>
+  <span id="meta-model">—</span>
+  <span id="meta-constitution">—</span>
+  <span id="meta-timestamp">—</span>
+  <span id="meta-counts">—</span>
 </div>
 
 <div id="layout">
+
+  <!-- Question list sidebar -->
   <div id="sidebar">
     <div id="sidebar-header">
       <div class="label">Questions</div>
-      <select id="sort-select" onchange="sortQuestions()">
+      <select id="sort-select" onchange="renderSidebar()">
         <option value="qid">Sort by QID</option>
         <option value="edt_pct">Sort by EDT%</option>
         <option value="errors">Sort by Errors</option>
-        <option value="split">Sort by Closeness to 50/50</option>
+        <option value="split">Closest to 50/50</option>
       </select>
     </div>
     <div id="question-list"></div>
   </div>
 
+  <!-- Main panel: full trace view (normal) or compact picker (compare mode) -->
   <div id="main" class="empty-state">
-    <div class="empty-msg">Select a question from the left panel</div>
+    <div class="empty-msg">Select a question to begin</div>
   </div>
 
-  <div id="compare-panel"></div>
+  <!-- Compare panel: two portrait columns -->
+  <div id="compare-panel">
+    <div class="compare-cols">
+      <div class="compare-col" id="col-left">
+        <div class="col-header">
+          <span class="dt-badge err">L</span>
+          <span class="col-slot">LEFT</span>
+        </div>
+        <div class="col-body">
+          <div class="col-empty">Select a trace from the picker and click "→ L"</div>
+        </div>
+      </div>
+      <div class="compare-col" id="col-right">
+        <div class="col-header">
+          <span class="dt-badge err">R</span>
+          <span class="col-slot">RIGHT</span>
+        </div>
+        <div class="col-body">
+          <div class="col-empty">Select a second trace and click "→ R"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
 let DATA = null;
 let selectedQid = null;
 let compareMode = false;
-let compareSelections = [];
+let compareLeft = null;
+let compareRight = null;
 let traceFilter = 'all';
+
+/* ---- Init ---- */
 
 async function init() {
   try {
-    const resp = await fetch('data/cot_traces.json');
+    const resp = await fetch('data/cot_traces_manifest.json');
+    const manifest = await resp.json();
+    const runs = manifest.runs || [];
+    const sel = document.getElementById('run-select');
+    sel.innerHTML = runs.map(r =>
+      `<option value="data/${r.file}">${r.model} / ${r.constitution} / ${r.timestamp}</option>`
+    ).join('');
+    if (runs.length > 0) await loadRun('data/' + runs[0].file);
+  } catch (e) {
+    console.warn('Manifest failed, trying fallback:', e);
+    document.getElementById('run-select').innerHTML = '<option value="data/cot_traces.json">Default</option>';
+    await loadRun('data/cot_traces.json');
+  }
+}
+
+async function loadRun(url) {
+  if (!url) return;
+  try {
+    const resp = await fetch(url);
     DATA = await resp.json();
-  } catch(e) {
-    document.getElementById('main').innerHTML = '<div class="empty-msg">Failed to load data/cot_traces.json</div>';
+  } catch (e) {
+    document.getElementById('main').innerHTML = `<div class="empty-msg">Failed to load ${url}</div>`;
     return;
   }
+  selectedQid = null;
+  compareLeft = null;
+  compareRight = null;
+  if (compareMode) { compareMode = false; document.getElementById('compare-btn').classList.remove('active'); }
+  updateLayout();
+  updateMetaBar();
+  renderSidebar();
+  showEmpty();
+}
 
+function updateMetaBar() {
+  if (!DATA) return;
   const m = DATA.metadata;
   document.getElementById('meta-model').textContent = 'Model: ' + m.model;
   document.getElementById('meta-constitution').textContent = 'Constitution: ' + m.constitution;
   document.getElementById('meta-timestamp').textContent = 'Run: ' + m.timestamp;
-  document.getElementById('meta-counts').textContent = m.n_questions + ' questions, ' + m.n_samples + ' samples each';
-
-  renderSidebar();
+  const total = Object.values(DATA.questions).reduce((s, q) => s + q.total, 0);
+  document.getElementById('meta-counts').textContent = m.n_questions + ' questions · ' + total + ' samples';
 }
 
+function updateLayout() {
+  const main = document.getElementById('main');
+  const cp = document.getElementById('compare-panel');
+  if (compareMode) {
+    main.classList.add('compare-mode');
+    main.classList.remove('empty-state');
+    cp.classList.add('active');
+  } else {
+    main.classList.remove('compare-mode');
+    cp.classList.remove('active');
+  }
+}
+
+function showEmpty() {
+  const main = document.getElementById('main');
+  if (!compareMode) {
+    main.className = 'empty-state';
+    main.innerHTML = '<div class="empty-msg">Select a question to begin</div>';
+  }
+}
+
+/* ---- Sidebar ---- */
+
 function getQuestionOrder() {
-  const sort = document.getElementById('sort-select').value;
+  if (!DATA) return [];
   const qs = Object.values(DATA.questions);
+  const sort = document.getElementById('sort-select').value;
   if (sort === 'edt_pct') {
-    qs.sort((a, b) => {
-      const pa = a.total > 0 ? a.edt_count / a.total : 0;
-      const pb = b.total > 0 ? b.edt_count / b.total : 0;
-      return pb - pa;
-    });
+    qs.sort((a, b) => (b.edt_count / (b.total||1)) - (a.edt_count / (a.total||1)));
   } else if (sort === 'errors') {
     qs.sort((a, b) => b.error_count - a.error_count);
   } else if (sort === 'split') {
     qs.sort((a, b) => {
-      const valid_a = a.edt_count + a.cdt_count;
-      const valid_b = b.edt_count + b.cdt_count;
-      const split_a = valid_a > 0 ? Math.abs(0.5 - a.edt_count / valid_a) : 1;
-      const split_b = valid_b > 0 ? Math.abs(0.5 - b.edt_count / valid_b) : 1;
-      return split_a - split_b;
+      const va = a.edt_count + a.cdt_count, vb = b.edt_count + b.cdt_count;
+      const sa = va > 0 ? Math.abs(0.5 - a.edt_count/va) : 1;
+      const sb = vb > 0 ? Math.abs(0.5 - b.edt_count/vb) : 1;
+      return sa - sb;
     });
   } else {
     qs.sort((a, b) => a.qid.localeCompare(b.qid, undefined, {numeric: true}));
@@ -461,22 +429,21 @@ function getQuestionOrder() {
 
 function renderSidebar() {
   const list = document.getElementById('question-list');
+  if (!DATA) { list.innerHTML = ''; return; }
   const qs = getQuestionOrder();
   list.innerHTML = qs.map(q => {
-    const total = q.total || 1;
-    const edtW = (q.edt_count / total * 100).toFixed(0);
-    const cdtW = (q.cdt_count / total * 100).toFixed(0);
-    const errW = (q.error_count / total * 100).toFixed(0);
+    const t = q.total || 1;
+    const eW = (q.edt_count/t*100).toFixed(0), cW = (q.cdt_count/t*100).toFixed(0), eR = (q.error_count/t*100).toFixed(0);
     const sel = q.qid === selectedQid ? ' selected' : '';
-    const setting = q.setting_file.replace('setting', '').replace('.json', '').replace(/_/g, ' ');
+    const setting = q.setting_file.replace(/^setting\d*/, '').replace('.json','').replace(/_/g,' ').trim();
     return `<div class="q-item${sel}" onclick="selectQuestion('${q.qid}')">
       <span class="qid">${q.qid}</span>
       <span class="setting">${setting}</span>
       <div class="bar-row">
         <div class="mini-bar">
-          <div class="seg-edt" style="width:${edtW}%"></div>
-          <div class="seg-cdt" style="width:${cdtW}%"></div>
-          <div class="seg-err" style="width:${errW}%"></div>
+          <div class="seg-edt" style="width:${eW}%"></div>
+          <div class="seg-cdt" style="width:${cW}%"></div>
+          <div class="seg-err" style="width:${eR}%"></div>
         </div>
         <span class="counts">E${q.edt_count} C${q.cdt_count} ?${q.error_count}</span>
       </div>
@@ -484,94 +451,65 @@ function renderSidebar() {
   }).join('');
 }
 
-function sortQuestions() {
-  renderSidebar();
-}
+/* ---- Question selection ---- */
 
 function selectQuestion(qid) {
   selectedQid = qid;
-  compareSelections = [];
+  compareLeft = null;
+  compareRight = null;
   renderSidebar();
-  if (compareMode) exitCompare();
-  renderMain();
+  if (compareMode) {
+    renderMainPicker();
+    renderCompareCol('left');
+    renderCompareCol('right');
+  } else {
+    renderMainFull();
+  }
 }
 
-function renderMain() {
+/* ---- Main panel: full view (normal mode) ---- */
+
+function renderMainFull() {
   const main = document.getElementById('main');
-  if (!selectedQid) {
-    main.className = 'empty-state';
-    main.innerHTML = '<div class="empty-msg">Select a question from the left panel</div>';
-    return;
-  }
+  if (!selectedQid || !DATA) { showEmpty(); return; }
   main.className = '';
   const q = DATA.questions[selectedQid];
+  if (!q) { showEmpty(); return; }
 
-  let answersHtml = q.answers.map(a => {
+  const answersHtml = q.answers.map(a => {
     let cls = '';
     if (a.label === 'EDT') cls = 'edt-answer';
     else if (a.label === 'CDT') cls = 'cdt-answer';
     else if (a.label === 'EDT+CDT') cls = 'both-answer';
-    const badge = a.label ? `<span class="tag-badge">${a.label}</span>` : '';
-    return `<li class="${cls}"><span class="letter">${a.letter})</span> ${escHtml(a.text)}${badge}</li>`;
+    const badge = a.label ? ` <span class="tag-badge">${a.label}</span>` : '';
+    return `<li class="${cls}"><span class="letter">${a.letter})</span>${escHtml(a.text)}${badge}</li>`;
   }).join('');
 
   const tagsHtml = q.tags.map(t => `<span class="tag-badge">${escHtml(t)}</span>`).join(' ');
-
-  const edtPct = q.total > 0 ? (q.edt_count / q.total * 100).toFixed(0) : '-';
+  const edtPct = q.total > 0 ? (q.edt_count/q.total*100).toFixed(0) : '-';
 
   let filtered = q.samples;
   if (traceFilter === 'edt') filtered = q.samples.filter(s => s.is_edt_aligned);
   else if (traceFilter === 'cdt') filtered = q.samples.filter(s => s.is_cdt_aligned);
-  else if (traceFilter === 'error') filtered = q.samples.filter(s => s.parse_error);
+  else if (traceFilter === 'error') filtered = q.samples.filter(s => s.parse_error && !s.is_edt_aligned && !s.is_cdt_aligned);
 
   const firstEdt = q.samples.findIndex(s => s.is_edt_aligned);
   const firstCdt = q.samples.findIndex(s => s.is_cdt_aligned);
 
-  const tracesHtml = filtered.map(s => {
-    let badge, badgeCls;
-    if (s.parse_error) { badge = 'ERR'; badgeCls = 'err'; }
-    else if (s.is_edt_aligned) { badge = 'EDT'; badgeCls = 'edt'; }
-    else if (s.is_cdt_aligned) { badge = 'CDT'; badgeCls = 'cdt'; }
-    else { badge = '?'; badgeCls = 'err'; }
-
-    const autoOpen = (s.sample_idx === firstEdt || s.sample_idx === firstCdt) ? ' open' : '';
-    const answer = s.model_answer || '(no answer)';
-    const preview = s.raw_response ? s.raw_response.substring(0, 100).replace(/\n/g, ' ') + '...' : '';
-    const errorLine = s.parse_error ? `<div class="error-msg">Parse error: ${escHtml(s.parse_error)}</div>` : '';
-    const responseText = s.raw_response ? escHtml(s.raw_response) : '<em style="color:var(--text-faint)">(empty response)</em>';
-    const compSel = compareSelections.includes(s.sample_idx) ? ' selected' : '';
-
-    return `<div class="trace-card${autoOpen}" id="trace-${s.sample_idx}">
-      <div class="trace-header" onclick="toggleTrace(${s.sample_idx}, event)">
-        <span class="chevron">&#9654;</span>
-        <span class="idx">#${s.sample_idx}</span>
-        <span class="dt-badge ${badgeCls}">${badge}</span>
-        <span class="answer-text">${escHtml(answer)} &mdash; ${escHtml(preview)}</span>
-        ${compareMode ? `<span class="compare-check${compSel}" onclick="toggleCompareSelect(${s.sample_idx}, event)">compare</span>` : ''}
-      </div>
-      <div class="trace-body">
-        ${errorLine}
-        <div class="response-text">${responseText}</div>
-      </div>
-    </div>`;
+  const filterBtns = ['all','edt','cdt','error'].map(f => {
+    const active = traceFilter===f ? ' active':'';
+    return `<button class="filter-btn${active}" onclick="setFilter('${f}')">${{all:'All',edt:'EDT',cdt:'CDT',error:'Errors'}[f]}</button>`;
   }).join('');
 
-  const filterBtns = ['all', 'edt', 'cdt', 'error'].map(f => {
-    const active = traceFilter === f ? ' active' : '';
-    const labels = {all: 'All', edt: 'EDT', cdt: 'CDT', error: 'Errors'};
-    return `<button class="filter-btn${active}" onclick="setFilter('${f}')">${labels[f]}</button>`;
-  }).join('');
+  const tracesHtml = filtered.map(s => fullTraceCard(s, firstEdt, firstCdt)).join('');
 
   main.innerHTML = `
     <div class="question-card">
-      <h2>${escHtml(q.qid)} &mdash; ${escHtml(q.setting_file.replace('.json','').replace(/_/g,' '))}</h2>
+      <h2>${escHtml(q.qid)} — ${escHtml(q.setting_file.replace('.json','').replace(/_/g,' '))}</h2>
       ${q.setup ? `<div class="setup">${escHtml(q.setup)}</div>` : ''}
       <div class="q-text">${escHtml(q.question_text)}</div>
       <ul class="answer-list">${answersHtml}</ul>
-      <div style="margin-top:8px;font-size:12px;color:var(--text-faint)">
-        EDT ${q.edt_count}/${q.total} (${edtPct}%) | CDT ${q.cdt_count} | Errors ${q.error_count}
-        &nbsp;&nbsp; ${tagsHtml}
-      </div>
+      <div class="q-stats">EDT ${q.edt_count}/${q.total} (${edtPct}%) · CDT ${q.cdt_count} · Errors ${q.error_count} &nbsp;${tagsHtml}</div>
     </div>
     <div class="traces-header">
       <h3>Traces (${filtered.length}/${q.total})</h3>
@@ -581,89 +519,159 @@ function renderMain() {
   `;
 }
 
-function toggleTrace(idx, event) {
-  if (event.target.classList.contains('compare-check')) return;
-  const card = document.getElementById('trace-' + idx);
-  if (card) card.classList.toggle('open');
+function fullTraceCard(s, firstEdtIdx, firstCdtIdx) {
+  const {badge, cls} = badgeFor(s);
+  const autoOpen = (s.sample_idx===firstEdtIdx || s.sample_idx===firstCdtIdx) ? ' open' : '';
+  const preview = s.raw_response ? s.raw_response.substring(0,80).replace(/\n/g,' ')+'…' : '(empty)';
+  const errorLine = s.parse_error ? `<div class="error-msg">⚠ ${escHtml(s.parse_error)}</div>` : '';
+  const responseText = s.raw_response ? escHtml(s.raw_response) : '<em style="color:var(--text-faint)">(empty)</em>';
+  return `<div class="trace-card${autoOpen}" id="trace-${s.sample_idx}">
+    <div class="trace-header" onclick="this.closest('.trace-card').classList.toggle('open')">
+      <span class="chevron">&#9654;</span>
+      <span class="trace-num">#${s.sample_idx}</span>
+      <span class="dt-badge ${cls}">${badge}</span>
+      <span class="trace-preview">${escHtml(s.model_answer||'')} — ${escHtml(preview)}</span>
+    </div>
+    <div class="trace-body">
+      ${errorLine}
+      <div class="response-text">${responseText}</div>
+    </div>
+  </div>`;
 }
 
-function setFilter(f) {
-  traceFilter = f;
-  renderMain();
+function setFilter(f) { traceFilter = f; renderMainFull(); }
+
+/* ---- Main panel: compact picker (compare mode) ---- */
+
+function renderMainPicker() {
+  const main = document.getElementById('main');
+  main.className = 'compare-mode';
+  if (!selectedQid || !DATA) {
+    main.innerHTML = '<div style="color:var(--text-faint);font-size:12px;padding:12px">Select a question</div>';
+    return;
+  }
+  const q = DATA.questions[selectedQid];
+  if (!q) return;
+
+  const answersHtml = q.answers.map(a => {
+    let cls = '';
+    if (a.label==='EDT') cls='edt-answer';
+    else if (a.label==='CDT') cls='cdt-answer';
+    else if (a.label==='EDT+CDT') cls='both-answer';
+    const badge = a.label ? ` <span class="tag-badge">${a.label}</span>` : '';
+    return `<li class="${cls}"><span class="letter">${a.letter})</span>${escHtml(a.text)}${badge}</li>`;
+  }).join('');
+
+  const rowsHtml = q.samples.map(s => {
+    const {badge, cls} = badgeFor(s);
+    const preview = s.raw_response ? s.raw_response.substring(0,45).replace(/\n/g,' ')+'…' : '(empty)';
+    const isLeft = compareLeft===s.sample_idx, isRight = compareRight===s.sample_idx;
+    const rowCls = isLeft ? ' selected-left' : (isRight ? ' selected-right' : '');
+    const lBtn = `<button class="slot-btn${isLeft?' assigned-left':''}" onclick="assignSlot('left',${s.sample_idx})">→ L</button>`;
+    const rBtn = `<button class="slot-btn${isRight?' assigned-right':''}" onclick="assignSlot('right',${s.sample_idx})">→ R</button>`;
+    return `<div class="trace-row${rowCls}">
+      <span class="dt-badge ${cls}">${badge}</span>
+      <span class="trace-num" style="font-size:10px;color:var(--text-faint)">#${s.sample_idx}</span>
+      <span class="preview">${escHtml(preview)}</span>
+      ${lBtn}${rBtn}
+    </div>`;
+  }).join('');
+
+  main.innerHTML = `
+    <div class="question-card compact">
+      <h2>${escHtml(q.qid)}</h2>
+      ${q.setup ? `<div class="setup">${escHtml(q.setup)}</div>` : ''}
+      <div class="q-text">${escHtml(q.question_text)}</div>
+      <ul class="answer-list">${answersHtml}</ul>
+    </div>
+    <div class="traces-header"><h3>Pick traces</h3></div>
+    ${rowsHtml}
+  `;
 }
+
+/* ---- Compare columns ---- */
+
+function assignSlot(side, idx) {
+  if (side === 'left') compareLeft = (compareLeft===idx ? null : idx);
+  else compareRight = (compareRight===idx ? null : idx);
+  renderMainPicker();
+  renderCompareCol(side);
+}
+
+function renderCompareCol(side) {
+  const el = document.getElementById('col-' + side);
+  const idx = side==='left' ? compareLeft : compareRight;
+  const label = side==='left' ? 'LEFT' : 'RIGHT';
+  const slotBadgeCls = side==='left' ? 'edt' : 'cdt';
+
+  if (idx===null || idx===undefined || !DATA || !selectedQid) {
+    el.innerHTML = `
+      <div class="col-header">
+        <span class="dt-badge ${slotBadgeCls}">${label[0]}</span>
+        <span class="col-slot">${label}</span>
+      </div>
+      <div class="col-body">
+        <div class="col-empty">Use the picker to assign a trace to this column</div>
+      </div>`;
+    return;
+  }
+
+  const q = DATA.questions[selectedQid];
+  const s = q ? q.samples.find(x => x.sample_idx===idx) : null;
+  if (!s) return;
+
+  const {badge, cls} = badgeFor(s);
+  const errorLine = s.parse_error ? `<div class="col-error">⚠ ${escHtml(s.parse_error)}</div>` : '';
+  const responseText = s.raw_response ? escHtml(s.raw_response) : '<em style="color:var(--text-faint)">(empty)</em>';
+
+  el.innerHTML = `
+    <div class="col-header">
+      <span class="dt-badge ${cls}">${badge}</span>
+      <span class="col-slot">${label}</span>
+      <span class="col-answer">#${s.sample_idx} — ${escHtml(s.model_answer||'(no answer)')}</span>
+    </div>
+    <div class="col-body">
+      ${errorLine}
+      <div class="col-response">${responseText}</div>
+    </div>`;
+}
+
+/* ---- Compare mode toggle ---- */
 
 function toggleCompare() {
   compareMode = !compareMode;
   document.getElementById('compare-btn').classList.toggle('active', compareMode);
-  if (!compareMode) exitCompare();
-  renderMain();
-}
-
-function toggleCompareSelect(idx, event) {
-  event.stopPropagation();
-  const pos = compareSelections.indexOf(idx);
-  if (pos >= 0) {
-    compareSelections.splice(pos, 1);
+  updateLayout();
+  if (compareMode) {
+    if (selectedQid) {
+      renderMainPicker();
+    } else {
+      document.getElementById('main').innerHTML = '<div style="color:var(--text-faint);font-size:12px;padding:12px">Select a question from the sidebar</div>';
+    }
+    renderCompareCol('left');
+    renderCompareCol('right');
   } else {
-    if (compareSelections.length >= 2) compareSelections.shift();
-    compareSelections.push(idx);
+    compareLeft = null;
+    compareRight = null;
+    renderMainFull();
   }
-  renderMain();
-  if (compareSelections.length === 2) showCompare();
 }
 
-function showCompare() {
-  const q = DATA.questions[selectedQid];
-  const panel = document.getElementById('compare-panel');
-  const main = document.getElementById('main');
-  panel.classList.add('active');
-  main.classList.add('compare-hidden');
+/* ---- Helpers ---- */
 
-  const cols = compareSelections.map(idx => {
-    const s = q.samples.find(x => x.sample_idx === idx);
-    if (!s) return '';
-    let badge, badgeCls;
-    if (s.parse_error) { badge = 'ERR'; badgeCls = 'err'; }
-    else if (s.is_edt_aligned) { badge = 'EDT'; badgeCls = 'edt'; }
-    else if (s.is_cdt_aligned) { badge = 'CDT'; badgeCls = 'cdt'; }
-    else { badge = '?'; badgeCls = 'err'; }
-    const responseText = s.raw_response ? escHtml(s.raw_response) : '<em style="color:var(--text-faint)">(empty)</em>';
-    const errorLine = s.parse_error ? `<div class="error-msg" style="margin-bottom:8px">Parse error: ${escHtml(s.parse_error)}</div>` : '';
-    return `<div class="compare-col">
-      <h3><span class="dt-badge ${badgeCls}">${badge}</span> Sample #${idx} &mdash; ${escHtml(s.model_answer || '(no answer)')}</h3>
-      ${errorLine}
-      <div class="response-text">${responseText}</div>
-    </div>`;
-  }).join('');
-
-  panel.innerHTML = `
-    <div style="position:absolute;top:8px;right:14px;z-index:10">
-      <button class="mode-toggle" onclick="exitCompare()" style="font-size:11px">Exit Compare</button>
-    </div>
-    ${cols}
-  `;
-  panel.style.position = 'relative';
-}
-
-function exitCompare() {
-  const panel = document.getElementById('compare-panel');
-  const main = document.getElementById('main');
-  panel.classList.remove('active');
-  panel.innerHTML = '';
-  main.classList.remove('compare-hidden');
-  compareMode = false;
-  compareSelections = [];
-  document.getElementById('compare-btn').classList.remove('active');
-  renderMain();
+function badgeFor(s) {
+  if (s.is_edt_aligned && s.is_cdt_aligned) return {badge:'E+C', cls:'edt'};
+  if (s.is_edt_aligned) return {badge:'EDT', cls:'edt'};
+  if (s.is_cdt_aligned) return {badge:'CDT', cls:'cdt'};
+  return {badge:'ERR', cls:'err'};
 }
 
 function escHtml(str) {
   if (!str) return '';
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 init();
 </script>
-
 </body>
 </html>
