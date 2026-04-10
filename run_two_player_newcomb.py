@@ -31,7 +31,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import llm_providers
-from llm_providers import init_llm_call
+from llm_providers import init_llm_call, is_gemini_model, init_gemini_client, make_gemini_call
 
 # Override default token limits — reasoning + decision needs more than 512
 llm_providers.MAX_TOKENS_ANTHROPIC = 2048
@@ -295,6 +295,29 @@ def parse_newcomb_response(response: str, tag: str = "CHOICE") -> tuple[Optional
 
 # --- Core evaluation ---
 
+MAX_RETRIES = 3
+RETRY_DELAYS = [5, 15, 30]
+
+
+def llm_call_with_retry(llm_call, messages, label=""):
+    """Call LLM with exponential backoff on transient errors (503, 429, etc.)."""
+    for attempt in range(MAX_RETRIES + 1):
+        try:
+            response = llm_call(messages)
+            if response:
+                return response
+        except Exception as e:
+            err = str(e)
+            is_transient = any(code in err for code in ["503", "429", "UNAVAILABLE", "overloaded", "high demand"])
+            if is_transient and attempt < MAX_RETRIES:
+                delay = RETRY_DELAYS[attempt]
+                print(f"\n    Retrying in {delay}s (attempt {attempt+1}/{MAX_RETRIES}, {label})...", end=" ", flush=True)
+                time.sleep(delay)
+                continue
+            return f"[ERROR: {e}]"
+    return "[ERROR: empty response after retries]"
+
+
 def run_trial(
     trial_idx: int,
     condition: str,
@@ -316,10 +339,7 @@ def run_trial(
         b_messages.append({"role": "system", "content": system_prompt_b})
     b_messages.append({"role": "user", "content": b_prompt})
 
-    try:
-        b_response = llm_call_b(b_messages)
-    except Exception as e:
-        b_response = f"[ERROR: {e}]"
+    b_response = llm_call_with_retry(llm_call_b, b_messages, label="B/predictor")
 
     b_prediction, b_parse_error = parse_newcomb_response(b_response, tag="PREDICTION")
 
@@ -333,10 +353,7 @@ def run_trial(
         a_messages.append({"role": "system", "content": system_prompt_a})
     a_messages.append({"role": "user", "content": a_prompt})
 
-    try:
-        a_response = llm_call_a(a_messages)
-    except Exception as e:
-        a_response = f"[ERROR: {e}]"
+    a_response = llm_call_with_retry(llm_call_a, a_messages, label="A/chooser")
 
     a_choice, a_parse_error = parse_newcomb_response(a_response, tag="CHOICE")
 
@@ -580,11 +597,17 @@ Examples:
             print(build_chooser_prompt("specific_model", model_a, model_b, not has_native_thinking(model_a)))
         return
 
-    llm_call_a = init_llm_call(model_a)
+    def _init_model(model):
+        if is_gemini_model(model):
+            client = init_gemini_client(force_api_key=True)
+            return make_gemini_call(client, model)
+        return init_llm_call(model)
+
+    llm_call_a = _init_model(model_a)
     if model_a == model_b:
         llm_call_b = llm_call_a
     else:
-        llm_call_b = init_llm_call(model_b)
+        llm_call_b = _init_model(model_b)
 
     all_runs = []
     start_time = time.time()

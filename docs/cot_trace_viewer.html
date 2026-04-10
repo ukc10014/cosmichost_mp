@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoT Trace Viewer — Cosmic Host Research</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg-raised: #161b22;
+    --bg-card: #1c2129;
+    --text: #e1e4e8;
+    --text-dim: #8b949e;
+    --text-faint: #6e7681;
+    --accent: #7ee8c7;
+    --accent-dim: #4db899;
+    --rule: #30363d;
+    --edt-color: #7ee8c7;
+    --cdt-color: #e8a87e;
+    --error-color: #e87e7e;
+    --edt-bg: rgba(126, 232, 199, 0.08);
+    --cdt-bg: rgba(232, 168, 126, 0.08);
+    --error-bg: rgba(232, 126, 126, 0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #topbar {
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--rule);
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+  #topbar h1 { font-size: 15px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.04em; }
+  #home-link {
+    font-size: 12px;
+    color: var(--accent);
+    text-decoration: none;
+    margin-left: auto;
+  }
+  #home-link:hover { text-decoration: underline; }
+  .mode-toggle {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    background: var(--bg);
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+  .mode-toggle:hover { border-color: var(--accent-dim); color: var(--text); }
+  .mode-toggle.active { border-color: var(--accent); color: var(--accent); background: rgba(126, 232, 199, 0.1); }
+
+  #layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* --- Left panel --- */
+  #sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: var(--bg-raised);
+    border-right: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #sidebar-header {
+    padding: 10px 14px 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+  #sidebar-header .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  #sort-select {
+    font-size: 12px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 3px 6px;
+    width: 100%;
+  }
+  #question-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0;
+  }
+  .q-item {
+    padding: 8px 14px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    transition: background 0.1s;
+  }
+  .q-item:hover { background: rgba(255,255,255,0.03); }
+  .q-item.selected { background: rgba(126,232,199,0.06); border-left-color: var(--accent); }
+  .q-item .qid { font-size: 13px; font-weight: 600; color: var(--text); }
+  .q-item .setting { font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .q-item .bar-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+  .mini-bar {
+    height: 6px;
+    border-radius: 3px;
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  .mini-bar .seg-edt { background: var(--edt-color); }
+  .mini-bar .seg-cdt { background: var(--cdt-color); }
+  .mini-bar .seg-err { background: var(--error-color); opacity: 0.5; }
+  .q-item .counts {
+    font-size: 10px;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+
+  /* --- Main panel --- */
+  #main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  #main.empty-state {
+    align-items: center;
+    justify-content: center;
+  }
+  .empty-msg {
+    color: var(--text-faint);
+    font-size: 14px;
+  }
+
+  /* Question card */
+  .question-card {
+    background: var(--bg-raised);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 20px;
+  }
+  .question-card h2 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .question-card .setup {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 10px;
+    white-space: pre-wrap;
+  }
+  .question-card .q-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+  .answer-list { list-style: none; }
+  .answer-list li {
+    font-size: 13px;
+    padding: 4px 8px;
+    margin: 2px 0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .answer-list li .letter {
+    font-weight: 700;
+    width: 20px;
+    text-align: center;
+  }
+  .answer-list li.edt-answer { background: var(--edt-bg); border-left: 3px solid var(--edt-color); }
+  .answer-list li.cdt-answer { background: var(--cdt-bg); border-left: 3px solid var(--cdt-color); }
+  .answer-list li.both-answer { background: linear-gradient(90deg, var(--edt-bg), var(--cdt-bg)); border-left: 3px solid var(--accent); }
+  .tag-badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: rgba(126,232,199,0.12);
+    color: var(--accent-dim);
+    margin-left: 4px;
+  }
+
+  /* Traces section */
+  .traces-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .traces-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dim);
+  }
+  .filter-btns {
+    display: flex;
+    gap: 4px;
+  }
+  .filter-btn {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+  .filter-btn:hover { border-color: var(--text-faint); }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(126,232,199,0.08); }
+
+  /* Trace card */
+  .trace-card {
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .trace-header {
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.1s;
+  }
+  .trace-header:hover { background: rgba(255,255,255,0.02); }
+  .trace-header .chevron {
+    font-size: 10px;
+    color: var(--text-faint);
+    transition: transform 0.15s;
+    width: 14px;
+  }
+  .trace-card.open .trace-header .chevron { transform: rotate(90deg); }
+  .trace-header .idx {
+    font-size: 12px;
+    color: var(--text-faint);
+    font-weight: 600;
+    width: 18px;
+  }
+  .dt-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+  }
+  .dt-badge.edt { background: var(--edt-bg); color: var(--edt-color); border: 1px solid rgba(126,232,199,0.25); }
+  .dt-badge.cdt { background: var(--cdt-bg); color: var(--cdt-color); border: 1px solid rgba(232,168,126,0.25); }
+  .dt-badge.err { background: var(--error-bg); color: var(--error-color); border: 1px solid rgba(232,126,126,0.25); }
+  .trace-header .answer-text {
+    font-size: 12px;
+    color: var(--text-dim);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .trace-header .compare-check {
+    font-size: 11px;
+    color: var(--text-faint);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--rule);
+  }
+  .trace-header .compare-check:hover { border-color: var(--text-faint); }
+  .trace-header .compare-check.selected { border-color: var(--accent); color: var(--accent); background: rgba(126,232,199,0.1); }
+  .trace-body {
+    display: none;
+    padding: 12px 14px 14px;
+    border-top: 1px solid var(--rule);
+  }
+  .trace-card.open .trace-body { display: block; }
+  .trace-body .response-text {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: "SF Mono", "Cascadia Code", "Menlo", monospace;
+    max-height: 600px;
+    overflow-y: auto;
+    padding: 10px;
+    background: var(--bg);
+    border-radius: 4px;
+  }
+  .trace-body .error-msg {
+    font-size: 12px;
+    color: var(--error-color);
+    margin-bottom: 8px;
+  }
+
+  /* Comparison mode */
+  #compare-panel {
+    display: none;
+    flex: 1;
+    overflow: hidden;
+  }
+  #compare-panel.active { display: flex; }
+  #main.compare-hidden { display: none; }
+  .compare-col {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    border-right: 1px solid var(--rule);
+  }
+  .compare-col:last-child { border-right: none; }
+  .compare-col h3 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .compare-col .response-text {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: "SF Mono", "Cascadia Code", "Menlo", monospace;
+    padding: 10px;
+    background: var(--bg);
+    border-radius: 4px;
+  }
+
+  /* Metadata */
+  #meta-bar {
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--rule);
+    padding: 4px 18px;
+    font-size: 11px;
+    color: var(--text-faint);
+    display: flex;
+    gap: 20px;
+    flex-shrink: 0;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1>CoT Trace Viewer</h1>
+  <button class="mode-toggle" id="compare-btn" onclick="toggleCompare()">Compare Mode</button>
+  <a id="home-link" href="index.html">Home</a>
+</div>
+<div id="meta-bar">
+  <span id="meta-model"></span>
+  <span id="meta-constitution"></span>
+  <span id="meta-timestamp"></span>
+  <span id="meta-counts"></span>
+</div>
+
+<div id="layout">
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <div class="label">Questions</div>
+      <select id="sort-select" onchange="sortQuestions()">
+        <option value="qid">Sort by QID</option>
+        <option value="edt_pct">Sort by EDT%</option>
+        <option value="errors">Sort by Errors</option>
+        <option value="split">Sort by Closeness to 50/50</option>
+      </select>
+    </div>
+    <div id="question-list"></div>
+  </div>
+
+  <div id="main" class="empty-state">
+    <div class="empty-msg">Select a question from the left panel</div>
+  </div>
+
+  <div id="compare-panel"></div>
+</div>
+
+<script>
+let DATA = null;
+let selectedQid = null;
+let compareMode = false;
+let compareSelections = [];
+let traceFilter = 'all';
+
+async function init() {
+  try {
+    const resp = await fetch('data/cot_traces.json');
+    DATA = await resp.json();
+  } catch(e) {
+    document.getElementById('main').innerHTML = '<div class="empty-msg">Failed to load data/cot_traces.json</div>';
+    return;
+  }
+
+  const m = DATA.metadata;
+  document.getElementById('meta-model').textContent = 'Model: ' + m.model;
+  document.getElementById('meta-constitution').textContent = 'Constitution: ' + m.constitution;
+  document.getElementById('meta-timestamp').textContent = 'Run: ' + m.timestamp;
+  document.getElementById('meta-counts').textContent = m.n_questions + ' questions, ' + m.n_samples + ' samples each';
+
+  renderSidebar();
+}
+
+function getQuestionOrder() {
+  const sort = document.getElementById('sort-select').value;
+  const qs = Object.values(DATA.questions);
+  if (sort === 'edt_pct') {
+    qs.sort((a, b) => {
+      const pa = a.total > 0 ? a.edt_count / a.total : 0;
+      const pb = b.total > 0 ? b.edt_count / b.total : 0;
+      return pb - pa;
+    });
+  } else if (sort === 'errors') {
+    qs.sort((a, b) => b.error_count - a.error_count);
+  } else if (sort === 'split') {
+    qs.sort((a, b) => {
+      const valid_a = a.edt_count + a.cdt_count;
+      const valid_b = b.edt_count + b.cdt_count;
+      const split_a = valid_a > 0 ? Math.abs(0.5 - a.edt_count / valid_a) : 1;
+      const split_b = valid_b > 0 ? Math.abs(0.5 - b.edt_count / valid_b) : 1;
+      return split_a - split_b;
+    });
+  } else {
+    qs.sort((a, b) => a.qid.localeCompare(b.qid, undefined, {numeric: true}));
+  }
+  return qs;
+}
+
+function renderSidebar() {
+  const list = document.getElementById('question-list');
+  const qs = getQuestionOrder();
+  list.innerHTML = qs.map(q => {
+    const total = q.total || 1;
+    const edtW = (q.edt_count / total * 100).toFixed(0);
+    const cdtW = (q.cdt_count / total * 100).toFixed(0);
+    const errW = (q.error_count / total * 100).toFixed(0);
+    const sel = q.qid === selectedQid ? ' selected' : '';
+    const setting = q.setting_file.replace('setting', '').replace('.json', '').replace(/_/g, ' ');
+    return `<div class="q-item${sel}" onclick="selectQuestion('${q.qid}')">
+      <span class="qid">${q.qid}</span>
+      <span class="setting">${setting}</span>
+      <div class="bar-row">
+        <div class="mini-bar">
+          <div class="seg-edt" style="width:${edtW}%"></div>
+          <div class="seg-cdt" style="width:${cdtW}%"></div>
+          <div class="seg-err" style="width:${errW}%"></div>
+        </div>
+        <span class="counts">E${q.edt_count} C${q.cdt_count} ?${q.error_count}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function sortQuestions() {
+  renderSidebar();
+}
+
+function selectQuestion(qid) {
+  selectedQid = qid;
+  compareSelections = [];
+  renderSidebar();
+  if (compareMode) exitCompare();
+  renderMain();
+}
+
+function renderMain() {
+  const main = document.getElementById('main');
+  if (!selectedQid) {
+    main.className = 'empty-state';
+    main.innerHTML = '<div class="empty-msg">Select a question from the left panel</div>';
+    return;
+  }
+  main.className = '';
+  const q = DATA.questions[selectedQid];
+
+  let answersHtml = q.answers.map(a => {
+    let cls = '';
+    if (a.label === 'EDT') cls = 'edt-answer';
+    else if (a.label === 'CDT') cls = 'cdt-answer';
+    else if (a.label === 'EDT+CDT') cls = 'both-answer';
+    const badge = a.label ? `<span class="tag-badge">${a.label}</span>` : '';
+    return `<li class="${cls}"><span class="letter">${a.letter})</span> ${escHtml(a.text)}${badge}</li>`;
+  }).join('');
+
+  const tagsHtml = q.tags.map(t => `<span class="tag-badge">${escHtml(t)}</span>`).join(' ');
+
+  const edtPct = q.total > 0 ? (q.edt_count / q.total * 100).toFixed(0) : '-';
+
+  let filtered = q.samples;
+  if (traceFilter === 'edt') filtered = q.samples.filter(s => s.is_edt_aligned);
+  else if (traceFilter === 'cdt') filtered = q.samples.filter(s => s.is_cdt_aligned);
+  else if (traceFilter === 'error') filtered = q.samples.filter(s => s.parse_error);
+
+  const firstEdt = q.samples.findIndex(s => s.is_edt_aligned);
+  const firstCdt = q.samples.findIndex(s => s.is_cdt_aligned);
+
+  const tracesHtml = filtered.map(s => {
+    let badge, badgeCls;
+    if (s.parse_error) { badge = 'ERR'; badgeCls = 'err'; }
+    else if (s.is_edt_aligned) { badge = 'EDT'; badgeCls = 'edt'; }
+    else if (s.is_cdt_aligned) { badge = 'CDT'; badgeCls = 'cdt'; }
+    else { badge = '?'; badgeCls = 'err'; }
+
+    const autoOpen = (s.sample_idx === firstEdt || s.sample_idx === firstCdt) ? ' open' : '';
+    const answer = s.model_answer || '(no answer)';
+    const preview = s.raw_response ? s.raw_response.substring(0, 100).replace(/\n/g, ' ') + '...' : '';
+    const errorLine = s.parse_error ? `<div class="error-msg">Parse error: ${escHtml(s.parse_error)}</div>` : '';
+    const responseText = s.raw_response ? escHtml(s.raw_response) : '<em style="color:var(--text-faint)">(empty response)</em>';
+    const compSel = compareSelections.includes(s.sample_idx) ? ' selected' : '';
+
+    return `<div class="trace-card${autoOpen}" id="trace-${s.sample_idx}">
+      <div class="trace-header" onclick="toggleTrace(${s.sample_idx}, event)">
+        <span class="chevron">&#9654;</span>
+        <span class="idx">#${s.sample_idx}</span>
+        <span class="dt-badge ${badgeCls}">${badge}</span>
+        <span class="answer-text">${escHtml(answer)} &mdash; ${escHtml(preview)}</span>
+        ${compareMode ? `<span class="compare-check${compSel}" onclick="toggleCompareSelect(${s.sample_idx}, event)">compare</span>` : ''}
+      </div>
+      <div class="trace-body">
+        ${errorLine}
+        <div class="response-text">${responseText}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const filterBtns = ['all', 'edt', 'cdt', 'error'].map(f => {
+    const active = traceFilter === f ? ' active' : '';
+    const labels = {all: 'All', edt: 'EDT', cdt: 'CDT', error: 'Errors'};
+    return `<button class="filter-btn${active}" onclick="setFilter('${f}')">${labels[f]}</button>`;
+  }).join('');
+
+  main.innerHTML = `
+    <div class="question-card">
+      <h2>${escHtml(q.qid)} &mdash; ${escHtml(q.setting_file.replace('.json','').replace(/_/g,' '))}</h2>
+      ${q.setup ? `<div class="setup">${escHtml(q.setup)}</div>` : ''}
+      <div class="q-text">${escHtml(q.question_text)}</div>
+      <ul class="answer-list">${answersHtml}</ul>
+      <div style="margin-top:8px;font-size:12px;color:var(--text-faint)">
+        EDT ${q.edt_count}/${q.total} (${edtPct}%) | CDT ${q.cdt_count} | Errors ${q.error_count}
+        &nbsp;&nbsp; ${tagsHtml}
+      </div>
+    </div>
+    <div class="traces-header">
+      <h3>Traces (${filtered.length}/${q.total})</h3>
+      <div class="filter-btns">${filterBtns}</div>
+    </div>
+    ${tracesHtml}
+  `;
+}
+
+function toggleTrace(idx, event) {
+  if (event.target.classList.contains('compare-check')) return;
+  const card = document.getElementById('trace-' + idx);
+  if (card) card.classList.toggle('open');
+}
+
+function setFilter(f) {
+  traceFilter = f;
+  renderMain();
+}
+
+function toggleCompare() {
+  compareMode = !compareMode;
+  document.getElementById('compare-btn').classList.toggle('active', compareMode);
+  if (!compareMode) exitCompare();
+  renderMain();
+}
+
+function toggleCompareSelect(idx, event) {
+  event.stopPropagation();
+  const pos = compareSelections.indexOf(idx);
+  if (pos >= 0) {
+    compareSelections.splice(pos, 1);
+  } else {
+    if (compareSelections.length >= 2) compareSelections.shift();
+    compareSelections.push(idx);
+  }
+  renderMain();
+  if (compareSelections.length === 2) showCompare();
+}
+
+function showCompare() {
+  const q = DATA.questions[selectedQid];
+  const panel = document.getElementById('compare-panel');
+  const main = document.getElementById('main');
+  panel.classList.add('active');
+  main.classList.add('compare-hidden');
+
+  const cols = compareSelections.map(idx => {
+    const s = q.samples.find(x => x.sample_idx === idx);
+    if (!s) return '';
+    let badge, badgeCls;
+    if (s.parse_error) { badge = 'ERR'; badgeCls = 'err'; }
+    else if (s.is_edt_aligned) { badge = 'EDT'; badgeCls = 'edt'; }
+    else if (s.is_cdt_aligned) { badge = 'CDT'; badgeCls = 'cdt'; }
+    else { badge = '?'; badgeCls = 'err'; }
+    const responseText = s.raw_response ? escHtml(s.raw_response) : '<em style="color:var(--text-faint)">(empty)</em>';
+    const errorLine = s.parse_error ? `<div class="error-msg" style="margin-bottom:8px">Parse error: ${escHtml(s.parse_error)}</div>` : '';
+    return `<div class="compare-col">
+      <h3><span class="dt-badge ${badgeCls}">${badge}</span> Sample #${idx} &mdash; ${escHtml(s.model_answer || '(no answer)')}</h3>
+      ${errorLine}
+      <div class="response-text">${responseText}</div>
+    </div>`;
+  }).join('');
+
+  panel.innerHTML = `
+    <div style="position:absolute;top:8px;right:14px;z-index:10">
+      <button class="mode-toggle" onclick="exitCompare()" style="font-size:11px">Exit Compare</button>
+    </div>
+    ${cols}
+  `;
+  panel.style.position = 'relative';
+}
+
+function exitCompare() {
+  const panel = document.getElementById('compare-panel');
+  const main = document.getElementById('main');
+  panel.classList.remove('active');
+  panel.innerHTML = '';
+  main.classList.remove('compare-hidden');
+  compareMode = false;
+  compareSelections = [];
+  document.getElementById('compare-btn').classList.remove('active');
+  renderMain();
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+init();
+</script>
+
+</body>
+</html>
