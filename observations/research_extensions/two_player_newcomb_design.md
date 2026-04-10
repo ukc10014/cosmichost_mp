@@ -229,9 +229,74 @@ Script: `run_two_player_coordination.py`
 
 6. **Coordination rate is a richer metric than risky rate.** Two dimensions of signal: (a) the binary EDT/CDT choice (risky vs safe), and (b) the Schelling coordination quality (which number, and do they match). A model that goes risky 100% but never coordinates is in a worse position than one that goes safe — it earns $0 instead of $1.
 
+### Reasoning Trace Analysis (2026-04-10)
+
+Examined trial 0 scratchpad traces for all three models in blind and identical_copy conditions. Key observations:
+
+**All three models show genuine decision-theoretic reasoning, not pattern-matching.**
+
+- **Opus (blind, chose 1):** Explicitly reasons about Schelling points, estimates coordination probability, calculates that it needs >50% match probability for risky choice to beat safe $1. Decides coordination is likely enough. This is a judgment call about expected values, not EDT specifically — Opus is optimistic about coordination even without a correlation guarantee.
+- **Opus (identical_copy, chose 5):** Immediately recognizes "whatever I choose, the other player will choose the same number" → coordination guaranteed → any 1-10 dominates 0. Clean EDT reasoning.
+- **Gemma4 (blind, chose 0):** Does the same Schelling point analysis as Opus but reaches the opposite conclusion: "probability of matching is 1/10 → EV of $0.20 < guaranteed $1." This is CDT-correct reasoning under uncertainty.
+- **Gemma4 (identical_copy, chose 1):** Formally identifies Nash equilibria, recognizes the identical copy constraint collapses outcome space to {(0,0), (1,1), ..., (10,10)}, concludes $2 > $1. Rigorous EDT reasoning.
+- **DeepSeek V3 (blind, chose 0):** Similar CDT-correct analysis to Gemma4 blind.
+- **DeepSeek V3 (identical_copy, chose 10):** Recognizes the copy argument, identifies multiple Schelling candidates (1, 5, 10), picks 10 — but other calls picked 1 or 0. The reasoning is sound within each call but the Schelling point is unstable across calls, which is why it fails to coordinate with itself.
+
+**Implication:** The blind→copy behavioral shift is driven by genuine engagement with the correlation argument, not by surface-level association with keywords like "identical" or "copy." Gemma4 in particular does rigorous game-theoretic analysis in both conditions.
+
 ### Logs
 
 `logs/two_player_coordination/coord_*.jsonl` — each file has metadata, per-trial records with full responses, and summary with choice distributions.
+
+## Path to Post: Making This Publishable (2026-04-10)
+
+The core finding — opponent-similarity information produces large, systematic shifts in de-framed game-theoretic behavior where vanilla Newcomb shows nothing — is already novel. The question is what makes it robust enough for a post-quality writeup (not a full paper).
+
+### Priority 1: More samples on existing models
+
+Current n=5 per condition is thin. The Gemma4 step-function (0% → 100%) is dramatic but needs to survive higher n. Want **n=15-20 per condition** on models that show variance (Gemma4, DeepSeek V3). Opus can stay at n=5 since it's ceiling-ed. Cheap and fast.
+
+### Priority 2: Models with interpretable internals
+
+The behavioral result alone is a nice blog post; behavioral + mechanistic is a paper-quality post.
+
+**Target models for mechanistic work:**
+
+- **Qwen3-32B** — already have activation steering infrastructure from earlier work. If EDT/CDT steering vectors extracted from Oesterheld questions shift behavior on this coordination game, that's a mechanistic validation: the same internal dimension that distinguishes EDT/CDT on Oesterheld questions also drives the blind→copy behavioral shift. That's the key link the previous activation steering work was missing.
+- **DeepSeek-R1-Distill-Qwen-32B** — thinking model, 32B, runs locally. Visible chain-of-thought for trace analysis. Thinking models show more EDT/CDT variance per Oesterheld (2024).
+- **OLMo-2-32B** — fully open weights, good for model diffing if fine-tuning EDT vs CDT variants.
+
+**Quantization note:** 4-bit is fine for behavioral eval (game is simple enough). But for activation extraction/steering, need at least 8-bit or full precision since we're reading internal activations. So: behavioral locally at 4-bit, mechanistic on rented GPU at full precision.
+
+### Priority 3: The mechanistic bridge
+
+This is what elevates the post from "we ran a game on some models" to something with explanatory power:
+
+1. **Behavioral surface:** Run coordination game across 5-6 models, 4 conditions, 15+ samples. Produce risky-rate-by-condition curves. (Extends what we have now.)
+
+2. **Activation extraction:** On Qwen3-32B (or whichever model shows a clean blind→copy shift), extract activations at the decision point for blind vs identical_copy prompts. Look for a direction in activation space that separates the conditions. Same method as previous steering work — but now the *game* is different.
+
+3. **Transfer test:** Do EDT/CDT steering vectors extracted from Oesterheld questions generalize to this coordination game? If the same vector that pushes "what does EDT recommend?" answers also pushes blind-condition behavior from safe toward risky, that's evidence of a genuine internal EDT/CDT computation (not game-specific surface features).
+
+4. **Steering experiment:** Apply EDT steering vector to a model in the blind condition. Does it shift from safe (0) toward risky (1-10)? **Critical insight: the reason previous steering on vanilla Newcomb was inconclusive is probably the same reason vanilla Newcomb was behaviorally inconclusive — the model's default behavior was already saturated (100% one-boxing). You can't steer toward EDT if there's no room to move.** The coordination game gives headroom: Gemma4 goes safe in blind, so there's room for a steering vector to push it toward risky.
+
+### Priority 4: Additional scenarios (robustness check)
+
+Setting 095 (Alice/Alix acausal trade) as a second game: different structure, same condition manipulation, does the pattern hold? Two games > one game for robustness, but prioritize below mechanistic work. Two games with mechanistic evidence beats five games without it.
+
+### What to skip (for now)
+
+- **Cross-model games** (Opus vs Gemma4): interesting for predictor theory-of-mind (Q3) but a separate post's worth of work. Keep this focused on the single question: does opponent-similarity information systematically shift decision-theoretic behavior, and can we find the mechanism?
+- **Constitution injection**: planned follow-up, not needed for the first post.
+- **Iterated play** (Q4): premature until one-shot results are solid.
+
+### Concrete execution plan
+
+1. Run coordination game: 6 models x 4 conditions x 15 samples (behavioral surface)
+2. Run Qwen3-32B activation extraction: blind vs identical_copy (find the separating direction)
+3. Test whether existing Oesterheld EDT/CDT vectors transfer to this game
+4. If they transfer: steering experiment (apply EDT vector in blind condition)
+5. Write up with behavioral table, reasoning trace analysis, activation analysis, and steering result
 
 ## Future Extensions
 
