@@ -1,0 +1,18 @@
+{
+  "verifications": [
+    {
+      "file": "cot_verify_together-deepseek-ai-DeepSeek-R1_baseline_20260408T162133_claude-sonnet-4-20250514_20260410T174014.json",
+      "verifier_model": "claude-sonnet-4-20250514",
+      "source_traces": "cot_traces_together-deepseek-ai-DeepSeek-R1_baseline_20260408T162133.json",
+      "timestamp": "20260410T174014",
+      "n_verified": 130
+    },
+    {
+      "file": "cot_verify_together-deepseek-ai-DeepSeek-R1_baseline_20260408T162133_claude-haiku-4-5-20251001_20260410T165439.json",
+      "verifier_model": "claude-haiku-4-5-20251001",
+      "source_traces": "cot_traces_together-deepseek-ai-DeepSeek-R1_baseline_20260408T162133.json",
+      "timestamp": "20260410T165439",
+      "n_verified": 130
+    }
+  ]
+}

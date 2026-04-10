@@ -51,6 +51,11 @@
     border: 1px solid var(--rule); border-radius: 4px; padding: 4px 8px;
     flex: 1; max-width: 480px;
   }
+  #verify-select {
+    font-size: 12px; background: var(--bg); color: var(--text);
+    border: 1px solid var(--rule); border-radius: 4px; padding: 4px 8px;
+    max-width: 240px;
+  }
   .mode-toggle {
     font-size: 12px; padding: 4px 10px; border-radius: 4px;
     border: 1px solid var(--rule); background: var(--bg);
@@ -256,6 +261,45 @@
     padding: 10px; background: var(--bg); border-radius: 4px;
   }
 
+  /* --- Verification overlay --- */
+  .verify-bar {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    padding: 6px 11px; border-top: 1px solid var(--rule);
+    background: rgba(255,255,255,0.015);
+  }
+  .verify-dot {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 10px; color: var(--text-dim);
+  }
+  .verify-dot .dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .dot-green { background: #4ade80; }
+  .dot-amber { background: #fbbf24; }
+  .dot-red { background: #f87171; }
+  .dot-pivot { background: #a78bfa; }
+  .dot-straight { background: #6b7280; }
+  .dot-falsepivot { background: #fb923c; }
+  .verify-moves {
+    display: flex; gap: 3px; flex-wrap: wrap; margin-left: 4px;
+  }
+  .move-tag {
+    font-size: 9px; padding: 1px 5px; border-radius: 2px;
+    background: rgba(126,232,199,0.08); color: var(--accent-dim);
+    border: 1px solid rgba(126,232,199,0.15);
+  }
+  .verify-note {
+    font-size: 10px; color: var(--text-faint); line-height: 1.4;
+    padding: 4px 11px 6px; border-top: 1px dashed var(--rule);
+  }
+  .verify-note span { display: block; margin: 1px 0; }
+  .verify-label { font-size: 10px; color: var(--text-faint); font-weight: 600; }
+
+  /* Compact verification in compare columns */
+  .col-verify { padding: 8px 10px; border-bottom: 1px solid var(--rule); }
+  .col-verify .verify-bar { padding: 0; border: none; background: none; }
+  .col-verify .verify-note { padding: 4px 0 0; border: none; }
+
   /* Scrollbar */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -269,6 +313,9 @@
   <h1>CoT Trace Viewer</h1>
   <select id="run-select" onchange="loadRun(this.value)">
     <option value="">Loading…</option>
+  </select>
+  <select id="verify-select" onchange="switchVerifier(this.value)">
+    <option value="">No verification</option>
   </select>
   <button class="mode-toggle" id="compare-btn" onclick="toggleCompare()">Compare Mode</button>
   <a id="home-link" href="index.html">Home</a>
@@ -329,6 +376,7 @@
 
 <script>
 let DATA = null;
+let VERIFY = null;  // verification data overlay (null if unavailable)
 let selectedQid = null;
 let compareMode = false;
 let compareLeft = null;
@@ -366,11 +414,72 @@ async function loadRun(url) {
   selectedQid = null;
   compareLeft = null;
   compareRight = null;
+  VERIFY = null;
   if (compareMode) { compareMode = false; document.getElementById('compare-btn').classList.remove('active'); }
+
+  // Populate verifier dropdown for this run
+  const tracesFile = url.split('/').pop();
+  await populateVerifierDropdown(tracesFile);
+
   updateLayout();
   updateMetaBar();
   renderSidebar();
   showEmpty();
+}
+
+let verifyManifestEntries = [];
+
+async function populateVerifierDropdown(tracesFile) {
+  const sel = document.getElementById('verify-select');
+  VERIFY = null;
+  verifyManifestEntries = [];
+  try {
+    const resp = await fetch('data/cot_verify_manifest.json');
+    const manifest = await resp.json();
+    const entries = (manifest.verifications || []).filter(e => e.source_traces === tracesFile);
+    verifyManifestEntries = entries;
+    if (entries.length === 0) {
+      sel.innerHTML = '<option value="">No verification available</option>';
+      return;
+    }
+    sel.innerHTML = '<option value="">No verification</option>' +
+      entries.map((e, i) => `<option value="${i}">${e.verifier_model} (${e.n_verified} traces)</option>`).join('');
+    // Auto-select first verifier
+    sel.value = '0';
+    await loadVerification(entries[0].file);
+  } catch (e) {
+    sel.innerHTML = '<option value="">No verification available</option>';
+    VERIFY = null;
+  }
+}
+
+async function loadVerification(filename) {
+  try {
+    const vResp = await fetch('data/' + filename);
+    VERIFY = await vResp.json();
+    console.log('Loaded verification:', filename, '(' + VERIFY.metadata.n_verified + ' traces)');
+  } catch (e) {
+    VERIFY = null;
+  }
+}
+
+async function switchVerifier(val) {
+  if (val === '' || val === null) {
+    VERIFY = null;
+  } else {
+    const entry = verifyManifestEntries[parseInt(val)];
+    if (entry) await loadVerification(entry.file);
+  }
+  updateMetaBar();
+  if (selectedQid) {
+    if (compareMode) {
+      renderMainPicker();
+      renderCompareCol('left');
+      renderCompareCol('right');
+    } else {
+      renderMainFull();
+    }
+  }
 }
 
 function updateMetaBar() {
@@ -380,7 +489,12 @@ function updateMetaBar() {
   document.getElementById('meta-constitution').textContent = 'Constitution: ' + m.constitution;
   document.getElementById('meta-timestamp').textContent = 'Run: ' + m.timestamp;
   const total = Object.values(DATA.questions).reduce((s, q) => s + q.total, 0);
-  document.getElementById('meta-counts').textContent = m.n_questions + ' questions · ' + total + ' samples';
+  let countStr = m.n_questions + ' questions · ' + total + ' samples';
+  if (VERIFY) {
+    const vm = VERIFY.metadata;
+    countStr += ' · Verified: ' + vm.n_verified + ' (' + vm.verifier_model + ')';
+  }
+  document.getElementById('meta-counts').textContent = countStr;
 }
 
 function updateLayout() {
@@ -525,6 +639,9 @@ function fullTraceCard(s, firstEdtIdx, firstCdtIdx) {
   const preview = s.raw_response ? s.raw_response.substring(0,80).replace(/\n/g,' ')+'…' : '(empty)';
   const errorLine = s.parse_error ? `<div class="error-msg">⚠ ${escHtml(s.parse_error)}</div>` : '';
   const responseText = s.raw_response ? escHtml(s.raw_response) : '<em style="color:var(--text-faint)">(empty)</em>';
+  const v = getVerify(selectedQid, s.sample_idx);
+  const verifyBar = renderVerifyBar(v);
+  const verifyNotes = renderVerifyNotes(v);
   return `<div class="trace-card${autoOpen}" id="trace-${s.sample_idx}">
     <div class="trace-header" onclick="this.closest('.trace-card').classList.toggle('open')">
       <span class="chevron">&#9654;</span>
@@ -534,6 +651,8 @@ function fullTraceCard(s, firstEdtIdx, firstCdtIdx) {
     </div>
     <div class="trace-body">
       ${errorLine}
+      ${verifyBar}
+      ${verifyNotes}
       <div class="response-text">${responseText}</div>
     </div>
   </div>`;
@@ -623,6 +742,8 @@ function renderCompareCol(side) {
   const {badge, cls} = badgeFor(s);
   const errorLine = s.parse_error ? `<div class="col-error">⚠ ${escHtml(s.parse_error)}</div>` : '';
   const responseText = s.raw_response ? escHtml(s.raw_response) : '<em style="color:var(--text-faint)">(empty)</em>';
+  const v = getVerify(selectedQid, s.sample_idx);
+  const verifyHtml = v ? `<div class="col-verify">${renderVerifyBar(v)}${renderVerifyNotes(v)}</div>` : '';
 
   el.innerHTML = `
     <div class="col-header">
@@ -630,6 +751,7 @@ function renderCompareCol(side) {
       <span class="col-slot">${label}</span>
       <span class="col-answer">#${s.sample_idx} — ${escHtml(s.model_answer||'(no answer)')}</span>
     </div>
+    ${verifyHtml}
     <div class="col-body">
       ${errorLine}
       <div class="col-response">${responseText}</div>
@@ -669,6 +791,68 @@ function badgeFor(s) {
 function escHtml(str) {
   if (!str) return '';
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ---- Verification rendering ---- */
+
+function getVerify(qid, sampleIdx) {
+  if (!VERIFY) return null;
+  const qv = VERIFY.verifications[qid];
+  if (!qv) return null;
+  return qv[String(sampleIdx)] || null;
+}
+
+function ratingDotCls(rating) {
+  if (!rating) return 'dot-straight';
+  const r = rating.toUpperCase();
+  if (r === 'GREEN') return 'dot-green';
+  if (r === 'AMBER') return 'dot-amber';
+  if (r === 'RED') return 'dot-red';
+  if (r === 'PIVOT') return 'dot-pivot';
+  if (r === 'STRAIGHT') return 'dot-straight';
+  if (r === 'FALSE_PIVOT') return 'dot-falsepivot';
+  return 'dot-straight';
+}
+
+function renderVerifyBar(v) {
+  if (!v) return '';
+  const sr = v.structure_recognition || {};
+  const co = v.coherence || {};
+  const ta = v.theory_application || {};
+  const pv = v.pivot_detection || {};
+  const moves = v.reasoning_moves || [];
+
+  const dots = [
+    {label: 'Struct', rating: sr.rating},
+    {label: 'Coher', rating: co.rating},
+    {label: 'Theory', rating: ta.rating},
+    {label: 'Pivot', rating: pv.rating},
+  ];
+
+  const dotsHtml = dots.map(d =>
+    `<span class="verify-dot"><span class="dot ${ratingDotCls(d.rating)}"></span>${d.label}</span>`
+  ).join('');
+
+  const movesHtml = moves.length > 0
+    ? `<span class="verify-moves">${moves.map(m => `<span class="move-tag">${escHtml(m)}</span>`).join('')}</span>`
+    : '';
+
+  return `<div class="verify-bar">${dotsHtml}${movesHtml}</div>`;
+}
+
+function renderVerifyNotes(v) {
+  if (!v) return '';
+  const dims = [
+    {key: 'structure_recognition', label: 'Structure'},
+    {key: 'coherence', label: 'Coherence'},
+    {key: 'theory_application', label: 'Theory'},
+    {key: 'pivot_detection', label: 'Pivot'},
+  ];
+  const lines = dims
+    .filter(d => v[d.key] && v[d.key].note)
+    .map(d => `<span><strong>${d.label}:</strong> ${escHtml(v[d.key].note)}</span>`);
+  if (lines.length === 0) return '';
+  return `<div class="verify-note">${lines.join('')}</div>`;
 }
 
 init();

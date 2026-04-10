@@ -225,7 +225,7 @@ def parse_answer(response: str, num_options: int) -> tuple[Optional[int], Option
     # Use case-insensitive matching on original response to preserve letter case
     # Only match A-D to avoid matching words like "answer is" -> "i"
     answer_patterns = [
-        r'\*\*(?:answer|choice)[:\s]+([A-Da-d])\*\*',  # **Answer: A** (common in R1/thinking models)
+        r'\*\*(?:answer|choice)[:\s]+\(?([A-Da-d])\)?\*\*',  # **Answer: A** or **Answer: (A)** (common in R1/thinking models)
         r'(?:the correct answer is|therefore,?)[:\s]+\*\*([A-Da-d])\*\*',  # The correct answer is **A**
         r'(?:the correct answer is|therefore,?)[:\s]+\(?([A-Da-d])\)?(?:\.|,|\s|$)',  # The correct answer is A
         r'(?:answer|choice) is[:\s]+\*\*([A-Da-d])\*\*',  # answer is **A**
@@ -252,10 +252,11 @@ def parse_answer(response: str, num_options: int) -> tuple[Optional[int], Option
     if bold_end_match:
         return try_letter(bold_end_match.group(1))
 
-    # Phase 3: Look for (A) anywhere in the response
-    paren_match = re.search(r'\(([A-Z])\)', response_upper)
-    if paren_match:
-        return try_letter(paren_match.group(1))
+    # Phase 3: Look for (A) anywhere in the response — use LAST match, since models
+    # often reference other options mid-reasoning before stating their answer at the end
+    paren_matches = list(re.finditer(r'\(([A-Z])\)', response_upper))
+    if paren_matches:
+        return try_letter(paren_matches[-1].group(1))
 
     # Phase 4: Check first line more aggressively
     first_line = response_upper.split('\n')[0].strip()

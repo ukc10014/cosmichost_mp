@@ -174,11 +174,34 @@ On 81.1ATT (ECL moral advocacy), R1 is 90% CDT --- the opposite of the cross-mod
 
 ### Next steps
 
-1. **Run with constitutions** (`--constitutions baseline ecl90 fdt`) to see whether constitutional prompts shift R1's reasoning patterns, not just its answers
-2. **Qualitative trace analysis** on the 50/50 questions (66.4ATT, 68.5ATT, 109.2ATT) --- read the 10 EDT and 10 CDT traces side by side, manually identify candidate thought anchors before applying the automated method
-3. **Compare 82.1 vs 35.1ATT traces** --- the say/do dissociation is the most interesting finding; the traces should reveal whether R1 explicitly acknowledges the tension
+#### Priority 1: CoT analysis tooling (cheap, fast, publishable on its own)
+
+Build a lightweight model-as-verifier pipeline using a cheap model (Haiku, Flash) to classify each reasoning trace along structured dimensions:
+
+1. **Structure recognition:** Does the trace correctly identify the game structure (PD, coordination, Newcomb)?
+2. **Key reasoning moves:** Taxonomy of moves — identify structure, consider dominance, invoke copy symmetry, calculate EV, appeal to authority/convention. Tag which moves appear in each trace, then correlate move presence with final EDT/CDT answer.
+3. **Pivot point detection:** Identify the sentence where the trace first commits to a direction. Traces that say "defection dominates... but wait, my opponent is identical... so cooperation" have a visible pivot; traces that pattern-match ("copies should cooperate") never pivot. The verifier should distinguish these.
+4. **Coherence checking:** Flag traces where the conclusion contradicts the stated reasoning — this is exactly the say/do dissociation (R1 says CDT on 82.1, acts EDT on 35.1ATT). A cheap model can detect this at scale.
+
+This tooling serves double duty: publishable analysis on its own, and it identifies exactly *where* in the reasoning chain to look for activation-level signals (feeding Priority 2).
+
+**Target questions for analysis:** 10.4ATT (40% EDT, clean separation), 89.1ATT (57% EDT), 48.1ATT (30% EDT). Also compare 82.1 vs 35.1ATT traces for the say/do dissociation.
+
+#### Priority 2: Activation extraction at identified points
+
+Three approaches, in order of increasing difficulty:
+
+1. **Final answer token only.** Extract activations at the token where the model commits to A or B, ignoring the CoT. By the time the model emits the answer, whatever internal state drove the decision should be present. This is the simplest approach and mirrors how Venhoff et al. (2025) steer DeepSeek-R1-Distill — at generation time, measuring effects on reasoning behaviour rather than individual CoT tokens.
+2. **Pivot point extraction.** If the Priority 1 verifier identifies the sentence where the trace commits, extract activations at that token position. This connects both workstreams: CoT tooling feeds the activation work.
+3. **Resampling-based analysis (Macar et al.).** Resample from branching points and compare residual streams between branches that go EDT vs CDT. This is thought anchors with activations instead of just text — research frontier, attempt only if approaches 1-2 fail.
+
+**Key insight:** The coordination game (Setting 068) provides better substrate for activation work than the Oesterheld questions alone. Shorter prompts, cleaner decision point, and behavioral headroom in the blind condition where models differ. The two workstreams converge: CoT tooling on resampled Oesterheld traces to understand reasoning patterns, activation extraction on the coordination game to find steering vectors.
+
+#### Lower priority
+
+3. **Run with constitutions** (`--constitutions baseline ecl90 fdt`) to see whether constitutional prompts shift R1's reasoning patterns, not just its answers
 4. **Fix empty responses** on 120.2ATT and 100.1ATT --- increase `max_tokens` or simplify the prompt
-5. **Increase N** to 20 for the 50/50 questions to get tighter distributions
+5. **Increase N** to 20 for the clean-separation questions (10.4ATT, 89.1ATT, 48.1ATT) to get tighter distributions
 
 ### Data location
 
@@ -245,6 +268,41 @@ All three "50/50 split" questions are compromised. None cleanly separate EDT fro
 | **48.1ATT** | 30% | Angelic intervention | `EDT: 0, CDT: 1` |
 
 Of the 76 attitude questions in the Oesterheld dataset, 64 have fully non-overlapping EDT/CDT correct answers. Future resampling runs should prioritise these for thought anchor analysis. **95.1ATT** (Alice/Alix acausal trade, `EDT: 0, CDT: 1`) is a strong addition — clean separation, ECL-relevant, and already a Tier 1 candidate for two-player adaptation.
+
+## Verifier Pipeline and Inter-Rater Reliability (2026-04-10)
+
+Built `run_cot_verifier.py` as the Workstream A model-as-verifier implementation. Scores each R1 trace on five dimensions via a structured rubric (see `writeup/mech_interp_outline.md` Section 14 for full rubric design and calibration notes).
+
+### Haiku vs Sonnet comparison
+
+Ran 130 DeepSeek-R1 traces through both `claude-haiku-4-5-20251001` and `claude-sonnet-4-6` to check inter-rater reliability:
+
+| Dimension | Haiku | Sonnet | Agreement |
+|---|---|---|---|
+| `structure_recognition` | 92G / 5A / 33R | 93G / 3A / 34R | 95% |
+| `coherence` | 68G / 27A / 35R | 94G / 1A / 35R | 78% |
+| `theory_application` | 57G / 34A / 39R | 95G / 2A / 33R | 68% |
+| `pivot_detection` | 9 PIVOT / 120 STRAIGHT / 1 FALSE\_PIVOT | 1 PIVOT / 129 STRAIGHT | — |
+
+Top reasoning moves (Haiku): `outcome_comparison`=94, `evidential_reasoning`=55, `causal_reasoning`=46, `ev_calculation`=39, `dominance`=32, `copy_symmetry`=28, `pattern_match`=18, `authority_appeal`=16
+
+Top reasoning moves (Sonnet): `outcome_comparison`=88, `ev_calculation`=48, `evidential_reasoning`=42, `causal_reasoning`=37, `pattern_match`=28, `dominance`=23
+
+### What the comparison shows
+
+**Structure recognition is the most reliable signal.** 95% agreement, ~33 RED from both. If a trace genuinely fails to identify the game structure, both verifiers catch it. This is the dimension worth trusting without a Sonnet cross-check.
+
+**RED is robust; AMBER is not.** Both verifiers agree on ~33–35 RED per dimension. The disagreement is at GREEN/AMBER: Haiku finds 27 AMBER on coherence, Sonnet finds 1. Haiku finds 34 AMBER on theory\_application, Sonnet finds 2. Sonnet treats most AMBERs as GREEN. For the purpose of identifying genuinely broken reasoning (RED), Haiku is reliable and cheaper. For claiming a trace is clearly correct (GREEN), Sonnet is more conservative and generates fewer false positives.
+
+**Pivots are rare and Haiku over-detects.** Only 1 PIVOT from Sonnet vs 9 from Haiku. R1 mostly reasons straight through to a conclusion — it doesn't visibly change direction mid-trace on these questions. Haiku appears to flag hedging language as pivots. For pivot analysis, Sonnet's count is more credible.
+
+**Rubric calibration was load-bearing.** Early Haiku runs rated CDT traces as RED on theory\_application because "it misses the EDT insight." The fix — "evaluate execution within the chosen framework, not framework selection" — was necessary before either verifier produces useful data on that dimension. Both verifiers now handle this correctly after the rubric revision.
+
+### Practical upshot
+
+Haiku is good enough for RED detection and reasoning-move tagging. Sonnet adds value for AMBER/GREEN discrimination and pivot detection. Default pipeline: Haiku (fast, cheap). Validation runs: `--verifier claude-sonnet-4-6`.
+
+The disagreement on coherence (78%) and theory\_application (68%) does not undermine the main findings from Section 12 — those are based on answer distributions across resamples, not on verifier labels. The verifier data layers on top for qualitative analysis of *why* R1 answers as it does.
 
 ## References
 

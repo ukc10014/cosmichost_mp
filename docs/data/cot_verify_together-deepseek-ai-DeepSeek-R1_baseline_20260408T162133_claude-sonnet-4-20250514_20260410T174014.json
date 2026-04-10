@@ -1,0 +1,2936 @@
+{
+  "metadata": {
+    "verifier_model": "claude-sonnet-4-20250514",
+    "source_traces": "cot_traces_together-deepseek-ai-DeepSeek-R1_baseline_20260408T162133.json",
+    "timestamp": "20260410T174014",
+    "n_verified": 130,
+    "n_questions": 15
+  },
+  "verifications": {
+    "10.4ATT": {
+      "0": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Prisoner's Dilemma with copies where agent 2 doesn't observe agent 1's choice, understanding the sequential but unobserved nature of the game."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "nash_equilibrium",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a consistent CDT dominance approach throughout without considering alternative theories or switching approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to defect follows logically from the dominance reasoning and the analysis that agent 2 will also defect regardless of observation."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies CDT dominance reasoning by showing defection yields higher payoffs in both scenarios (T>R when opponent cooperates, P>S when opponent defects)."
+        }
+      },
+      "1": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Prisoner's Dilemma between identical copies where agent 2 doesn't observe agent 1's choice."
+        },
+        "reasoning_moves": [
+          "copy_symmetry",
+          "evidential_reasoning",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly to copy symmetry and evidential logic without considering dominance or switching approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to cooperate follows logically from the premise that identical copies will reason identically and choose the same action."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT reasoning by recognizing that agent 1's choice is evidence for agent 2's choice due to their identical reasoning processes."
+        }
+      },
+      "2": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Prisoner's Dilemma between identical copies, recognizing the key constraint that agent 2 doesn't observe agent 1's choice but they share identical reasoning."
+        },
+        "reasoning_moves": [
+          "copy_symmetry",
+          "outcome_comparison",
+          "evidential_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning proceeds directly from copy symmetry to cooperation without considering or pivoting away from any alternative approach."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to cooperate follows logically from the premise that identical copies will make identical choices and the comparison showing (R,R) > (P,P)."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by recognizing that the agent's choice is perfectly correlated with the copy's choice due to identical reasoning processes, leading to the EDT conclusion."
+        }
+      },
+      "3": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Prisoner's Dilemma between identical copies with sequential play but no observation, understanding the key constraint that agent 2 cannot see agent 1's choice."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "nash_equilibrium",
+          "copy_symmetry",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a consistent CDT approach throughout, analyzing dominance and Nash equilibrium without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to defect follows logically from the dominance reasoning and the analysis that both agents will independently reach the same conclusion."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies CDT by identifying defection as the dominant strategy and reasoning through the Nash equilibrium outcome of mutual defection."
+        }
+      },
+      "4": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Prisoner's Dilemma between identical copies where agent 2 cannot observe agent 1's choice, making it effectively simultaneous despite the sequential structure."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "nash_equilibrium",
+          "copy_symmetry",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a consistent CDT approach throughout without considering or switching between different decision theories."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to defect follows logically from the dominance reasoning and the prediction that the identical copy will also defect."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies CDT by identifying defection as the dominant strategy and reasoning through the strategic interaction based on what each rational agent would choose."
+        }
+      },
+      "5": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Prisoner's Dilemma between identical copies where agent 2 cannot observe agent 1's choice, understanding the sequential but unobserved nature of the game."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "outcome_comparison",
+          "copy_symmetry"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a consistent CDT approach throughout, acknowledging copy identity but maintaining that lack of observability prevents coordination."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to defect follows logically from the premises that agent 2 has a dominant strategy to defect and agent 1 should respond optimally to this."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies CDT dominance reasoning by analyzing what each agent will do given their information structure and concluding that defection dominates for both players."
+        }
+      },
+      "6": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Prisoner's Dilemma between identical copies where agent 2 cannot observe agent 1's choice, making it effectively simultaneous."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "copy_symmetry",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning proceeds directly through dominance logic without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "Conclusion to defect follows logically from the dominance reasoning and prediction that the identical copy will also defect."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies CDT dominance reasoning by comparing payoffs across all possible opponent actions and identifying defection as strictly dominant."
+        }
+      },
+      "7": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a sequential Prisoner's Dilemma between copies where agent 2 cannot observe agent 1's choice, and accurately describes the payoff structure."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a consistent CDT approach throughout, analyzing agent 2's dominance reasoning and then agent 1's best response without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to defect follows logically from the dominance analysis showing agent 2 will always defect regardless of beliefs, making defection optimal for agent 1."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies CDT by using dominance reasoning for agent 2 and best response analysis for agent 1, with proper mathematical justification for why defection dominates cooperation."
+        }
+      },
+      "8": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Prisoner's Dilemma between exact copies where agent 2 doesn't observe agent 1's choice but both reason identically."
+        },
+        "reasoning_moves": [
+          "copy_symmetry",
+          "outcome_comparison",
+          "evidential_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly to copy symmetry logic without considering dominance or other approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "Conclusion to cooperate follows logically from the premise that identical copies will make identical choices."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT reasoning by recognizing that agent 1's choice is perfectly correlated with agent 2's choice due to identical reasoning processes."
+        }
+      },
+      "9": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Prisoner's Dilemma between identical copies where agent 1 moves first but agent 2 doesn't observe the choice."
+        },
+        "reasoning_moves": [
+          "copy_symmetry",
+          "outcome_comparison",
+          "evidential_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly to copy symmetry and evidential considerations without considering dominance or switching approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to cooperate follows logically from the premise that identical copies will make identical choices."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by recognizing that the agent's choice is evidence for what the identical copy will choose, leading to symmetric outcomes."
+        }
+      }
+    },
+    "100.1ATT": {
+      "3": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a coordination game between identical players with symmetric payoffs, recognizing the key features of simultaneous decision-making and common knowledge."
+        },
+        "reasoning_moves": [
+          "outcome_comparison",
+          "nash_equilibrium",
+          "copy_symmetry",
+          "ev_calculation"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning proceeds directly from setup analysis to coordination logic without considering alternative approaches or switching between theories."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to attack follows logically from the coordination analysis showing that mutual attack yields higher payoff (1/2) than mutual non-attack (1/3)."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies coordination reasoning by recognizing that identical players with common knowledge will choose the same action, leading to the Pareto superior equilibrium."
+        }
+      },
+      "4": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a coordination game between identical rational players with symmetric payoffs and no private communication."
+        },
+        "reasoning_moves": [
+          "copy_symmetry",
+          "evidential_reasoning",
+          "outcome_comparison",
+          "ev_calculation"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning proceeds directly from symmetry assumption to conclusion without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "Conclusion to attack follows logically from the premise that identical players will choose the same action and joint attack yields higher payoff."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by treating Alice's choice as evidence for Bob's identical choice, leading to proper coordination on the mutually beneficial outcome."
+        }
+      },
+      "8": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a coordination game between identical rational players with symmetric information and payoffs."
+        },
+        "reasoning_moves": [
+          "copy_symmetry",
+          "nash_equilibrium",
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning proceeds directly from symmetry argument to coordination conclusion without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "Conclusion to attack follows logically from the symmetry reasoning and payoff calculations presented."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by recognizing that identical rational players will make the same choice, making Alice's decision evidence for Bob's decision."
+        }
+      }
+    },
+    "109.2ATT": {
+      "0": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a philosophical argument about EDT's consistency, not a game-theoretic scenario, and recognizes the key distinction between belief formation and action choice."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "outcome_comparison",
+          "causal_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning consistently defends EDT from the start without considering that Dave's argument might have merit."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Dave's argument is invalid follows logically from the reasoning about the distinction between belief formation and action choice under EDT."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT by distinguishing between evidence-based belief formation and action choice, properly noting that EDT evaluates actions given fixed beliefs rather than prescribing belief manipulation."
+        }
+      },
+      "1": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a philosophical argument about EDT's scope and application, distinguishing between decision-making and belief formation."
+        },
+        "reasoning_moves": [
+          "theory_application",
+          "outcome_comparison",
+          "causal_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning consistently argues that Dave misapplies EDT without considering the opposing view."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "Conclusion that Dave's argument is invalid follows logically from the premise that EDT applies to actions, not belief formation."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT by distinguishing its proper domain (action selection) from belief formation, showing rigorous understanding of the theory's scope."
+        }
+      },
+      "2": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a philosophical argument about EDT's application to belief formation vs. action selection, recognizing the key distinction between epistemic and practical reasoning."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "outcome_comparison",
+          "authority_appeal"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning consistently argues against Dave's reductio from start to finish without considering the opposing view."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Dave's argument fails logically follows from the premise that EDT applies to actions, not belief formation."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT by distinguishing between its proper domain (action selection under uncertainty) and improper application to belief formation, maintaining the theory's coherence."
+        }
+      },
+      "3": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a philosophical challenge to EDT involving the distinction between belief formation and decision-making, not a standard game theory setup."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "outcome_comparison",
+          "authority_appeal"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning consistently defends EDT from the start without considering the validity of Dave's critique."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Dave's argument is invalid follows logically from the premises about the distinction between beliefs and actions."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT principles by distinguishing between belief formation (epistemic) and action selection (decision-theoretic), showing that EDT doesn't advocate choosing beliefs for utility maximization."
+        }
+      },
+      "4": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a philosophical argument about EDT's application to belief formation vs. action choice, recognizing the distinction between credence formation and decision-making under EDT."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "outcome_comparison",
+          "authority_appeal"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning consistently defends EDT throughout without considering alternative perspectives or switching approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Dave's argument fails as a reductio follows logically from the premise that EDT applies to actions given fixed credences, not to belief formation itself."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT by distinguishing between evidence-based credence formation and action selection given those credences, showing that manipulating beliefs contradicts proper EDT application."
+        }
+      },
+      "5": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a philosophical argument about the scope and application of EDT, distinguishing between belief formation and action selection."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "outcome_comparison",
+          "ev_calculation",
+          "causal_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning consistently follows one line of argument throughout - that Dave misapplies EDT to belief formation rather than action selection."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Dave's argument is invalid follows logically from the premise that EDT applies to actions given fixed credences, not to belief formation itself."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT by distinguishing its proper domain (action selection given credences) from belief formation, and explains why choosing beliefs to manipulate evidence would undermine EDT's evidential foundation."
+        }
+      },
+      "6": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a philosophical argument about EDT's application to belief formation vs. action selection, recognizing the key distinction between forming credences based on evidence and choosing actions given those credences."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "outcome_comparison",
+          "authority_appeal"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning consistently defends EDT from the start without considering the validity of Dave's critique or switching approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Dave's argument fails logically follows from the premise that EDT applies to action selection given fixed beliefs, not to belief formation itself."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT by distinguishing between belief formation (which should respond to evidence) and action selection (which EDT evaluates based on evidential value given those beliefs)."
+        }
+      },
+      "7": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a philosophical argument about EDT's consistency, recognizing the distinction between choosing actions vs. choosing beliefs, and the evidential relationship between beliefs and outcomes."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "outcome_comparison",
+          "causal_reasoning",
+          "ev_calculation"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning consistently defends EDT from the start without considering that Dave's argument might have merit."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Dave's argument fails follows logically from the premises about EDT not endorsing arbitrary belief choice and the distinction between actions and beliefs."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT by distinguishing between choosing actions (which EDT evaluates) and choosing beliefs (which should be evidence-based), and properly identifies that EDT evaluates vegetarianism based on expected utility given actual credences."
+        }
+      },
+      "8": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a philosophical argument about EDT's application to belief formation vs. action selection, recognizing the key distinction between choosing beliefs and choosing actions."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "outcome_comparison",
+          "causal_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace consistently argues against Dave's reductio from start to finish without considering the opposing view."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Dave's argument is invalid follows logically from the premises about EDT applying to actions not beliefs and the independence of facts from beliefs."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT by distinguishing between belief formation (constrained by evidence) and action selection (where EDT applies), and properly identifies that EDT evaluates actions given current beliefs."
+        }
+      },
+      "9": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a meta-question about EDT's application to belief formation vs. action selection, recognizing the key distinction between choosing actions and forming beliefs."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "causal_reasoning",
+          "outcome_comparison",
+          "ev_calculation"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning consistently defends EDT throughout without considering alternative interpretations or switching approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "Conclusion that Dave's argument is invalid follows logically from the premise that EDT applies to actions given beliefs, not to belief formation itself."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT by distinguishing between action selection (where EDT is relevant) and belief formation (where it is not), accurately identifying that beliefs should be evidence-based rather than chosen for favorable implications."
+        }
+      }
+    },
+    "116.1ATT": {
+      "0": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of the problem structure - it's just a single letter 'A' with no reasoning about the prediction scenario, correlation vs causation, or decision-theoretic considerations."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown, so there's no opportunity for a pivot - just jumps directly to answer A."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There's no stated reasoning to evaluate coherence against - the conclusion appears without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied or even mentioned - the response lacks any theoretical framework or reasoning process."
+        }
+      },
+      "1": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of the problem structure - it's just a single letter 'A' with no reasoning about the prediction scenario, correlation vs causation, or decision-theoretic considerations."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown, so there's no opportunity for a pivot - just jumps directly to answer A."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There's no stated reasoning to evaluate coherence against - the conclusion appears without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied or even mentioned - the response lacks any theoretical framework or reasoning process."
+        }
+      },
+      "2": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of the problem structure - it's just a single letter 'A' with no reasoning about the prediction scenario, correlation vs causation, or decision-theoretic considerations."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning pivot since there's essentially no reasoning - just jumps directly to answer A."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There's no stated reasoning to evaluate coherence against - the conclusion doesn't follow from any premises since none are given."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied at all - the response is just a letter with no theoretical framework or reasoning process shown."
+        }
+      },
+      "3": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace completely fails to identify the decision-theoretic structure involving prediction, correlation between choices and book content, and the EDT vs CDT distinction."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning pivot occurs since there's essentially no reasoning shown at all."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "The conclusion 'B' doesn't follow from any stated reasoning since no reasoning was provided."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied or even mentioned despite this being a clear EDT vs CDT scenario."
+        }
+      },
+      "4": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of the problem structure - it's just a single letter 'A' with no reasoning about the prediction scenario, correlation vs causation, or decision-theoretic considerations."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown, so there's no opportunity for a pivot - just jumps directly to answer A."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There's no stated reasoning to evaluate coherence against - the conclusion doesn't follow from any premises because no premises are given."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied at all - the response is just a letter with no theoretical framework or reasoning process shown."
+        }
+      },
+      "5": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of the problem structure - it's just a single letter 'A' with no reasoning about the prediction scenario, correlation vs causation, or decision-theoretic considerations."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown, so there's no opportunity for a pivot - just jumps directly to answer A."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There's no stated reasoning to evaluate coherence against - the conclusion doesn't follow from any premises because no premises are given."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied at all - the response is just a letter with no theoretical framework or reasoning process shown."
+        }
+      },
+      "6": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of the problem structure - it's just a single letter 'A' with no reasoning about the prediction scenario, correlation vs causation, or decision-theoretic considerations."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown, so there's no opportunity for a pivot - just jumps directly to answer A."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There's no stated reasoning to evaluate coherence against - the conclusion doesn't follow from any premises because no premises are given."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied at all - the response is just a letter with no theoretical framework or reasoning process shown."
+        }
+      },
+      "7": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of the problem structure - it's just a single letter 'A' with no reasoning about the prediction scenario, correlation vs causation, or decision-theoretic considerations."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown, so there's no opportunity for a pivot - just jumps directly to answer A."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There's no stated reasoning to evaluate coherence against - the conclusion appears without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied or even mentioned - the response lacks any theoretical framework or reasoning process."
+        }
+      },
+      "8": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of the problem structure - it's just a single letter 'A' with no reasoning about the prediction scenario, correlation vs causation, or decision-theoretic considerations."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown, so there's no opportunity for a pivot - just jumps directly to answer A."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There's no stated reasoning to evaluate coherence against - the conclusion appears without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied or even mentioned - the response lacks any theoretical framework or reasoning process."
+        }
+      },
+      "9": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of the problem structure - it's just a single letter 'A' with no reasoning about the prediction scenario, correlation vs causation, or decision theory considerations."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown, so there's no opportunity for a pivot - just jumps directly to answer A."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There's no stated reasoning to evaluate coherence against - the conclusion doesn't follow from any premises because no premises are given."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied at all - the response is just a letter with no theoretical framework or reasoning process shown."
+        }
+      }
+    },
+    "120.2ATT": {},
+    "30.1ATT": {
+      "0": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Stag Hunt game with copies and accurately describes the payoff structure."
+        },
+        "reasoning_moves": [
+          "copy_symmetry",
+          "outcome_comparison",
+          "ev_calculation"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly from copy symmetry to choosing Stag without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "The trace concludes Alice should choose Stag (A) but the model actually selected answer choice B (CDT-aligned)."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT reasoning by recognizing that copy symmetry eliminates coordination risk and makes Stag the clear choice."
+        }
+      },
+      "1": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Stag Hunt game against a copy where the copy mimics Alice's choice."
+        },
+        "reasoning_moves": [
+          "copy_symmetry",
+          "outcome_comparison",
+          "evidential_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly to EDT-style thinking without considering CDT approach."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "Conclusion to choose Stag follows logically from the premise that the copy will mimic Alice's choice."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT reasoning by recognizing that Alice's choice determines the copy's choice, making beliefs about the copy irrelevant."
+        }
+      },
+      "2": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Stag Hunt game against a copy, understanding that the copy will make identical decisions."
+        },
+        "reasoning_moves": [
+          "copy_symmetry",
+          "outcome_comparison",
+          "evidential_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly from copy symmetry to choosing Stag without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to choose Stag follows logically from the premise that copies make identical choices and Stag-Stag yields higher payoffs."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by recognizing that Alice's choice is perfectly correlated with her copy's choice, making beliefs about the copy irrelevant."
+        }
+      },
+      "3": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Stag Hunt game against an identical copy, understanding that the copy will mirror Alice's choice."
+        },
+        "reasoning_moves": [
+          "copy_symmetry",
+          "outcome_comparison",
+          "evidential_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning proceeds directly from copy symmetry to the conclusion without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to choose Stag follows logically from the premise that copies make identical choices and Stag yields higher payoff."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by recognizing that Alice's choice is perfectly correlated with the copy's choice, making her action determinative of the outcome."
+        }
+      },
+      "4": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Stag Hunt game against a copy, understands the payoff structure, and recognizes that the copy will mirror Alice's choice."
+        },
+        "reasoning_moves": [
+          "copy_symmetry",
+          "outcome_comparison",
+          "dominance"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly from recognizing copy symmetry to concluding stag is optimal, with no consideration of alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Alice should choose stag follows logically from the premise that copies choose identically and stag yields higher payoff."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by recognizing that Alice's choice determines the copy's choice, making stag strictly better than hare."
+        }
+      },
+      "5": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Stag Hunt game against a copy, understanding that the copy will make identical decisions."
+        },
+        "reasoning_moves": [
+          "copy_symmetry",
+          "outcome_comparison",
+          "dominance"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly from copy symmetry to Stag choice without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "Conclusion that Alice should choose Stag follows logically from the premise that copies make identical choices."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by recognizing that Alice's choice perfectly correlates with her copy's choice, making Stag the clear optimal choice."
+        }
+      },
+      "6": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Stag Hunt game against a copy, understanding that the copy will make identical decisions."
+        },
+        "reasoning_moves": [
+          "copy_symmetry",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning goes directly from copy symmetry to choosing Stag without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "The trace concludes Alice should choose Stag and dismisses option B, but then selects answer A, which contradicts the CDT answer the model actually chose."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT reasoning by recognizing copy symmetry means Alice's choice determines the outcome, leading to the cooperative solution."
+        }
+      },
+      "7": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Stag Hunt game against a copy, understanding that the copy will make identical decisions."
+        },
+        "reasoning_moves": [
+          "copy_symmetry",
+          "outcome_comparison",
+          "evidential_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly from copy symmetry to choosing Stag without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "Conclusion to choose Stag follows logically from the premise that copies make identical choices and Stag coordination yields higher payoffs."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by recognizing that Alice's choice is perfectly correlated with her copy's choice, making beliefs irrelevant."
+        }
+      },
+      "8": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Stag Hunt game against a copy, understanding that the players are identical and will make the same choice."
+        },
+        "reasoning_moves": [
+          "copy_symmetry",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single consistent line from copy symmetry to outcome comparison without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to choose Stag follows logically from the premise that copies make identical choices and Stag-Stag yields higher payoff than Hare-Hare."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by recognizing that Alice's choice is perfectly correlated with her copy's choice, making beliefs about the copy's independent action irrelevant."
+        }
+      },
+      "9": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Stag Hunt game against a copy, understanding that the players are identical copies who will make the same choice."
+        },
+        "reasoning_moves": [
+          "copy_symmetry",
+          "outcome_comparison",
+          "dominance"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning goes directly from copy symmetry to choosing Stag without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to choose Stag follows logically from the premise that copies make identical choices and mutual Stag yields the highest payoff."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by recognizing that Alice's choice is perfectly correlated with her copy's choice, making mutual Stag achievable."
+        }
+      }
+    },
+    "35.1ATT": {
+      "0": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as Newcomb's problem with specific payoffs ($300k in B, $1.5k in A) and 60% predictor accuracy."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "ev_calculation"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly to evidential calculation without considering causal reasoning or dominance arguments."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion ($180,000) follows logically from the evidential expected value calculation presented."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential decision theory by calculating expected utility conditional on the chosen action, using the predictor's accuracy rate properly."
+        }
+      },
+      "1": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as Newcomb's problem with specific payoffs ($300k in B, $1.5k in A) and 60% predictor accuracy."
+        },
+        "reasoning_moves": [
+          "ev_calculation"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly to expected value calculation without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion ($180,000) follows logically from the expected value calculation shown."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT reasoning by calculating expected utility based on correlation between choice and predictor accuracy."
+        }
+      },
+      "2": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as Newcomb's problem with specific payoffs ($300k in B, $1.5k in A) and predictor accuracy (60%)."
+        },
+        "reasoning_moves": [
+          "ev_calculation"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Goes directly to expected value calculation without considering alternative approaches or theories."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion (choosing A, $180,000) follows logically from the expected value calculation shown."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT reasoning by calculating expected utility based on correlation between choice and predictor's accuracy."
+        }
+      },
+      "3": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as Newcomb's problem with specific payoffs ($300,000 in box B, $1,500 in box A) and predictor accuracy (60%)."
+        },
+        "reasoning_moves": [
+          "ev_calculation"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly to expected value calculation without considering alternative approaches or theories."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion ($180,000) follows logically from the expected value calculation shown."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT reasoning by calculating expected utility based on the correlation between choice and predictor accuracy."
+        }
+      },
+      "4": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as Newcomb's problem with specific payoffs ($300k in B, $1.5k in A) and 60% predictor accuracy."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "evidential_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly to EDT calculation without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion (A) follows logically from the expected value calculation presented."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT by calculating expected utility based on correlation between choice and prediction, treating choice as evidence for predictor's behavior."
+        }
+      },
+      "5": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as Newcomb's problem with specific payoff amounts and predictor accuracy rate."
+        },
+        "reasoning_moves": [
+          "ev_calculation"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly to expected value calculation without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion of $180,000 follows logically from the expected value calculation shown."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT by calculating expected utility based on correlation between choice and predictor accuracy."
+        }
+      },
+      "6": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as Newcomb's problem with specific payoffs ($300,000 in box B, $1,500 in box A) and predictor accuracy (60%)."
+        },
+        "reasoning_moves": [
+          "ev_calculation"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly to expected value calculation without considering alternative approaches or theories."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion (expected utility of $180,000) follows directly from the stated calculation."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by calculating expected utility based on correlation between choice and predictor's guess, with accurate probability calculations."
+        }
+      },
+      "7": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as Newcomb's problem with specific payoffs ($300k in B, $1.5k in A) and 60% predictor accuracy."
+        },
+        "reasoning_moves": [
+          "ev_calculation"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Goes directly to EDT calculation without considering or switching from any alternative approach."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion ($180,000) follows directly from the expected value calculation shown."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT by calculating expected utility based on conditional probabilities given the choice, treating the choice as evidence for the prediction."
+        }
+      },
+      "8": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as Newcomb's problem with specific payoffs ($300,000 in box B, $1,500 in box A) and predictor accuracy (60%)"
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "evidential_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly to evidential calculation without considering causal reasoning or dominance arguments"
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion ($180,000) follows logically from the expected value calculation using evidential reasoning"
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential decision theory by calculating expected utility based on the correlation between choice and predictor accuracy"
+        }
+      },
+      "9": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as Newcomb's problem with specific payoffs ($300,000 in B, $1,500 in A) and predictor accuracy (60%)."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly to evidential calculation without considering causal alternatives."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion ($180,000) follows logically from the expected value calculation shown."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by calculating expected utility based on conditional probabilities given the choice to one-box."
+        }
+      }
+    },
+    "41.3": {
+      "0": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-style problem with a predictor (80% accuracy) and recognizes the payoff structure of Matching Pennies with entry fee."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "ev_calculation",
+          "outcome_comparison",
+          "causal_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace consistently argues from an EDT perspective throughout, explaining why CDT fails rather than pivoting between theories."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that this is a compelling argument against CDT follows logically from the demonstrated calculation showing CDT leads to suboptimal outcomes."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT reasoning by accounting for the evidential correlation between player's choice and demon's prediction, and accurately calculates the expected value under the predictive correlation."
+        }
+      },
+      "1": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-style problem with a predictor, recognizes the payoff structure, and understands the key feature that the demon predicts and matches the player's choice."
+        },
+        "reasoning_moves": [
+          "causal_reasoning",
+          "evidential_reasoning",
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace consistently argues against CDT from start to finish without considering or switching between different approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that this is a compelling argument against CDT follows logically from the reasoning that CDT ignores predictive correlation and leads to suboptimal outcomes."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by recognizing the correlation between the agent's choice and the demon's prediction, and accurately calculates the expected values under both theories."
+        }
+      },
+      "2": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-style problem with a predictor who has already acted, recognizes the payoff structure, and understands the 80% prediction accuracy constraint."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "causal_reasoning",
+          "evidential_reasoning",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace consistently argues against CDT from start to finish, showing how CDT's recommendation leads to suboptimal outcomes without genuinely considering CDT's perspective."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that this scenario is a compelling argument against CDT follows logically from the demonstrated gap between CDT's recommendation and actual expected utility."
+        },
+        "theory_application": {
+          "rating": "AMBER",
+          "note": "Correctly calculates expected utilities under both CDT and EDT frameworks, but the CDT analysis assumes symmetric priors without fully justifying this assumption in the context of the problem."
+        }
+      },
+      "3": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-style prediction problem with an 80% accurate predictor and the key payoff structure including the $5 entry fee."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "ev_calculation",
+          "outcome_comparison",
+          "causal_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace consistently argues from an evidential perspective throughout, showing no consideration of switching to CDT reasoning."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that this scenario argues against CDT follows logically from the reasoning about prediction accuracy and expected values."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by incorporating the 80% prediction accuracy into expected value calculations and recognizing the correlation between choice and predictor's action."
+        }
+      },
+      "4": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-style problem with a predictor, recognizes the payoff structure ($11 for mismatch, $0 for match, minus $5 entry fee), and understands the 80% prediction accuracy."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "ev_calculation",
+          "outcome_comparison",
+          "causal_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace consistently argues from an EDT perspective throughout, explaining why CDT fails without genuinely considering CDT's merits."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that this is a compelling argument against CDT follows logically from the reasoning that CDT recommends a negative expected value action."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT reasoning by recognizing the evidential link between the player's choice and the demon's prediction, and accurately calculates the expected values under both theories."
+        }
+      },
+      "5": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-style problem with a predictor, recognizes the payoff structure, and understands the key feature that the Demon predicts with 80% accuracy."
+        },
+        "reasoning_moves": [
+          "causal_reasoning",
+          "evidential_reasoning",
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace consistently argues against CDT from start to finish, showing how CDT's independence assumption leads to incorrect calculations."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that this scenario is a compelling argument against CDT follows logically from the demonstrated calculation showing CDT leads to suboptimal outcomes."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies both CDT logic (treating Demon's choice as independent) and evidential reasoning (accounting for the 80% correlation), showing precisely why CDT fails in this context."
+        }
+      },
+      "6": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-style problem with a predictor (Demon) who chooses based on predicting the player's choice, and accurately describes the payoff structure and prediction accuracy."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "ev_calculation",
+          "outcome_comparison",
+          "causal_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace consistently argues from an EDT perspective throughout, explaining why CDT fails rather than pivoting between theories."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that this is a compelling argument against CDT follows logically from the demonstrated calculation showing CDT leads to suboptimal outcomes."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by recognizing the correlation between the player's choice and the Demon's prediction, and accurately calculates expected utilities under both CDT and EDT frameworks."
+        }
+      },
+      "7": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-style prediction problem with a matching pennies payoff structure, recognizing the key feature that the Demon predicts and matches the player's choice with 80% accuracy."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "causal_reasoning",
+          "evidential_reasoning",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace consistently argues against CDT from start to finish without considering or switching between different approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that this scenario is a compelling argument against CDT follows logically from the demonstrated calculation showing CDT leads to worse outcomes than EDT."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies both CDT logic (treating Demon's choice as independent, leading to +$0.50 expected value) and EDT logic (accounting for predictive correlation, leading to -$2.80 expected value) to demonstrate the contrast."
+        }
+      },
+      "8": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-style prediction problem with matching pennies structure, recognizing the 80% prediction accuracy and the payoff structure including entry fees."
+        },
+        "reasoning_moves": [
+          "causal_reasoning",
+          "evidential_reasoning",
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace consistently argues against CDT from start to finish without considering or switching between different approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that CDT leads to suboptimal outcomes follows logically from the expected value calculations and comparison with doing nothing."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by accounting for the correlation between player's choice and demon's prediction, and accurately calculates expected values under both CDT and EDT frameworks."
+        }
+      },
+      "9": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-style problem with a predictor, recognizes the payoff structure ($11 for mismatch, $0 for match, minus $5 entry fee), and understands the 80% prediction accuracy."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "causal_reasoning",
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace consistently argues against CDT from start to finish, showing how CDT fails due to ignoring correlations, without considering or switching between different approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that this scenario is a compelling argument against CDT follows logically from the demonstrated calculation showing CDT leads to suboptimal outcomes."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT reasoning by accounting for the evidential correlation between the agent's choice and the demon's prediction, and accurately calculates the expected values under the correlated probabilities."
+        }
+      }
+    },
+    "48.1ATT": {
+      "0": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a debate about EDT vs CDT approaches to Newcomb's Paradox, understanding that Alice is questioning the relevance of causal interventions."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "causal_reasoning",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace consistently argues for the EDT position from start to finish without considering or switching from the CDT perspective."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to agree with Alice (choosing EDT) follows logically from the reasoning that evidential considerations matter more than causal interventions."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT reasoning by emphasizing correlation/evidence over causal intervention, and accurately characterizes the EDT position on Newcomb's Paradox."
+        }
+      },
+      "1": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a meta-question about the philosophical foundations of CDT vs EDT, specifically about the relevance of interventions/counterfactuals in decision theory."
+        },
+        "reasoning_moves": [
+          "causal_reasoning",
+          "evidential_reasoning",
+          "outcome_comparison",
+          "authority_appeal"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace consistently argues for the CDT position throughout, defending the importance of interventions without considering the EDT perspective."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Alice's argument is flawed follows logically from the reasoning that interventions are necessary to distinguish causation from correlation."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies CDT reasoning by explaining how interventions help isolate causal effects and avoid spurious correlations, with appropriate examples like Newcomb's Paradox and the smoking gene problem."
+        }
+      },
+      "2": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace completely fails to identify this as a question about the philosophical foundations of decision theory, specifically about the relevance of interventional counterfactuals."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning pivot occurs since there's essentially no reasoning shown."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "The conclusion (choosing A) doesn't follow from any stated reasoning since no reasoning is provided."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is actually applied or discussed despite this being explicitly a question about EDT vs CDT foundations."
+        }
+      },
+      "3": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace completely fails to identify the structure - it's about the philosophical debate between EDT and CDT regarding the relevance of causal interventions, but the model provides no analysis of this setup."
+        },
+        "reasoning_moves": [],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is provided at all - just a direct answer choice with no consideration of alternatives."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion is given without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied or even mentioned - the model simply states an answer without demonstrating understanding of CDT principles or causal intervention concepts."
+        }
+      },
+      "4": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace completely fails to identify the structure - it's about the philosophical debate between EDT and CDT regarding the relevance of causal interventions, but the model provides no analysis of this setup."
+        },
+        "reasoning_moves": [],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is provided at all - just a direct answer choice with no consideration of alternatives."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion is given without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied or even mentioned - the model simply states an answer without demonstrating understanding of CDT principles or causal intervention concepts."
+        }
+      },
+      "5": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace completely fails to identify the structure - it's about the philosophical debate between EDT and CDT regarding the relevance of causal interventions, but the model provides no analysis of this setup."
+        },
+        "reasoning_moves": [],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is provided at all - just a direct answer choice with no consideration of alternatives."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion is given without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied or even mentioned - the model simply states an answer without demonstrating understanding of CDT principles or any other framework."
+        }
+      },
+      "6": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace completely fails to identify the structure - it's about the philosophical debate between EDT and CDT regarding the relevance of causal interventions, but the model provides no analysis of this setup."
+        },
+        "reasoning_moves": [],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is provided at all - just a direct answer choice with no consideration of alternatives."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion is given without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied or even mentioned - the model simply states an answer without demonstrating understanding of CDT principles or causal intervention concepts."
+        }
+      },
+      "7": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace completely fails to identify that this is a question about the philosophical foundations of decision theory, specifically about the relevance of causal interventions in distinguishing EDT from CDT."
+        },
+        "reasoning_moves": [],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is provided - just a single letter answer with no consideration of any approach."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion appears without any supporting argument."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied or even mentioned - the response shows no understanding of CDT's reliance on causal interventions or EDT's rejection of their relevance."
+        }
+      },
+      "8": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace completely fails to identify the structure - it's about the philosophical debate between EDT and CDT regarding the relevance of causal interventions, but the model provides no analysis of this setup."
+        },
+        "reasoning_moves": [],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is provided at all - just a direct answer choice with no consideration of alternatives."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion is given without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied or even mentioned - the model simply states an answer without demonstrating understanding of CDT principles or causal intervention concepts."
+        }
+      },
+      "9": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a meta-question about decision theory approaches, specifically the role of interventions in CDT vs EDT reasoning, with clear understanding of Newcomb's paradox context."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "causal_reasoning",
+          "outcome_comparison",
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning consistently supports EDT from start to finish without considering or switching from CDT perspective."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "Conclusion logically follows from the stated reasoning that interventions sever correlations and misrepresent actual decision contexts."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT logic by emphasizing correlations, conditional probabilities, and evidence provided by free choices rather than causal interventions."
+        }
+      }
+    },
+    "52ATT": {
+      "0": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as an analogy problem comparing Bob's reasoning in two scenarios (banana-nose pain correlation vs Newcomb's problem), recognizing Bob as a two-boxer and the core issue of causal vs correlational reasoning."
+        },
+        "reasoning_moves": [
+          "causal_reasoning",
+          "outcome_comparison",
+          "evidential_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace follows a consistent line of reasoning from start to finish, arguing that Charlie has identified an inconsistency without considering alternative interpretations."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Charlie successfully identified an inconsistency follows logically from the reasoning about Bob's different treatment of correlation in the two scenarios."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT-style reasoning by focusing on the evidential relationship between choices and outcomes, and properly identifies the inconsistency in Bob's treatment of correlational evidence across the two cases."
+        }
+      },
+      "1": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as an analogy problem comparing Alice's banana situation to Newcomb's problem, with Bob as a two-boxer (CDT adherent) and the question being about consistency between his positions."
+        },
+        "reasoning_moves": [
+          "causal_reasoning",
+          "outcome_comparison",
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning consistently applies CDT perspective throughout, defending Bob's position without considering the EDT interpretation."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Bob is consistent follows logically from the distinction drawn between forward and backward causation."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies CDT reasoning by distinguishing between forward causation (bananas\u2192pain) and backward causation (choice\u2192past prediction), showing why CDT would treat these cases differently."
+        }
+      },
+      "2": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as an analogy problem comparing Newcomb's problem reasoning to a banana/nose pain scenario, understanding the key issue is about causal vs evidential reasoning consistency."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "causal_reasoning",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single consistent line from start to finish, applying dominance reasoning to both scenarios without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that there's no inconsistency follows logically from the premise that Bob consistently applies dominance reasoning in both scenarios."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies CDT/dominance reasoning by showing that in both scenarios, one option weakly dominates the other regardless of the underlying causal mechanism."
+        }
+      },
+      "3": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as an analogy problem comparing Bob's reasoning in two scenarios (banana/nose pain vs Newcomb's problem) and recognizes the key issue is consistency in applying causal vs correlational reasoning."
+        },
+        "reasoning_moves": [
+          "causal_reasoning",
+          "evidential_reasoning",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace follows a single line of reasoning from start to finish, arguing that Bob is inconsistent without considering alternative interpretations."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Charlie successfully identified an inconsistency follows logically from the premise that Bob applies different standards for correlation vs causation in the two scenarios."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT reasoning by focusing on the inconsistency in how Bob treats correlational evidence across the two scenarios, properly identifying that CDT should require causal mechanisms in both cases."
+        }
+      },
+      "4": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a meta-level question about consistency between decision theories applied to different scenarios (Newcomb's problem vs. everyday correlation/causation)."
+        },
+        "reasoning_moves": [
+          "causal_reasoning",
+          "evidential_reasoning",
+          "outcome_comparison",
+          "copy_symmetry"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning consistently argues for the inconsistency from start to finish without considering the opposing view."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Charlie successfully identified an inconsistency follows logically from the analysis of Bob's different approaches to correlation vs. causation."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT reasoning by recognizing that correlational evidence can justify action choices, and accurately contrasts this with CDT's requirement for causal mechanisms."
+        }
+      },
+      "5": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as an analogy problem comparing Bob's reasoning in two scenarios (banana/nose pain vs Newcomb's problem) and recognizes the key issue is consistency in applying decision theory principles."
+        },
+        "reasoning_moves": [
+          "causal_reasoning",
+          "evidential_reasoning",
+          "outcome_comparison",
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning proceeds directly toward finding inconsistency without considering alternative interpretations or switching approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Charlie successfully identified an inconsistency follows logically from the analysis of Bob's different approaches to correlation vs causation in the two scenarios."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies the distinction between CDT (requiring causal information) and EDT (acting on correlations) to analyze the consistency of Bob's positions across both scenarios."
+        }
+      },
+      "6": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a meta-level question about consistency between decision theories applied to different scenarios, recognizing Bob as a CDT advocate and the banana scenario as analogous to Newcomb's problem."
+        },
+        "reasoning_moves": [
+          "evidential_reasoning",
+          "causal_reasoning",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning consistently argues for the inconsistency from start to finish without considering the opposing view."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Charlie successfully identified an inconsistency follows logically from the analysis of Bob's different responses to correlation in the two scenarios."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT reasoning by recognizing that Bob's willingness to act on correlation in the banana case contradicts his CDT stance that requires causal information in Newcomb's problem."
+        }
+      },
+      "7": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as an analogy problem comparing Bob's CDT reasoning in Newcomb's problem with his advice about the banana-nose pain correlation."
+        },
+        "reasoning_moves": [
+          "causal_reasoning",
+          "outcome_comparison",
+          "evidential_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning consistently follows one line of argument from start to finish without considering alternative interpretations."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Charlie successfully points out an inconsistency follows logically from the premise that Bob applies different standards in the two scenarios."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies the distinction between causal and evidential reasoning, accurately identifying that CDT requires causal mechanisms while Bob's banana advice relies on mere correlation."
+        }
+      },
+      "8": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as an analogy problem comparing Bob's reasoning in two scenarios - the banana/nose pain correlation and Newcomb's problem - to detect inconsistency in his causal reasoning standards."
+        },
+        "reasoning_moves": [
+          "causal_reasoning",
+          "outcome_comparison",
+          "evidential_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single direction throughout, identifying the inconsistency without considering alternative interpretations or switching approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Charlie has identified an inconsistency follows logically from the analysis of Bob's different standards for causal vs. correlational evidence across the two scenarios."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential reasoning by recognizing that Bob inconsistently demands causal information in Newcomb's problem but accepts correlational evidence for the banana advice, demonstrating the inconsistency Charlie points out."
+        }
+      },
+      "9": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as an analogy problem comparing Bob's CDT stance in Newcomb's problem with his advice in the banana scenario, recognizing the key issue is consistency in applying causal vs. correlational reasoning."
+        },
+        "reasoning_moves": [
+          "causal_reasoning",
+          "evidential_reasoning",
+          "outcome_comparison",
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning proceeds directly toward identifying the inconsistency without considering alternative interpretations or switching approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Charlie has identified an inconsistency follows logically from the analysis of Bob's different standards for causal information in the two scenarios."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies the distinction between CDT (requiring causal mechanisms) and EDT (acting on correlations) to identify the inconsistency in Bob's reasoning across the two scenarios."
+        }
+      }
+    },
+    "66.4ATT": {
+      "0": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a circular graph game with payoff structure dependent on predecessor's action, and recognizes Alice as CDT while others are similar decision-makers."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly from dominance analysis to conclusion without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "Conclusion that Bob should choose a1 follows logically from the dominance analysis showing a1 yields higher payoffs in all cases."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies dominance reasoning by systematically comparing payoffs for each possible predecessor action and showing a1 always yields higher payoffs."
+        }
+      },
+      "1": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a circular graph game with payoffs determined by predecessor-self action pairs, and recognizes Bob's position relative to Alice."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "nash_equilibrium",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly to dominance analysis without considering alternative approaches or switching between theories."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to choose a1 follows logically from the dominance analysis showing a1 yields higher payoffs regardless of Alice's choice."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies dominance reasoning by systematically comparing payoffs for both possible predecessor actions and identifying the strictly dominant strategy."
+        }
+      },
+      "2": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a circular graph game with payoff dependencies on predecessor actions, recognizes the simultaneous play structure, and understands that Alice is CDT while others use the same (unspecified) decision theory."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "nash_equilibrium",
+          "outcome_comparison",
+          "ev_calculation"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning proceeds directly through dominance analysis without considering alternative approaches or switching between different theoretical frameworks."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Bob should choose a1 follows logically from the dominance analysis showing a1 yields higher payoffs regardless of predecessor's action."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies dominance reasoning by systematically checking that a1 yields higher payoffs than a2 in both possible scenarios (predecessor plays a1 or a2), then extends this to equilibrium analysis."
+        }
+      },
+      "3": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a circular graph game with payoff dependencies on predecessors, recognizes the dominance structure, and understands the information about player types."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "nash_equilibrium",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single clear path from dominance analysis to conclusion without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Bob should choose a1 follows logically from the dominance analysis and the specific application to Bob's situation with Alice as predecessor."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies dominance reasoning by systematically checking both possible predecessor actions and showing a1 yields higher payoffs in each case."
+        }
+      },
+      "4": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies the circular graph structure, payoff table, and that each player has exactly one predecessor."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly to dominance analysis without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "Conclusion that Bob should choose a1 follows logically from the dominance reasoning presented."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies dominance reasoning by comparing payoffs across all possible predecessor actions and showing a1 always yields higher payoffs."
+        }
+      },
+      "5": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies the circular graph structure, payoff dependencies on predecessor actions, and the dominance relationship in the payoff matrix."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single clear path from payoff analysis to dominance conclusion without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Bob should choose a1 follows logically from the demonstrated strict dominance analysis."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies dominance reasoning by systematically comparing Bob's payoffs under both possible predecessor actions and showing a1 is always better."
+        }
+      },
+      "6": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a circular graph game with payoff dependencies on predecessor actions, recognizes the simultaneous play structure, and understands Alice's special CDT status."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "nash_equilibrium",
+          "outcome_comparison",
+          "ev_calculation"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single clear path from dominance analysis to conclusion without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Bob should choose a1 follows logically from the dominance analysis showing a1 yields higher payoffs regardless of predecessor's action."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies dominance reasoning by systematically comparing payoffs for both possible predecessor actions and identifying a1 as strictly dominant."
+        }
+      },
+      "7": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a circular graph game with payoffs dependent on predecessor's action, recognizes Alice as CDT and others as similar decision-makers."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly to dominance analysis without considering alternative approaches or switching between theories."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "Conclusion that Bob should choose a1 follows logically from the dominance analysis showing a1 yields higher payoffs in all scenarios."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies dominance reasoning by systematically comparing payoffs for a1 vs a2 across all possible predecessor actions and showing a1 is strictly dominant."
+        }
+      },
+      "8": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a circular graph game with payoff dependencies on predecessor actions, recognizes Alice as CDT and others as similar decision-makers."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "nash_equilibrium",
+          "causal_reasoning",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning proceeds directly through dominance analysis without considering alternative approaches or switching theories."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "Conclusion that Bob should choose a1 follows logically from the dominance argument and analysis of Alice's CDT reasoning."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies dominance reasoning by showing a1 yields higher payoffs in both scenarios ($2 > $1 and $6.00 > $5.20) and properly analyzes the Nash equilibrium."
+        }
+      },
+      "9": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a directed graph game with payoffs dependent on predecessor actions, recognizes the circular structure, and understands that Bob's payoff depends only on Alice's action."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "outcome_comparison",
+          "ev_calculation"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single logical path from analyzing Alice's incentives to determining Bob's optimal response, with no consideration of alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Bob should choose a1 follows logically from the analysis showing Alice will play a1 and that a1 gives Bob higher payoff ($2 vs $1) given Alice's choice."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies dominance reasoning by showing a1 strictly dominates a2 for both Alice and Bob given their respective situations, with proper payoff comparisons."
+        }
+      }
+    },
+    "68.5ATT": {
+      "0": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a coordination game with a safe option (0 gives $1) and risky coordination options (matching on 1-10 gives $2), and recognizes the probabilistic belief structure about the other player's actions."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single clear path from setup through expected value calculation to conclusion without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Theodora's decision depends on p follows logically from the expected value analysis showing different optimal choices for different values of p."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies expected utility maximization by calculating expected payoffs (1 for choosing 0, 2p for choosing any k\u2208{1,...,10}) and identifying the threshold p=0.5 where preferences switch."
+        }
+      },
+      "1": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a coordination game with asymmetric payoffs where players have beliefs about correlation between their choices."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning proceeds directly through expected value calculations without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that decision depends on p follows logically from the expected value calculations showing different optimal choices for different values of p."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies expected utility maximization by calculating expected payoffs for each strategy and identifying the threshold value p=0.5 where optimal choice changes."
+        }
+      },
+      "2": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a coordination game with a safe option (0 gives $1) and risky coordination options (matching on 1-10 gives $2), and understands the belief structure about probability p of coordination."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single clear path from setup through expected value calculation to conclusion without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that decision depends on p follows logically from the expected value analysis showing optimal choice changes at the threshold p = 0.5."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies expected value maximization by calculating payoffs for each option (1 for choosing 0, 2p for choosing any k\u22651) and identifying the decision threshold at p = 0.5."
+        }
+      },
+      "3": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a coordination game with a safe outside option (choosing 0) and mutual coordination payoffs for matching non-zero numbers."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single clear path from setup through expected value calculation to conclusion without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Theodora's decision depends on p follows logically from the expected value analysis showing different optimal choices for different values of p."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies expected utility maximization by calculating expected payoffs (1 for choosing 0, 2p for choosing any non-zero number) and determining optimal choice based on comparing these values."
+        }
+      },
+      "4": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a coordination game with asymmetric payoffs where players have correlated beliefs about each other's actions."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single direction throughout, calculating expected values and comparing them without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Theodora's decision depends on p follows logically from the expected value calculations showing different optimal choices for different values of p."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies expected value reasoning by calculating payoffs for each strategy (2p for non-zero numbers vs 1 for zero) and determining optimal choice based on p threshold."
+        }
+      },
+      "5": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a coordination game with a safe option (0 gives $1) and risky coordination options (1-10 give $2 if matched, $0 otherwise), and recognizes the belief structure about correlation."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single clear path from expected value calculation to threshold comparison without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that decision depends on p follows logically from the expected value calculations showing different optimal choices for p > 0.5 vs p < 0.5."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies expected value reasoning by calculating payoffs for each strategy (2p for numbers 1-10, constant 1 for choosing 0) and identifying the threshold at p = 0.5."
+        }
+      },
+      "6": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a coordination game with a safe option (0 gives $1) and risky coordination options (matching on 1-10 gives $2), and recognizes the probabilistic belief structure about the other player's behavior."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single clear path from setup through expected value calculation to conclusion without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Theodora's decision should depend on p follows directly from the expected value analysis showing different optimal choices for different values of p."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies expected utility maximization by calculating expected payoffs (2p for non-zero choices vs $1 for choosing 0) and determining the optimal strategy based on comparing these values."
+        }
+      },
+      "7": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a coordination game with asymmetric payoffs where players have beliefs about correlation in their choices."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning proceeds directly through expected value calculation without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "Conclusion that decision depends on p follows logically from the expected value analysis showing different optimal choices for different p values."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies expected value calculation using the given probability p to determine when each strategy is optimal."
+        }
+      },
+      "8": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a coordination game with a safe option (0) and risky coordination options (1-10), and recognizes the probabilistic belief structure about the other player's behavior."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single direction throughout, calculating expected values and comparing outcomes without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that the decision depends on p follows logically from the expected value calculations showing different optimal choices for different values of p."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies expected value maximization by calculating payoffs for each option (2p for numbers 1-10, $1 for 0) and determining optimal choice based on the threshold p = 0.5."
+        }
+      },
+      "9": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a coordination game with asymmetric payoffs where players choose numbers 0-10, with specific payoff rules for matching vs non-matching choices."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single direction throughout, calculating expected values and comparing outcomes without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Theodora's decision should depend on p follows logically from the expected value calculations showing different optimal choices for different values of p."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies expected value maximization by calculating 2p for choosing k\u22651 versus guaranteed payoff of 1 for choosing 0, and properly identifies the threshold at p=0.5."
+        }
+      }
+    },
+    "81.1ATT": {
+      "0": {
+        "structure_recognition": {
+          "rating": "AMBER",
+          "note": "Identifies this as an advocacy coordination problem with asymmetric groups but doesn't fully recognize it as a prisoner's dilemma-like structure where mutual restraint could benefit both sides."
+        },
+        "reasoning_moves": [
+          "outcome_comparison",
+          "causal_reasoning",
+          "dominance"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning consistently applies causal/CDT logic throughout without considering evidential reasoning or copy-symmetry arguments."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to choose 'No' follows logically from the stated concerns about asymmetry, lack of reciprocal guarantees, and potential exploitation."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies CDT reasoning by focusing on causal effects of their choice, lack of guaranteed reciprocity, and strategic considerations about unilateral restraint."
+        }
+      },
+      "1": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace completely fails to identify this as a coordination/prisoner's dilemma-like scenario involving advocacy groups with symmetric reasoning about whether to promote their values."
+        },
+        "reasoning_moves": [],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is provided - just a single letter answer with no deliberation or consideration of alternatives."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion appears without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied or even mentioned - the response lacks any theoretical framework or reasoning process."
+        }
+      },
+      "2": {
+        "structure_recognition": {
+          "rating": "AMBER",
+          "note": "Identifies this as involving symmetric groups and coordination but doesn't clearly recognize it as a prisoner's dilemma structure where both sides choosing to advocate leads to mutual nullification."
+        },
+        "reasoning_moves": [
+          "outcome_comparison",
+          "causal_reasoning",
+          "dominance"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning consistently applies causal/CDT logic throughout without considering evidential reasoning or copy symmetry."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Bob's argument is flawed follows logically from the stated concerns about asymmetry, enforcement, and unilateral defection risks."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies CDT reasoning by focusing on causal effects and the risk that unilateral restraint allows the other side to dominate, which is the standard dominance argument in this type of scenario."
+        }
+      },
+      "3": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace completely fails to identify this as a coordination/cooperation problem between symmetric agents (Alice/Bob and their counterparts on the other side) where mutual restraint could be beneficial."
+        },
+        "reasoning_moves": [],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is provided - just a single letter answer with no deliberation or consideration of alternatives."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion is given without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied or even mentioned - the response lacks any theoretical framework or reasoning process."
+        }
+      },
+      "4": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace completely fails to identify this as a coordination/cooperation problem between symmetric agents (Alice/Bob and their counterparts on the other side) where mutual restraint could benefit everyone."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace shows no reasoning development or consideration of alternatives - just a single letter response."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion is given without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied or even mentioned - the response lacks any theoretical framework or analysis."
+        }
+      },
+      "5": {
+        "structure_recognition": {
+          "rating": "AMBER",
+          "note": "Identifies this as a coordination problem between advocacy groups but misses the key evidential/copy-symmetry structure where similar reasoners might reach similar conclusions."
+        },
+        "reasoning_moves": [
+          "causal_reasoning",
+          "outcome_comparison",
+          "authority_appeal"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning goes directly to rejecting Bob's argument without considering the evidential perspective that would support it."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion that Bob's argument is flawed follows logically from the causal reasoning presented about lack of guaranteed reciprocity."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies CDT logic by focusing on causal independence and rejecting evidential updating based on one's own choice."
+        }
+      },
+      "6": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace completely fails to identify this as a coordination problem between advocates with opposing views, missing the key strategic structure where both sides' choices are interdependent."
+        },
+        "reasoning_moves": [],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is provided at all - just a direct answer choice with no consideration of alternatives."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion appears without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied or even mentioned - the response lacks any theoretical framework or reasoning process."
+        }
+      },
+      "7": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace misidentifies this as a standard advocacy problem rather than recognizing it as a coordination game between symmetric players (advocates on both sides) where mutual cooperation (both sides refraining) could benefit society."
+        },
+        "reasoning_moves": [
+          "dominance",
+          "outcome_comparison",
+          "causal_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning consistently applies CDT-style causal analysis without considering the evidential/symmetry perspective that Bob's argument relies on."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion logically follows from the CDT premises about unilateral action and lack of coordination mechanisms."
+        },
+        "theory_application": {
+          "rating": "AMBER",
+          "note": "Applies CDT reasoning adequately by focusing on causal effects and incentives to defect, but doesn't fully engage with the coordination aspects that make this a more complex strategic situation."
+        }
+      },
+      "8": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace completely fails to identify this as a coordination/cooperation problem between symmetric agents (Alice/Bob and their counterparts on the other side) where mutual restraint could benefit everyone."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace shows no reasoning development - it immediately jumps to answer B without any consideration of alternatives."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion appears without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied at all - the model provides no reasoning for why CDT or any other framework supports this choice."
+        }
+      },
+      "9": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace completely fails to identify this as a coordination/cooperation problem between symmetric agents (Alice/Bob and their counterparts on the other side) where mutual restraint could benefit everyone."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The trace shows no reasoning development or consideration of alternatives - just a single letter response."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion is given without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is applied or even mentioned - the response lacks any theoretical framework or analysis."
+        }
+      }
+    },
+    "82.1": {
+      "0": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of what EDT vs CDT are or their key differences - it's just a single letter response."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown, so there's no opportunity for a pivot - just jumps directly to answer B."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There's no stated reasoning to evaluate coherence against - the conclusion appears without any supporting argument."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is actually applied or discussed - the response is just a bare letter choice without any theoretical justification."
+        }
+      },
+      "1": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of what EDT vs CDT are or their key differences - it's just a single letter answer with no engagement with the theoretical content."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown at all - just jumps directly to answer B without any consideration of alternatives."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion appears with no supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is actually applied or discussed - the model simply states 'B' without demonstrating understanding of either EDT or CDT."
+        }
+      },
+      "2": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of what EDT vs CDT are or their key differences - it's just a single letter answer with no engagement with the theoretical content."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown at all - just jumps directly to answer B without any consideration of alternatives."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion appears with no supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is actually applied or discussed - the model simply states a preference without demonstrating understanding of either theory."
+        }
+      },
+      "3": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of what EDT vs CDT are or their key differences - it's just a single letter answer with no engagement with the theoretical content."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown at all - just jumps directly to answer B without any consideration of alternatives."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion appears with no supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is actually applied or discussed - the model simply states 'B' without demonstrating understanding of either EDT or CDT."
+        }
+      },
+      "4": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of what EDT vs CDT are or their key differences - it's just a single letter response."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown, so there's no opportunity for a pivot - just jumps directly to answer B."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There's no stated reasoning to evaluate coherence against - the conclusion appears without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is actually applied or discussed - the model just selects CDT without demonstrating understanding of either theory."
+        }
+      },
+      "5": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of what EDT vs CDT are or their key differences - it's just a single letter answer with no engagement with the theoretical content."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown at all - just jumps directly to answer B without any consideration of alternatives."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion appears without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is actually applied or discussed - the model simply states 'B' without demonstrating understanding of either EDT or CDT."
+        }
+      },
+      "6": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of what EDT vs CDT are or their key differences - it's just a single letter answer with no engagement with the theoretical content."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown at all - just jumps directly to answer B without any consideration of alternatives."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There is no stated reasoning to evaluate coherence against - the conclusion appears without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is actually applied or discussed - the model simply states 'B' without demonstrating understanding of either EDT or CDT."
+        }
+      },
+      "7": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of what EDT vs CDT are or their key differences - it's just a single letter response."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown, so there's no opportunity for a pivot - just jumps directly to answer B."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There's no stated reasoning to evaluate coherence against - the conclusion appears without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is actually applied or discussed - the model just selects CDT without demonstrating understanding of either theory."
+        }
+      },
+      "8": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of what EDT vs CDT are or their key differences - it's just a single letter response."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown, so there's no opportunity for a pivot - just jumps directly to answer B."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There's no stated reasoning to evaluate coherence against - the conclusion appears without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is actually applied or discussed - the model just selects CDT without demonstrating understanding of either theory."
+        }
+      },
+      "9": {
+        "structure_recognition": {
+          "rating": "RED",
+          "note": "The trace provides no analysis of what EDT vs CDT are or their key differences - it's just a single letter response."
+        },
+        "reasoning_moves": [
+          "pattern_match"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "No reasoning is shown, so there's no opportunity for a pivot - just jumps directly to answer B."
+        },
+        "coherence": {
+          "rating": "RED",
+          "note": "There's no stated reasoning to evaluate coherence against - the conclusion appears without any supporting logic."
+        },
+        "theory_application": {
+          "rating": "RED",
+          "note": "No decision theory is actually applied or discussed - the model just selects CDT without demonstrating understanding of either theory."
+        }
+      }
+    },
+    "89.1ATT": {
+      "0": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-like problem with a predictor (financial markets) that has 90% accuracy, and accurately maps out the payoff structure with four possible outcomes based on Fed action and market prediction."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single direction throughout, calculating expected utilities for both options without considering alternative approaches or switching between decision theories."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to keep the money supply constant follows logically from the expected utility calculations showing 1.8 > 1.2."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential decision theory by treating the market's prediction as correlated with the Fed's choice and calculating expected utilities based on the 90% accuracy rate."
+        }
+      },
+      "1": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-like problem with a predictor (financial markets with 90% accuracy) and payoff structure based on correlation between Fed action and market prediction."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "Reasoning proceeds directly through expected utility calculation without considering alternative approaches or switching between theories."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to keep money supply constant follows logically from the expected utility calculations showing 1.8 > 1.2."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT by calculating expected utilities based on the correlation between Fed action and market predictions, properly accounting for the 90% prediction accuracy."
+        }
+      },
+      "3": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-like problem with a predictor (financial markets) that has 90% accuracy, and accurately maps out the payoff structure with four possible outcomes based on Fed action vs. market prediction."
+        },
+        "reasoning_moves": [
+          "outcome_comparison",
+          "ev_calculation",
+          "causal_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a consistent causal decision theory approach throughout, focusing on which action avoids the worst outcome without considering evidential reasoning."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to expand the money supply logically follows from the premise that this eliminates recession risk while accepting inflation as a more manageable outcome."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies CDT by focusing on causal consequences of the Fed's action given uncertainty about market predictions, properly weighing outcomes without considering the Fed's choice as evidence for market predictions."
+        }
+      },
+      "4": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-like problem with a predictor (financial markets) that has 90% accuracy, and accurately maps out the payoff structure with four possible outcomes based on Fed action and market prediction combinations."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison",
+          "causal_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "PIVOT",
+          "note": "Initially calculates that keeping constant has higher expected utility (-1 vs -3.5), then pivots to expanding by reweighting the recession outcome more heavily and emphasizing risk avoidance."
+        },
+        "coherence": {
+          "rating": "AMBER",
+          "note": "The conclusion follows the reasoning but involves an ad hoc adjustment of utility values mid-analysis without clear justification for why recession should be weighted as -50 instead of -10."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies CDT by treating the Fed's choice as causally independent of market predictions, calculating expected utilities based on the given 90% accuracy rate without considering evidential correlation."
+        }
+      },
+      "5": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-like problem where the Fed's decision correlates with public predictions due to the predictor's 90% accuracy."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison",
+          "causal_reasoning"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning consistently applies causal decision theory throughout without considering evidential reasoning or switching approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to expand the money supply follows logically from the premise that avoiding recession (the worst outcome) is paramount."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies CDT by focusing on causal consequences of each action given the probability distribution over predictions, without treating the Fed's choice as evidence for what markets predict."
+        }
+      },
+      "6": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-like problem with a predictor (financial markets) that has 90% accuracy, and accurately maps out the payoff structure with four possible outcomes based on Fed action and market prediction."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single direction throughout, calculating expected utilities for both options without considering alternative decision-theoretic approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to keep the money supply constant follows logically from the expected utility calculations showing -0.2 > -0.8."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies evidential decision theory by treating the 90% prediction accuracy as conditional probabilities and maximizing expected utility based on those probabilities."
+        }
+      },
+      "7": {
+        "structure_recognition": {
+          "rating": "GREEN",
+          "note": "Correctly identifies this as a Newcomb-like problem where the Fed's decision correlates with market predictions due to the predictor's 90% accuracy, and accurately maps out the payoff structure."
+        },
+        "reasoning_moves": [
+          "ev_calculation",
+          "outcome_comparison"
+        ],
+        "pivot_detection": {
+          "rating": "STRAIGHT",
+          "note": "The reasoning follows a single direction throughout, calculating expected values for both options without considering alternative approaches."
+        },
+        "coherence": {
+          "rating": "GREEN",
+          "note": "The conclusion to keep money supply constant logically follows from the expected utility calculations showing 1.8 > 1.2."
+        },
+        "theory_application": {
+          "rating": "GREEN",
+          "note": "Correctly applies EDT by treating the Fed's choice as evidence for what markets predict, using the 90% correlation to calculate expected utilities based on the evidential relationship."
+        }
+      }
+    }
+  }
+}
