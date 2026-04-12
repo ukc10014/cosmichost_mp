@@ -304,6 +304,162 @@ Haiku is good enough for RED detection and reasoning-move tagging. Sonnet adds v
 
 The disagreement on coherence (78%) and theory\_application (68%) does not undermine the main findings from Section 12 — those are based on answer distributions across resamples, not on verifier labels. The verifier data layers on top for qualitative analysis of *why* R1 answers as it does.
 
+## Verifier Leniency Assessment (2026-04-11)
+
+Audited the Sonnet verifier output (`cot_verify_together-deepseek-ai-DeepSeek-R1_baseline_20260408T162133_claude-sonnet-4-20250514_20260410T174014.json`) to check whether the near-universal GREEN ratings indicate classifier leniency.
+
+**Finding: the verifier is not generally lenient — RED rates are ~25% per dimension, but concentrated in four questions.**
+
+| Question | RED samples | Cause |
+|---|---|---|
+| 82.1 (EDT vs CDT direct?) | 10/10 | R1 emitted bare `B` — no thinking trace at all |
+| 116.1ATT (book predicting reader) | 10/10 | Bare `A` responses, no reasoning |
+| 48.1ATT (angelic intervention) | 7/10 | Bare letter answers |
+| 81.1ATT (ECL moral advocacy) | ~7/10 | Bare letter answers |
+
+The REDs are not evidence of reasoning failures — they are traces where R1 produced no visible CoT. The verifier correctly flags these. Questions that do have reasoning traces receive mostly GREEN, which is where the leniency concern lives.
+
+**Two substantively interesting exceptions:**
+
+- **30.1ATT s0 and s6** (stag hunt vs copy): coherence RED because the trace concludes "choose Stag" (EDT-aligned) but the recorded answer is the CDT option (B). This is the say/do dissociation in live form — reasoning goes EDT, answer goes CDT. High priority for trace-level inspection in the viewer.
+
+- **89.1ATT s4**: AMBER on coherence — "ad hoc adjustment of utility values mid-analysis without justification." Subtle mid-reasoning slippage, not a blank trace.
+
+**Where the leniency concern remains valid:** The ~90 GREEN traces with actual reasoning are assessed only for presence and internal consistency, not for reasoning quality. The verifier cannot distinguish *good* EDT reasoning from *superficial* pattern-matching that happens to reach an EDT answer. Suggested fix: add a rubric dimension for reasoning depth, specifically whether the model correctly identifies which moves are evidential vs causal and why that matters for this question. This would surface the difference between R1 genuinely working through copy symmetry and R1 saying "my action correlates with the other agent's, therefore cooperate" without engaging the game structure.
+
+## Scaffolded CoT Experiment: Preliminary Results (2026-04-11)
+
+### Design
+
+Three-arm comparison on the 81 attitude questions from the Oesterheld dataset, run locally on Qwen3-32B-4bit (MLX, M4 Max), 5 samples per question per condition:
+
+| Condition | Prompt structure | Tokens |
+|---|---|---|
+| No-CoT | Scenario + "reply with just the letter" | 64 max |
+| Free-CoT | Scenario + "think step by step, end with ANSWER: [letter]" | 1024 max |
+| Scaffolded | Scenario + 5 structured sub-questions (agents, actions, payoffs, relationship, decision) | 512 per step |
+
+The scaffolded sub-questions are neutrally framed to decompose the game-theoretic structure without leading toward either theory. The key hypothesis: Step 4 ("What is the relationship between you and the other agent(s)?") forces the model to articulate correlation/copy structure, which is the EDT-relevant insight.
+
+Script: `run_scaffolded_cot.py`
+
+### No-CoT vs Free-CoT Results
+
+| Condition | EDT rate | Parse errors |
+|---|---|---|
+| No-CoT | **55.8%** (226/405) | 1 (0.2%) |
+| Free-CoT | **45.4%** (184/405) | 56 (13.8%) |
+
+**Surprising finding: free-form reasoning *decreases* EDT rate by 10.4pp relative to no-CoT.** 24 questions shift >20pp toward CDT with free reasoning; only 11 shift >20pp toward EDT.
+
+### Interpretation
+
+The no-CoT baseline is bimodal — 39 questions are >60% EDT, 31 are <40% EDT. Without reasoning, the model's "gut response" is often EDT-aligned (perhaps through RLHF toward cooperation/niceness).
+
+Free-CoT disrupts this in an asymmetric way:
+
+**Where free-CoT helps EDT (+80-100pp):** Copy/coordination questions where reasoning through the structure matters.
+- 10.4ATT (PD vs copy): 0% → 80%
+- 10.5ATT (PD vs copy variant): 20% → 100%
+- 68.3 (close copy coordination): 0% → 100%
+
+**Where free-CoT hurts EDT (-60 to -100pp):** Classic Newcomb/prediction questions where the model reasons itself into CDT dominance arguments.
+- 116.1ATT (book predicting reader): 100% → 0%
+- 49.1ATT (Calvinist predetermination): 100% → 0%
+- 29.1ATT (voting): 80% → 0%
+- 118.1ATT (Newcomb with reward): 100% → 40%
+- 85.1ATT (DT preferences): 100% → 40%
+
+**The pattern:** Free-CoT enables genuine EDT reasoning on copy-symmetry problems (the model needs to *think* to notice it's playing against itself). But it also enables CDT dominance arguments on prediction problems (the model reasons "my choice doesn't causally affect the predictor's past action, therefore two-box"). The CDT effect is larger because there are more prediction-structure questions than copy-structure questions in the dataset.
+
+**Parse error concern:** 56/405 (14%) of free-CoT responses couldn't be parsed. Many are likely truncated (hit 1024 token limit mid-reasoning) or used non-standard answer formats. This inflates the apparent CDT shift — the true free-CoT EDT rate may be higher once parse errors are resolved.
+
+### Implications for Scaffolded Condition
+
+If the scaffolded condition can:
+1. Surface the correlation structure (Step 4) like free-CoT does for copy questions
+2. *Without* triggering the CDT dominance cascade on prediction questions
+
+...then scaffolding should show a higher EDT rate than either no-CoT or free-CoT. This would be evidence that the model *has* the EDT-relevant representations but the free-form reasoning pathway preferentially activates CDT reasoning patterns.
+
+For activation capture: the prediction is that the EDT/CDT decision point lives specifically at the Step 4 → Step 5 boundary. Residual streams before Step 4 should be theory-neutral; after Step 4 the model should have committed to a frame.
+
+### Full Results (2026-04-12)
+
+| Condition | EDT rate (all) | EDT rate (parsed) | Parse errors |
+|---|---|---|---|
+| No-CoT | 55.8% (226/405) | 59.8% | 1 (0.2%) |
+| Free-CoT | 45.4% (184/405) | 55.6% | 56 (13.8%) |
+| **Scaffolded** | **57.5% (233/405)** | **63.0%** | 2 (0.5%) |
+
+Per-question win/loss record:
+
+| Comparison | Scaff wins | Ties | Scaff loses |
+|---|---|---|---|
+| vs No-CoT | 20 | 44 | 17 |
+| vs Free-CoT | 42 | 18 | 21 |
+
+Big swings (>30pp) vs No-CoT: 12 wins, 10 losses. vs Free-CoT: 26 wins, 10 losses.
+
+**Standout questions — scaffolding uniquely unlocks EDT:**
+
+| Question | No-CoT | Free-CoT | Scaffolded | Note |
+|---|---|---|---|---|
+| 10.4ATT (PD vs copy) | 0% | 80% | **100%** | Scaffolding perfects what free partially finds |
+| 30.1ATT (Stag Hunt vs copy) | 0% | 0% | **60%** | Only scaffolding cracks this |
+| 83.1ATT (phonepocalypse) | 0% | 0% | **60%** | Only scaffolding cracks this |
+| 89.1ATT (econ Newcomb) | 0% | 20% | **40%** | Progress on hard CDT question |
+
+**Standout questions — scaffolding prevents CDT cascade:**
+
+| Question | No-CoT | Free-CoT | Scaffolded | Recovery |
+|---|---|---|---|---|
+| 116.1ATT (book predicting reader) | 100% | 0% | **100%** | Full recovery |
+| 49.1ATT (Calvinist predet.) | 100% | 0% | **100%** | Full recovery |
+| 54ATT (Newcomb alt story) | 100% | 40% | **100%** | Full recovery |
+| 118.1ATT (Newcomb w/ reward) | 100% | 40% | **100%** | Full recovery |
+| 77.1ATT (friendly/unfriendly RPS) | 100% | 40% | **100%** | Full recovery |
+
+**Scaffolding losses vs no-CoT:**
+
+| Question | No-CoT | Scaffolded | Drop |
+|---|---|---|---|
+| 29.1ATT (voting) | 80% | 0% | -80pp |
+| 109.2ATT (epistemic tickle) | 100% | 40% | -60pp |
+| 120.2ATT (Newcomb imperfect recall) | 100% | 40% | -60pp |
+| 85.3ATT (DT preferences) | 100% | 40% | -60pp |
+
+### Interpretation
+
+The experiment separates two components of Newcomb-like question performance:
+
+1. **Structure parsing** — can the model identify the game type, the agents, the correlation/prediction structure?
+2. **Theory preference** — given that it has parsed the structure, does it lean EDT or CDT?
+
+Scaffolding primarily helps with (1). By forcing the model through a canonical decomposition (agents → actions → payoffs → relationship → decision), it ensures the correlation/copy structure gets articulated even when the model wouldn't spontaneously surface it. The +60pp gains on 30.1ATT and 83.1ATT are structure-parsing wins: without scaffolding, the model never notices it's playing against a copy; with scaffolding, Step 4 forces that recognition, and EDT follows.
+
+The CDT-cascade prevention effect is also a structure-parsing story. In free-CoT, the model often correctly identifies the prediction structure early, then launches into CDT dominance reasoning ("my choice can't causally affect the prediction that was already made"). Scaffolding breaks this cascade by deferring the decision to Step 5, after the model has separately articulated both the causal structure (Step 3: payoffs) and the correlational structure (Step 4: relationship). The CDT dominance argument is harder to sustain when you've just written "there is a strong correlation between our choices" in the previous step.
+
+**What this doesn't tell us about inherent EDT preference.** The scaffolded EDT rate of 57.5% (or 63.0% parsed) is only modestly above the no-CoT baseline of 55.8% (59.8% parsed) — roughly a 3pp lift. This is not strong evidence that Qwen3-32B-4bit has an EDT preference that scaffolding is "unlocking." It's more consistent with the model having a weak EDT lean (~60% over chance) that is:
+- Slightly enhanced by structured reasoning (scaffolded: +3pp)
+- Disrupted by unstructured reasoning (free-CoT: -4pp on parsed trials)
+- Not strongly committed either way
+
+The 63% parsed EDT rate puts this model at roughly 13 points above chance — detectable but not the kind of strong EDT signal that the frontier thinking models (DeepSeek-R1, o3) show on the same questions.
+
+### Next step: can steering amplify what scaffolding surfaces?
+
+The probing results from earlier in this project showed clean linear encoding of EDT/CDT at layer 40 (100% validation accuracy). Activation steering failed to shift behavior in the standard setup. But that was tested with unstructured prompting — the model's "gut response."
+
+The question now: if scaffolding gets the model to 63% EDT by improving structure parsing, can activation steering on top of that push the number higher by shifting the model's *preference* once it has correctly parsed the structure? This would be a layered intervention:
+
+- Scaffolding → improves problem comprehension (black-box, prompt-level)
+- Steering vector → shifts theory preference (white-box, activation-level)
+
+If steering works better on scaffolded prompts than on raw prompts, that's evidence the steering vector targets theory preference rather than structure parsing — and that the original steering failure was because the model hadn't parsed the structure well enough for the preference to matter.
+
+Concretely: re-run `activation_steering/steer_and_eval.py` using scaffolded prompts instead of raw prompts, extract activations at the Step 4 → Step 5 boundary, and apply the existing layer-40 steering vector. Compare EDT rate with and without steering, on the scaffolded prompts only.
+
 ## References
 
 - Nanda, "A Pragmatic Vision for Interpretability" (LessWrong, Sept 2025)

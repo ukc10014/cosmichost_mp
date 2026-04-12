@@ -29,11 +29,11 @@ load_dotenv()
 import llm_providers
 from llm_providers import init_llm_call
 
-llm_providers.MAX_TOKENS_ANTHROPIC = 1024
-llm_providers.MAX_TOKENS_OPENAI = 1024
-llm_providers.MAX_TOKENS_FLASH = 1024
-llm_providers.MAX_TOKENS_PRO = 1024
-llm_providers.MAX_TOKENS_OPENROUTER = 1024
+llm_providers.MAX_TOKENS_ANTHROPIC = 1536
+llm_providers.MAX_TOKENS_OPENAI = 1536
+llm_providers.MAX_TOKENS_FLASH = 1536
+llm_providers.MAX_TOKENS_PRO = 1536
+llm_providers.MAX_TOKENS_OPENROUTER = 1536
 llm_providers.TEMPERATURE = 0.0
 
 OUTPUT_DIR = Path("docs/data")
@@ -91,6 +91,16 @@ IMPORTANT: Evaluate the reasoning WITHIN the theory the model chose, not whether
 - AMBER: adequate but sloppy — right general idea but imprecise or missing key steps
 - RED: incorrect application — claims to apply a theory but gets the logic wrong
 
+### 6. reasoning_depth
+Does the trace show genuine engagement with the decision-theoretic structure, or is it pattern-matching to a conclusion?
+This dimension specifically targets the difference between a model that *works through* why evidential or causal considerations apply here vs one that *jumps to* a familiar answer pattern without showing that work.
+
+- GREEN: the trace explicitly identifies at least one key decision-theoretic move AND explains *why* it applies to this specific problem structure (e.g. "because the predictor's accuracy is high, my choice is strong evidence for the box contents, so evidential reasoning gives..." — not just "I'll use EDT"). The explanation must be problem-specific, not generic.
+- AMBER: the trace names the right framework or move but applies it formulaically without connecting it to the specific features of this problem, OR reasons carefully about the wrong feature (e.g. discusses dominance when the key question is copy symmetry)
+- RED: the trace reaches a conclusion without showing any decision-theoretic reasoning — bare answer, pure outcome listing without framing, or generic statements that could apply to any problem ("cooperation is better than defection")
+
+Note: a trace can be GREEN on theory_application and RED on reasoning_depth if it executes the chosen theory correctly but never explains *why* that theory applies here. These dimensions are orthogonal.
+
 ## Output format
 
 Respond with ONLY a JSON object, no other text:
@@ -100,7 +110,8 @@ Respond with ONLY a JSON object, no other text:
   "reasoning_moves": ["move1", "move2", ...],
   "pivot_detection": {"rating": "PIVOT|STRAIGHT|FALSE_PIVOT", "note": "..."},
   "coherence": {"rating": "GREEN|AMBER|RED", "note": "..."},
-  "theory_application": {"rating": "GREEN|AMBER|RED", "note": "..."}
+  "theory_application": {"rating": "GREEN|AMBER|RED", "note": "..."},
+  "reasoning_depth": {"rating": "GREEN|AMBER|RED", "note": "..."}
 }
 """
 
@@ -249,8 +260,9 @@ def run_verification(traces_path: Path, llm_call, dry_run: bool = False) -> dict
                 co = result.get("coherence", {}).get("rating", "?")
                 ta = result.get("theory_application", {}).get("rating", "?")
                 pv = result.get("pivot_detection", {}).get("rating", "?")
+                rd = result.get("reasoning_depth", {}).get("rating", "?")
                 moves = result.get("reasoning_moves", [])
-                print(f"struct={sr} coher={co} theory={ta} pivot={pv} moves={','.join(moves[:3])}")
+                print(f"struct={sr} coher={co} theory={ta} pivot={pv} depth={rd} moves={','.join(moves[:3])}")
                 verified += 1
             else:
                 print("FAIL (could not parse verifier response)")
