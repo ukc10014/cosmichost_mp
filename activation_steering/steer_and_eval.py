@@ -48,7 +48,7 @@ ACTIVATIONS_DIR = Path(__file__).parent / "activations"
 MODEL_ID = "mlx-community/Qwen3-32B-4bit"
 MODEL_LABEL = "qwen3-32b-4bit-steered"
 CONSTITUTION_PATH = Path(__file__).parent.parent / "logs" / "mp_constitutions" / "ecl_pilled" / "eclpilled_ch90.md"
-TEMPERATURE = 0.7
+TEMPERATURE = 0.0
 MAX_TOKENS = 512
 
 DEFAULT_ALPHAS = [-3.0, -1.5, -0.5, 0.0, 0.5, 1.5, 3.0]

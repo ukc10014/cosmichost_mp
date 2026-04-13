@@ -1,0 +1,235 @@
+{
+  "layer": 40,
+  "results": [
+    {
+      "step_idx": 0,
+      "step_name": "agents",
+      "n_trials": 370,
+      "n_edt": 233,
+      "n_cdt": 137,
+      "majority_baseline": 0.6297297297297297,
+      "cv_accuracy": 0.7432432432432432,
+      "cv_folds": [
+        {
+          "held_out_sample": 0,
+          "train_n": 297,
+          "test_n": 73,
+          "test_acc": 0.7945205479452054
+        },
+        {
+          "held_out_sample": 1,
+          "train_n": 296,
+          "test_n": 74,
+          "test_acc": 0.7432432432432432
+        },
+        {
+          "held_out_sample": 2,
+          "train_n": 295,
+          "test_n": 75,
+          "test_acc": 0.6933333333333334
+        },
+        {
+          "held_out_sample": 3,
+          "train_n": 297,
+          "test_n": 73,
+          "test_acc": 0.7123287671232876
+        },
+        {
+          "held_out_sample": 4,
+          "train_n": 295,
+          "test_n": 75,
+          "test_acc": 0.7733333333333333
+        }
+      ],
+      "full_probe_train_acc": 1.0,
+      "full_probe_coef_norm": 2.438026811679129,
+      "dispositional_separation": 4.260398117608047,
+      "contrastive_accuracy": 0.5027027027027027,
+      "contrastive_separation": -0.09771394729614258
+    },
+    {
+      "step_idx": 1,
+      "step_name": "actions",
+      "n_trials": 370,
+      "n_edt": 233,
+      "n_cdt": 137,
+      "majority_baseline": 0.6297297297297297,
+      "cv_accuracy": 0.7324324324324324,
+      "cv_folds": [
+        {
+          "held_out_sample": 0,
+          "train_n": 297,
+          "test_n": 73,
+          "test_acc": 0.726027397260274
+        },
+        {
+          "held_out_sample": 1,
+          "train_n": 296,
+          "test_n": 74,
+          "test_acc": 0.7297297297297297
+        },
+        {
+          "held_out_sample": 2,
+          "train_n": 295,
+          "test_n": 75,
+          "test_acc": 0.6933333333333334
+        },
+        {
+          "held_out_sample": 3,
+          "train_n": 297,
+          "test_n": 73,
+          "test_acc": 0.7534246575342466
+        },
+        {
+          "held_out_sample": 4,
+          "train_n": 295,
+          "test_n": 75,
+          "test_acc": 0.76
+        }
+      ],
+      "full_probe_train_acc": 1.0,
+      "full_probe_coef_norm": 2.364046817789537,
+      "dispositional_separation": 4.262962142069302,
+      "contrastive_accuracy": 0.4972972972972973,
+      "contrastive_separation": -0.005419731140136719
+    },
+    {
+      "step_idx": 2,
+      "step_name": "payoffs",
+      "n_trials": 370,
+      "n_edt": 233,
+      "n_cdt": 137,
+      "majority_baseline": 0.6297297297297297,
+      "cv_accuracy": 0.6918918918918919,
+      "cv_folds": [
+        {
+          "held_out_sample": 0,
+          "train_n": 297,
+          "test_n": 73,
+          "test_acc": 0.7534246575342466
+        },
+        {
+          "held_out_sample": 1,
+          "train_n": 296,
+          "test_n": 74,
+          "test_acc": 0.6756756756756757
+        },
+        {
+          "held_out_sample": 2,
+          "train_n": 295,
+          "test_n": 75,
+          "test_acc": 0.68
+        },
+        {
+          "held_out_sample": 3,
+          "train_n": 297,
+          "test_n": 73,
+          "test_acc": 0.6438356164383562
+        },
+        {
+          "held_out_sample": 4,
+          "train_n": 295,
+          "test_n": 75,
+          "test_acc": 0.7066666666666667
+        }
+      ],
+      "full_probe_train_acc": 1.0,
+      "full_probe_coef_norm": 2.561963571222688,
+      "dispositional_separation": 5.4584467957561875,
+      "contrastive_accuracy": 0.42162162162162165,
+      "contrastive_separation": -2.9060239791870117
+    },
+    {
+      "step_idx": 3,
+      "step_name": "relationship",
+      "n_trials": 370,
+      "n_edt": 233,
+      "n_cdt": 137,
+      "majority_baseline": 0.6297297297297297,
+      "cv_accuracy": 0.6648648648648648,
+      "cv_folds": [
+        {
+          "held_out_sample": 0,
+          "train_n": 297,
+          "test_n": 73,
+          "test_acc": 0.6575342465753424
+        },
+        {
+          "held_out_sample": 1,
+          "train_n": 296,
+          "test_n": 74,
+          "test_acc": 0.6486486486486487
+        },
+        {
+          "held_out_sample": 2,
+          "train_n": 295,
+          "test_n": 75,
+          "test_acc": 0.64
+        },
+        {
+          "held_out_sample": 3,
+          "train_n": 297,
+          "test_n": 73,
+          "test_acc": 0.7397260273972602
+        },
+        {
+          "held_out_sample": 4,
+          "train_n": 295,
+          "test_n": 75,
+          "test_acc": 0.64
+        }
+      ],
+      "full_probe_train_acc": 1.0,
+      "full_probe_coef_norm": 2.4537536914803213,
+      "dispositional_separation": 3.780873384850701,
+      "contrastive_accuracy": 0.5081081081081081,
+      "contrastive_separation": 0.19851446151733398
+    },
+    {
+      "step_idx": 4,
+      "step_name": "decision",
+      "n_trials": 370,
+      "n_edt": 233,
+      "n_cdt": 137,
+      "majority_baseline": 0.6297297297297297,
+      "cv_accuracy": 0.9648648648648649,
+      "cv_folds": [
+        {
+          "held_out_sample": 0,
+          "train_n": 297,
+          "test_n": 73,
+          "test_acc": 0.958904109589041
+        },
+        {
+          "held_out_sample": 1,
+          "train_n": 296,
+          "test_n": 74,
+          "test_acc": 0.972972972972973
+        },
+        {
+          "held_out_sample": 2,
+          "train_n": 295,
+          "test_n": 75,
+          "test_acc": 0.9733333333333334
+        },
+        {
+          "held_out_sample": 3,
+          "train_n": 297,
+          "test_n": 73,
+          "test_acc": 0.9452054794520548
+        },
+        {
+          "held_out_sample": 4,
+          "train_n": 295,
+          "test_n": 75,
+          "test_acc": 0.9733333333333334
+        }
+      ],
+      "full_probe_train_acc": 1.0,
+      "full_probe_coef_norm": 1.1577885578303808,
+      "dispositional_separation": 12.680227914721211,
+      "contrastive_accuracy": 0.6,
+      "contrastive_separation": 1.7157983779907227
+    }
+  ]
+}

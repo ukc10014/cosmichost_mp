@@ -460,6 +460,75 @@ If steering works better on scaffolded prompts than on raw prompts, that's evide
 
 Concretely: re-run `activation_steering/steer_and_eval.py` using scaffolded prompts instead of raw prompts, extract activations at the Step 4 → Step 5 boundary, and apply the existing layer-40 steering vector. Compare EDT rate with and without steering, on the scaffolded prompts only.
 
+## Scaffolded Activation Trajectories: Content vs Disposition (2026-04-12)
+
+Ran the scaffolded activation extraction experiment. Extracted layer-40 residual stream activations at each of the 5 step boundaries for all 405 scaffolded trials on Qwen3-32B-4bit, and projected onto the contrastive EDT/CDT mean-difference direction.
+
+**Full writeup:** [`writeup/mech_interp/scaffolded_trajectory_analysis.md`](../../writeup/mech_interp/scaffolded_trajectory_analysis.md)  
+**Charts:** `charts/scaffolded_trajectories/`
+
+### Key finding: the contrastive direction encodes content, not disposition
+
+The EDT/CDT direction that perfectly classifies *forced* EDT vs CDT completions does **not** separate trials that *naturally* produce EDT vs CDT answers. Mean trajectories for EDT-answering and CDT-answering trials are nearly identical (gap < 2.1 at every step, vs ±20 signal range). Both groups follow the same shape: flat through Steps 1–2, spike to +7 at Step 4 (Relationship), crash to -13 at Step 5 (Decision).
+
+This explains the earlier steering null result: injecting the contrastive direction pushes toward EDT-like *text content* but not toward EDT-like *decision-making*. The representation of what EDT reasoning looks like is distinct from whatever mechanism causes the model to choose EDT.
+
+### What this changes for the pivot assessment
+
+The "try scaffolded steering with the existing vector" suggestion from the previous section (2026-04-11) is unlikely to work — the vector itself is the wrong tool, regardless of where we apply it. The next steps should target the dispositional mechanism directly:
+
+1. ~~**Step-conditional probing.** Train a new probe on Step 4 or Step 5 activations, using the trial's *natural* final answer as the label. If a dispositional direction exists, this will find it.~~ **Done (2026-04-12). Result: no per-trial signal.** Probes at Steps 1–4 achieve chance accuracy on mixed-answer questions (where the model gives different answers across samples for the same question). The apparent 74% accuracy at Step 1 was entirely question identity — the probe learned which questions reliably produce EDT vs CDT, not which trials would. Step 5 achieves 96% but is post-decision. See full analysis: [`writeup/mech_interp/scaffolded_trajectory_analysis.md`](../../writeup/mech_interp/scaffolded_trajectory_analysis.md).
+2. **Reasoning behavior steering (Venhoff et al.).** Steer toward EDT-associated reasoning behaviors rather than EDT answers. This remains the most promising untested approach.
+3. ~~**Cross-step prediction.** Test whether a direction found at Step 4 (labeled by final answer) predicts the answer better than the contrastive direction does.~~ **Subsumed by (1).** No direction at Step 4 predicts the answer on contested questions.
+
+### Data
+
+| Artifact | Path |
+|----------|------|
+| Trajectories + projections | `activation_steering/activations/scaffolded_trajectories_layer40.json` |
+| Raw activations (405 × 5 × 5120) | `activation_steering/activations/scaffolded_trajectories_layer40.npz` |
+| Extraction script | `activation_steering/extract_scaffolded_activations.py` |
+| Plotting script | `activation_steering/plot_scaffolded_trajectories.py` |
+
+## Current Assessment and Next Steps (2026-04-13)
+
+### What we've established
+
+Three rounds of activation-level experiments on Qwen3-32B-4bit (non-thinking mode) have produced consistent null results for causal intervention, while confirming the model *represents* the EDT/CDT distinction:
+
+1. **Contrastive probing (layer 40):** 100% validation accuracy classifying forced EDT vs CDT completions. The model clearly encodes the distinction. But the direction encodes *content* (what EDT text looks like) not *disposition* (what makes the model choose EDT).
+2. **Activation steering:** No causal shift in EDT/CDT answers when injecting the contrastive direction at layers 0, 40, or 48, across multiple alpha values.
+3. **Weight-space steering (LoRA subtraction):** No causal shift.
+4. **Scaffolded trajectory analysis:** The contrastive direction doesn't separate natural EDT vs CDT answers at any reasoning step. A dispositional probe finds ~74% accuracy at early steps, but this collapses to chance when controlling for question identity. On the 23 contested questions (mixed answers across samples), there is zero predictive signal at Steps 1–4 from any linear direction at layer 40.
+
+### Why this is the case: three hypotheses
+
+1. **Temperature sampling (most likely for contested questions).** At temp 0.7, the model's logit distribution over the answer token is near-uniform between EDT and CDT options on contested questions. The "decision" is resolved by the random seed, not by a deterministic internal computation. There is nothing to find because there is nothing there. *Testable:* rerun contested questions at temp 0; if answers become unanimous, this is confirmed.
+
+2. **Nonlinear or distributed mechanism.** The decision involves feature interactions (payoff structure × agent relationship → answer) that no single linear direction captures, or it is distributed across layers in a way layer-40 extraction misses. *Testable:* nonlinear probe (MLP) on concatenated step activations, or multi-layer extraction. But 115 contested trials in 5120+ dimensions makes overfitting almost certain.
+
+3. **Non-thinking mode doesn't actually reason.** Qwen3-32B with `enable_thinking=False` generates fluent reasoning text in a single pass per token without internal backtracking or revision. The scaffolding imposes external structure but doesn't change the underlying computation. A thinking model that generates hundreds of internal tokens per step might show a readable dispositional signal that develops over the course of deliberation. *This is the hypothesis that motivates the Venhoff-style approach.*
+
+### Proposed next experiment: Venhoff-style reasoning behavior steering
+
+Rather than trying to read or steer the model's *answer*, steer its *reasoning behaviors* during thinking-mode generation and measure whether the reasoning style shifts, following Venhoff et al. (2025) on DeepSeek-R1-Distill.
+
+**Design:**
+1. Run `run_scaffolded_cot.py` with `enable_thinking=True` on Qwen3-32B-4bit locally
+2. Apply the existing contrastive EDT/CDT direction as a continuous steering vector during generation (injected at every token, not just at step boundaries)
+3. Use the CoT verifier pipeline (`run_cot_verifier.py`) to classify reasoning moves in steered vs unsteered traces
+4. Measure: does steering shift the prevalence of `evidential_reasoning`, `copy_symmetry`, `causal_reasoning`, `dominance` tags? Does it change pivot detection or coherence ratings?
+
+**Why this might work when prior steering didn't:** Venhoff et al. found that steering vectors reliably shift reasoning *behaviors* in thinking models even when they don't flip final answers. The contrastive direction may be the right vector for shifting reasoning style (it encodes what EDT reasoning looks like) even though it's the wrong vector for flipping answers.
+
+**Temperature:** All prior steering experiments (including `steer_and_eval.py` sweeps) used temp 0.7. Steering comparisons should use temp 0 (greedy decoding) so output changes are attributable to the vector, not sampling noise. The existing steering null result may be worth rerunning at temp 0 as a cheap sanity check before attempting the full Venhoff-style experiment.
+
+**What success looks like:** Steered traces show measurably more evidential reasoning moves. Whether the final answer also shifts is secondary — a behavioral shift is itself a publishable result and would confirm that the direction is causally involved in reasoning even if the answer determination happens downstream.
+
+**What failure looks like:** Thinking mode traces are similar with and without steering, or steering degrades coherence without shifting reasoning style. This would suggest the contrastive direction is purely representational, not functional.
+
+**Alternative:** If thinking-mode steering also fails, the remaining path is to move to DeepSeek-R1-Distill-Qwen-32B, which is the model Venhoff et al. actually validated on and shares the Qwen architecture. Existing extraction code should transfer directly.
+
 ## References
 
 - Nanda, "A Pragmatic Vision for Interpretability" (LessWrong, Sept 2025)

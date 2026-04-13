@@ -315,8 +315,8 @@ TRIAL_RUNNERS = {
 # Output
 # ---------------------------------------------------------------------------
 
-def save_results(trials: list[ScaffoldedTrial], condition: str, timestamp: str) -> Path:
-    """Save trials as JSONL."""
+def open_log_file(condition: str, timestamp: str) -> Path:
+    """Create JSONL log file and write metadata header. Returns the path."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     filename = f"scaffolded_{MODEL_LABEL}_{condition}_{timestamp}.jsonl"
     out_path = OUTPUT_DIR / filename
@@ -327,16 +327,22 @@ def save_results(trials: list[ScaffoldedTrial], condition: str, timestamp: str) 
         "model_id": MODEL_ID,
         "condition": condition,
         "timestamp": timestamp,
-        "n_trials": len(trials),
         "temperature": TEMPERATURE,
     }
-
     with open(out_path, 'w') as f:
         f.write(json.dumps(meta) + "\n")
-        for trial in trials:
-            f.write(json.dumps(asdict(trial)) + "\n")
 
-    # Summary line
+    return out_path
+
+
+def append_trial(out_path: Path, trial: ScaffoldedTrial):
+    """Append a single trial to the JSONL log file (incremental save)."""
+    with open(out_path, 'a') as f:
+        f.write(json.dumps(asdict(trial)) + "\n")
+
+
+def write_summary(out_path: Path, trials: list[ScaffoldedTrial], condition: str):
+    """Append a summary line at the end of the JSONL log file."""
     attitude_trials = [t for t in trials if t.is_attitude]
     capabilities_trials = [t for t in trials if not t.is_attitude]
     edt_count = sum(1 for t in attitude_trials if t.is_edt_aligned)
@@ -358,8 +364,6 @@ def save_results(trials: list[ScaffoldedTrial], condition: str, timestamp: str) 
     }
     with open(out_path, 'a') as f:
         f.write(json.dumps(summary) + "\n")
-
-    return out_path
 
 
 def print_summary(trials: list[ScaffoldedTrial], condition: str):
@@ -515,9 +519,11 @@ def main():
     for condition in args.condition:
         runner = TRIAL_RUNNERS[condition]
         trials = []
+        out_path = open_log_file(condition, timestamp)
 
         print(f"\n{'='*60}")
         print(f"  Running: {condition} | {len(questions)} questions x {args.samples} samples")
+        print(f"  Log: {out_path}")
         print(f"{'='*60}")
 
         for qi, q in enumerate(questions):
@@ -531,6 +537,7 @@ def main():
                 elapsed = time.time() - t0
 
                 trials.append(trial)
+                append_trial(out_path, trial)
 
                 if trial.parse_error:
                     print(f"ERR ({elapsed:.1f}s)")
@@ -541,7 +548,7 @@ def main():
                 else:
                     print(f"??? ({elapsed:.1f}s)")
 
-        out_path = save_results(trials, condition, timestamp)
+        write_summary(out_path, trials, condition)
         print(f"\n  Saved: {out_path}")
         print_summary(trials, condition)
 
