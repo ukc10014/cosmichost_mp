@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DT Reasoning Explorer — Cosmic Host Research</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg-raised: #161b22;
+    --bg-card: #1c2129;
+    --text: #e1e4e8;
+    --text-dim: #8b949e;
+    --text-faint: #6e7681;
+    --accent: #7ee8c7;
+    --accent-dim: #4db899;
+    --rule: #30363d;
+    --edt-color: #7ee8c7;
+    --cdt-color: #e8a87e;
+    --error-color: #e87e7e;
+    --edt-bg: rgba(126, 232, 199, 0.08);
+    --cdt-bg: rgba(232, 168, 126, 0.08);
+    --error-bg: rgba(232, 126, 126, 0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text);
+    height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+  }
+
+  /* Tag colors */
+  .tag-predictor_identification { background: #2d1f5e; color: #b39ddb; border-color: #7c4dff; }
+  .tag-copy_symmetry { background: #1a3a2a; color: #81c784; border-color: #4caf50; }
+  .tag-evidential_reasoning { background: #1a2f3a; color: #7ee8c7; border-color: #26a69a; }
+  .tag-causal_reasoning { background: #3a2a1a; color: #e8a87e; border-color: #ff8a65; }
+  .tag-ev_calculation { background: #1a1a3a; color: #90caf9; border-color: #42a5f5; }
+  .tag-uncertainty { background: #3a1a2a; color: #f48fb1; border-color: #ec407a; }
+  .tag-plan_generation { background: #2a2a1a; color: #fff176; border-color: #ffee58; }
+  .tag-self_checking { background: #1a2a2a; color: #80cbc4; border-color: #26a69a; }
+  .tag-result_consolidation { background: #2a1a2a; color: #ce93d8; border-color: #ab47bc; }
+  .tag-decision_commit { background: #1a3a1a; color: #a5d6a7; border-color: #66bb6a; }
+  .tag-problem_setup { background: #1f1f2e; color: #9e9e9e; border-color: #757575; }
+  .tag-other { background: #1a1a1a; color: #616161; border-color: #424242; }
+
+  /* Topbar */
+  #topbar {
+    background: var(--bg-raised); border-bottom: 1px solid var(--rule);
+    padding: 8px 18px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  }
+  #topbar h1 { font-size: 14px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.04em; white-space: nowrap; }
+  .mode-toggle {
+    font-size: 12px; padding: 4px 10px; border-radius: 4px;
+    border: 1px solid var(--rule); background: var(--bg);
+    color: var(--text-dim); cursor: pointer; white-space: nowrap;
+  }
+  .mode-toggle:hover { border-color: var(--accent-dim); color: var(--text); }
+  .mode-toggle.active { border-color: var(--accent); color: var(--accent); background: rgba(126,232,199,0.1); }
+  #home-link { font-size: 12px; color: var(--accent); text-decoration: none; margin-left: auto; white-space: nowrap; }
+  #model-select {
+    font-size: 12px; padding: 4px 8px; border-radius: 4px;
+    border: 1px solid var(--rule); background: var(--bg);
+    color: var(--text); cursor: pointer;
+  }
+  #model-select:hover { border-color: var(--accent-dim); }
+
+  #meta-bar {
+    background: var(--bg-raised); border-bottom: 1px solid var(--rule);
+    padding: 3px 18px; font-size: 11px; color: var(--text-faint);
+    display: flex; gap: 20px; flex-shrink: 0;
+  }
+
+  /* Layout */
+  #layout { display: flex; flex: 1; overflow: hidden; }
+
+  /* Sidebar */
+  #sidebar {
+    width: 240px; min-width: 240px;
+    background: var(--bg-raised); border-right: 1px solid var(--rule);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  #sidebar-header { padding: 8px 12px 7px; border-bottom: 1px solid var(--rule); }
+  #sidebar-header .label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+    font-weight: 600; color: var(--text-dim); margin-bottom: 5px;
+  }
+  #sort-select, #filter-tag-select {
+    font-size: 12px; background: var(--bg); color: var(--text);
+    border: 1px solid var(--rule); border-radius: 4px; padding: 3px 5px; width: 100%;
+    margin-bottom: 4px;
+  }
+  #question-list { flex: 1; overflow-y: auto; padding: 3px 0; }
+  .q-item {
+    padding: 7px 12px; cursor: pointer; border-left: 3px solid transparent;
+    display: flex; flex-direction: column; gap: 2px; transition: background 0.1s;
+  }
+  .q-item:hover { background: rgba(255,255,255,0.03); }
+  .q-item.selected { background: rgba(126,232,199,0.06); border-left-color: var(--accent); }
+  .q-item .qid { font-size: 12px; font-weight: 600; color: var(--text); }
+  .q-item .setting { font-size: 10px; color: var(--text-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .q-item .dt-label { font-size: 10px; font-weight: 700; }
+  .q-item .dt-label.edt { color: var(--edt-color); }
+  .q-item .dt-label.cdt { color: var(--cdt-color); }
+  .q-item .dt-label.err { color: var(--error-color); }
+  .q-item .dt-label.both { color: var(--accent); }
+  .q-item .meta-line { font-size: 10px; color: var(--text-faint); }
+
+  /* Main panel */
+  #main {
+    flex: 1; overflow-y: auto; padding: 18px 24px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  #main.empty-state { align-items: center; justify-content: center; }
+  .empty-msg { color: var(--text-faint); font-size: 14px; }
+
+  /* Aggregate panel (right sidebar) */
+  #aggregate {
+    width: 300px; min-width: 300px;
+    background: var(--bg-raised); border-left: 1px solid var(--rule);
+    overflow-y: auto; padding: 12px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .agg-section h3 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-dim); font-weight: 600; margin-bottom: 8px;
+  }
+  .bar-chart { display: flex; flex-direction: column; gap: 4px; }
+  .bar-row { display: flex; align-items: center; gap: 6px; }
+  .bar-label { font-size: 10px; color: var(--text-dim); width: 130px; text-align: right; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-track { flex: 1; height: 14px; background: var(--bg); border-radius: 3px; overflow: hidden; position: relative; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+  .bar-fill.edt { background: var(--edt-color); opacity: 0.7; }
+  .bar-fill.cdt { background: var(--cdt-color); opacity: 0.7; }
+  .bar-fill.all { background: var(--accent-dim); opacity: 0.5; }
+  .bar-count { font-size: 10px; color: var(--text-faint); width: 30px; flex-shrink: 0; }
+
+  /* Question card */
+  .question-card {
+    background: var(--bg-raised); border: 1px solid var(--rule);
+    border-radius: 7px; padding: 12px 16px;
+  }
+  .question-card h2 { font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 7px; }
+  .question-card .setup { font-size: 12px; color: var(--text-dim); line-height: 1.45; margin-bottom: 7px; white-space: pre-wrap; }
+  .question-card .q-text { font-size: 13px; color: var(--text); line-height: 1.45; margin-bottom: 7px; font-weight: 500; }
+  .answer-list { list-style: none; }
+  .answer-list li {
+    font-size: 12px; padding: 3px 7px; margin: 2px 0;
+    border-radius: 3px; display: flex; align-items: center; gap: 7px;
+  }
+  .answer-list li .letter { font-weight: 700; width: 18px; text-align: center; }
+  .answer-list li.edt-answer { background: var(--edt-bg); border-left: 3px solid var(--edt-color); }
+  .answer-list li.cdt-answer { background: var(--cdt-bg); border-left: 3px solid var(--cdt-color); }
+  .answer-list li.both-answer { background: linear-gradient(90deg, var(--edt-bg), var(--cdt-bg)); border-left: 3px solid var(--accent); }
+  .dt-badge-inline {
+    display: inline-block; font-size: 10px; padding: 1px 5px;
+    border-radius: 3px; background: rgba(126,232,199,0.12); color: var(--accent-dim);
+  }
+
+  /* Thinking trace */
+  .trace-section { }
+  .trace-section h3 { font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom: 8px; }
+  .trace-stats { font-size: 11px; color: var(--text-faint); margin-bottom: 10px; }
+
+  .sentence {
+    padding: 6px 10px; margin: 2px 0; border-radius: 4px;
+    border-left: 3px solid transparent;
+    font-size: 12px; line-height: 1.5; color: var(--text-dim);
+    transition: background 0.1s;
+    cursor: default;
+  }
+  .sentence:hover { background: rgba(255,255,255,0.03); }
+  .sentence.anchor { border-left-color: var(--accent); background: rgba(126,232,199,0.04); }
+  .sentence.highlighted { background: rgba(126,232,199,0.1); }
+  .sentence .sent-tags { margin-top: 3px; display: flex; gap: 3px; flex-wrap: wrap; }
+  .sent-tag {
+    font-size: 9px; padding: 1px 5px; border-radius: 3px;
+    border: 1px solid; font-weight: 600; letter-spacing: 0.02em;
+  }
+  .sentence .sent-idx { font-size: 9px; color: var(--text-faint); margin-right: 6px; user-select: none; }
+
+  /* Visible answer section */
+  .visible-answer {
+    background: var(--bg-card); border: 1px solid var(--rule);
+    border-radius: 5px; padding: 10px 14px; margin-top: 6px;
+  }
+  .visible-answer h4 { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .visible-answer .answer-text { font-size: 12px; color: var(--text); line-height: 1.5; white-space: pre-wrap; }
+
+  /* Tag legend */
+  .tag-legend { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .legend-item {
+    font-size: 9px; padding: 2px 6px; border-radius: 3px;
+    border: 1px solid; cursor: pointer; user-select: none;
+    opacity: 0.6; transition: opacity 0.15s;
+  }
+  .legend-item:hover, .legend-item.active { opacity: 1.0; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1>DT Reasoning Explorer</h1>
+  <select id="model-select" onchange="switchModel(this.value)"></select>
+  <button class="mode-toggle active" id="trace-btn" onclick="setView('trace')">Traces</button>
+  <button class="mode-toggle" id="agg-btn" onclick="setView('aggregate')">Aggregate</button>
+  <a id="home-link" href="index.html">Home</a>
+</div>
+
+<div id="meta-bar">
+  <span id="meta-model">Model: —</span>
+  <span id="meta-temp">Temp: —</span>
+  <span id="meta-counts">—</span>
+</div>
+
+<div id="layout">
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <div class="label">Questions</div>
+      <select id="sort-select" onchange="renderSidebar()">
+        <option value="qid">Sort: QID</option>
+        <option value="n_sentences">Sort: Trace length</option>
+        <option value="anchors">Sort: Anchor density</option>
+        <option value="edt_first">Sort: EDT first</option>
+      </select>
+      <select id="filter-tag-select" onchange="renderSidebar()">
+        <option value="">Filter: All</option>
+        <option value="edt">EDT only</option>
+        <option value="cdt">CDT only</option>
+        <option value="error">Parse errors</option>
+      </select>
+    </div>
+    <div id="question-list"></div>
+  </div>
+
+  <div id="main" class="empty-state">
+    <div class="empty-msg">Select a question to explore its thinking trace</div>
+  </div>
+
+  <div id="aggregate"></div>
+</div>
+
+<script>
+let DATA = null;
+let selectedQid = null;
+let highlightTag = null;
+let currentView = 'trace';
+
+const TAG_ORDER = [
+  'predictor_identification', 'copy_symmetry', 'evidential_reasoning',
+  'causal_reasoning', 'ev_calculation', 'plan_generation', 'uncertainty',
+  'self_checking', 'result_consolidation', 'decision_commit', 'problem_setup', 'other'
+];
+
+const TAG_LABELS = {
+  predictor_identification: 'Predictor ID',
+  copy_symmetry: 'Copy Symmetry',
+  evidential_reasoning: 'Evidential',
+  causal_reasoning: 'Causal',
+  ev_calculation: 'EV Calc',
+  plan_generation: 'Planning',
+  uncertainty: 'Uncertainty',
+  self_checking: 'Self-Check',
+  result_consolidation: 'Consolidation',
+  decision_commit: 'Decision',
+  problem_setup: 'Setup',
+  other: 'Other',
+};
+
+function escHtml(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+let MANIFEST_RUNS = [];
+
+async function init() {
+  try {
+    const mResp = await fetch('data/thinking_traces_manifest.json');
+    const manifest = await mResp.json();
+    MANIFEST_RUNS = manifest.runs || [];
+    const sel = document.getElementById('model-select');
+    sel.innerHTML = '';
+    for (const run of MANIFEST_RUNS) {
+      const opt = document.createElement('option');
+      opt.value = run.file;
+      opt.textContent = run.model + ' (' + run.n_questions + 'q)';
+      sel.appendChild(opt);
+    }
+    if (MANIFEST_RUNS.length > 0) {
+      await loadRun('data/' + MANIFEST_RUNS[0].file);
+    } else {
+      document.getElementById('main').innerHTML = '<div class="empty-msg">No thinking trace data found. Run prepare_thinking_trace_data.py first.</div>';
+    }
+  } catch (e) {
+    document.getElementById('main').innerHTML = '<div class="empty-msg">Failed to load manifest: ' + e.message + '</div>';
+  }
+}
+
+async function switchModel(file) {
+  await loadRun('data/' + file);
+}
+
+async function loadRun(url) {
+  try {
+    const resp = await fetch(url);
+    DATA = await resp.json();
+  } catch (e) {
+    document.getElementById('main').innerHTML = '<div class="empty-msg">Failed to load ' + url + '</div>';
+    return;
+  }
+  selectedQid = null;
+  highlightTag = null;
+  updateMetaBar();
+  renderSidebar();
+  renderAggregate();
+  showEmpty();
+}
+
+function updateMetaBar() {
+  if (!DATA) return;
+  const m = DATA.metadata;
+  document.getElementById('meta-model').textContent = 'Model: ' + m.model + (m.model_id ? ' (' + m.model_id + ')' : '');
+  document.getElementById('meta-temp').textContent = 'Temp: ' + (m.temperature !== null ? m.temperature : '?') + (m.enable_thinking ? ' | Thinking' : '');
+  document.getElementById('meta-counts').textContent =
+    m.n_questions + ' questions | EDT ' + m.edt_count + ' | CDT ' + m.cdt_count + ' | Errors ' + m.parse_errors;
+}
+
+function setView(v) {
+  currentView = v;
+  document.getElementById('trace-btn').classList.toggle('active', v === 'trace');
+  document.getElementById('agg-btn').classList.toggle('active', v === 'aggregate');
+  document.getElementById('aggregate').style.display = v === 'aggregate' ? 'flex' : 'none';
+  if (v === 'aggregate') {
+    document.getElementById('main').style.display = 'none';
+  } else {
+    document.getElementById('main').style.display = 'flex';
+    document.getElementById('aggregate').style.display = 'none';
+  }
+}
+
+/* Sidebar */
+function getQuestions() {
+  if (!DATA) return [];
+  const qs = Object.values(DATA.questions);
+  const tagFilter = document.getElementById('filter-tag-select').value;
+  let filtered = qs;
+  if (tagFilter === 'edt') filtered = qs.filter(q => q.trace.is_edt_aligned);
+  else if (tagFilter === 'cdt') filtered = qs.filter(q => q.trace.is_cdt_aligned);
+  else if (tagFilter === 'error') filtered = qs.filter(q => q.trace.parse_error);
+
+  const sort = document.getElementById('sort-select').value;
+  if (sort === 'n_sentences') {
+    filtered.sort((a, b) => b.trace.n_sentences - a.trace.n_sentences);
+  } else if (sort === 'anchors') {
+    const anchorDensity = (q) => {
+      const s = q.trace.sentences;
+      if (!s.length) return 0;
+      return s.filter(x => x.is_anchor).length / s.length;
+    };
+    filtered.sort((a, b) => anchorDensity(b) - anchorDensity(a));
+  } else if (sort === 'edt_first') {
+    filtered.sort((a, b) => {
+      if (a.trace.is_edt_aligned && !b.trace.is_edt_aligned) return -1;
+      if (!a.trace.is_edt_aligned && b.trace.is_edt_aligned) return 1;
+      return a.question.qid.localeCompare(b.question.qid, undefined, {numeric: true});
+    });
+  } else {
+    filtered.sort((a, b) => a.question.qid.localeCompare(b.question.qid, undefined, {numeric: true}));
+  }
+  return filtered;
+}
+
+function renderSidebar() {
+  const list = document.getElementById('question-list');
+  if (!DATA) { list.innerHTML = ''; return; }
+  const qs = getQuestions();
+  list.innerHTML = qs.map(q => {
+    const t = q.trace;
+    const sel = q.question.qid === selectedQid ? ' selected' : '';
+    const setting = q.question.setting_file.replace(/^setting\d*/, '').replace('.json','').replace(/_/g,' ').trim();
+    let dtCls = 'err', dtText = 'ERR';
+    if (t.is_edt_aligned && t.is_cdt_aligned) { dtCls = 'both'; dtText = 'BOTH'; }
+    else if (t.is_edt_aligned) { dtCls = 'edt'; dtText = 'EDT'; }
+    else if (t.is_cdt_aligned) { dtCls = 'cdt'; dtText = 'CDT'; }
+    const anchors = t.sentences.filter(s => s.is_anchor).length;
+    return `<div class="q-item${sel}" onclick="selectQuestion('${q.question.qid}')">
+      <span class="qid">${q.question.qid} <span class="dt-label ${dtCls}">${dtText}</span></span>
+      <span class="setting">${escHtml(setting)}</span>
+      <span class="meta-line">${t.n_sentences} sent | ${anchors} anchors | ${(t.n_thinking_chars/1000).toFixed(1)}k chars</span>
+    </div>`;
+  }).join('');
+}
+
+function showEmpty() {
+  const main = document.getElementById('main');
+  main.className = 'empty-state';
+  main.innerHTML = '<div class="empty-msg">Select a question to explore its thinking trace</div>';
+}
+
+function selectQuestion(qid) {
+  selectedQid = qid;
+  highlightTag = null;
+  renderSidebar();
+  renderMainTrace();
+}
+
+/* Main trace view */
+function renderMainTrace() {
+  const main = document.getElementById('main');
+  if (!selectedQid || !DATA || !DATA.questions[selectedQid]) { showEmpty(); return; }
+  main.className = '';
+  const entry = DATA.questions[selectedQid];
+  const q = entry.question;
+  const t = entry.trace;
+
+  const answersHtml = q.answers.map(a => {
+    let cls = '';
+    if (a.label === 'EDT') cls = 'edt-answer';
+    else if (a.label === 'CDT') cls = 'cdt-answer';
+    else if (a.label === 'EDT+CDT') cls = 'both-answer';
+    const badge = a.label ? ` <span class="dt-badge-inline">${a.label}</span>` : '';
+    return `<li class="${cls}"><span class="letter">${a.letter})</span>${escHtml(a.text)}${badge}</li>`;
+  }).join('');
+
+  const tagsHtml = q.tags.map(t => `<span class="dt-badge-inline">${escHtml(t)}</span>`).join(' ');
+
+  let dtStr = 'Unparsed';
+  if (t.is_edt_aligned && t.is_cdt_aligned) dtStr = 'Both EDT+CDT';
+  else if (t.is_edt_aligned) dtStr = 'EDT';
+  else if (t.is_cdt_aligned) dtStr = 'CDT';
+
+  const legendHtml = TAG_ORDER.map(tag => {
+    const active = highlightTag === tag ? ' active' : '';
+    return `<span class="legend-item sent-tag tag-${tag}${active}" onclick="toggleHighlight('${tag}')">${TAG_LABELS[tag]}</span>`;
+  }).join('');
+
+  const anchors = t.sentences.filter(s => s.is_anchor).length;
+  const sentencesHtml = t.sentences.map(s => {
+    const tagBadges = s.tags.map(tag =>
+      `<span class="sent-tag tag-${tag}">${TAG_LABELS[tag] || tag}</span>`
+    ).join('');
+    const anchorCls = s.is_anchor ? ' anchor' : '';
+    const highlightCls = highlightTag && s.tags.includes(highlightTag) ? ' highlighted' : '';
+    return `<div class="sentence${anchorCls}${highlightCls}">
+      <span class="sent-idx">${s.idx + 1}</span>${escHtml(s.text)}
+      <div class="sent-tags">${tagBadges}</div>
+    </div>`;
+  }).join('');
+
+  const visibleHtml = t.visible_answer ?
+    `<div class="visible-answer">
+      <h4>Visible Response (answer: ${escHtml(t.final_answer || '?')} = ${dtStr})</h4>
+      <div class="answer-text">${escHtml(t.visible_answer)}</div>
+    </div>` : '';
+
+  const parseErrHtml = t.parse_error ?
+    `<div style="font-size:11px; color:var(--error-color); margin-bottom:6px;">Parse error: ${escHtml(t.parse_error)}</div>` : '';
+
+  main.innerHTML = `
+    <div class="question-card">
+      <h2>${escHtml(q.qid)} — ${escHtml(q.setting_file.replace('.json','').replace(/_/g,' '))}</h2>
+      ${q.setup ? `<div class="setup">${escHtml(q.setup)}</div>` : ''}
+      <div class="q-text">${escHtml(q.question_text)}</div>
+      <ul class="answer-list">${answersHtml}</ul>
+      <div style="margin-top:5px; font-size:11px; color:var(--text-faint);">${tagsHtml}</div>
+    </div>
+    <div class="trace-section">
+      <h3>Thinking Trace</h3>
+      <div class="trace-stats">${t.n_sentences} sentences | ${anchors} anchors | ${(t.n_thinking_chars/1000).toFixed(1)}k chars</div>
+      ${parseErrHtml}
+      <div class="tag-legend">${legendHtml}</div>
+      ${sentencesHtml}
+    </div>
+    ${visibleHtml}
+  `;
+}
+
+function toggleHighlight(tag) {
+  highlightTag = highlightTag === tag ? null : tag;
+  renderMainTrace();
+}
+
+/* Aggregate panel */
+function renderAggregate() {
+  const panel = document.getElementById('aggregate');
+  if (!DATA) { panel.innerHTML = ''; return; }
+  const agg = DATA.aggregate;
+
+  const maxAll = Math.max(...TAG_ORDER.map(t => agg.all_tags[t] || 0), 1);
+  const allBars = TAG_ORDER.filter(t => t !== 'other').map(tag => {
+    const count = agg.all_tags[tag] || 0;
+    const pct = (count / maxAll * 100).toFixed(0);
+    return `<div class="bar-row">
+      <span class="bar-label">${TAG_LABELS[tag]}</span>
+      <div class="bar-track"><div class="bar-fill all" style="width:${pct}%"></div></div>
+      <span class="bar-count">${count}</span>
+    </div>`;
+  }).join('');
+
+  const maxComp = Math.max(
+    ...TAG_ORDER.map(t => agg.edt_tags[t] || 0),
+    ...TAG_ORDER.map(t => agg.cdt_tags[t] || 0),
+    1
+  );
+  const compBars = TAG_ORDER.filter(t => t !== 'other').map(tag => {
+    const edtC = agg.edt_tags[tag] || 0;
+    const cdtC = agg.cdt_tags[tag] || 0;
+    const edtPct = (edtC / maxComp * 100).toFixed(0);
+    const cdtPct = (cdtC / maxComp * 100).toFixed(0);
+    return `<div class="bar-row">
+      <span class="bar-label">${TAG_LABELS[tag]}</span>
+      <div class="bar-track" style="display:flex; gap:1px;">
+        <div class="bar-fill edt" style="width:${edtPct}%"></div>
+        <div class="bar-fill cdt" style="width:${cdtPct}%"></div>
+      </div>
+      <span class="bar-count">${edtC}/${cdtC}</span>
+    </div>`;
+  }).join('');
+
+  const nEdt = DATA.metadata.edt_count;
+  const nCdt = DATA.metadata.cdt_count;
+  const nTotal = DATA.metadata.n_questions;
+  const edtPct = nTotal > 0 ? (nEdt / nTotal * 100).toFixed(0) : '?';
+
+  panel.innerHTML = `
+    <div class="agg-section">
+      <h3>Overview</h3>
+      <div style="font-size:12px; color:var(--text-dim); line-height:1.8;">
+        Questions: ${nTotal}<br>
+        EDT: ${nEdt} (${edtPct}%) | CDT: ${nCdt} | Errors: ${DATA.metadata.parse_errors}<br>
+        Model: ${DATA.metadata.model}
+      </div>
+    </div>
+    <div class="agg-section">
+      <h3>Sentence Tags (All Traces)</h3>
+      <div class="bar-chart">${allBars}</div>
+    </div>
+    <div class="agg-section">
+      <h3>EDT vs CDT Tag Comparison</h3>
+      <div style="font-size:10px; color:var(--text-faint); margin-bottom:6px;">
+        <span style="color:var(--edt-color);">EDT</span> /
+        <span style="color:var(--cdt-color);">CDT</span> sentence counts
+      </div>
+      <div class="bar-chart">${compBars}</div>
+    </div>
+  `;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('aggregate').style.display = 'none';
+  init();
+});
+</script>
+</body>
+</html>

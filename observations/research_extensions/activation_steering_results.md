@@ -336,6 +336,36 @@ Both sweeps show EDT% fluctuating within a ~7pp band around the baseline (~55-58
 
 Note: The fixed-hook results are essentially identical to the broken-hook results (~5-10pp non-monotonic fluctuation), confirming that the broken hook was not hiding a real signal — the noise pattern was the same with or without actual steering.
 
+### Sweep 3: Layer 40, raw direction, temperature 0 (greedy decoding)
+
+*Date: 2026-04-13*
+
+All prior sweeps used temperature 0.7, leaving open the possibility that sampling noise masked a real but small steering effect. To rule this out, the layer-40 sweep was re-run with greedy decoding (temperature 0), making output fully deterministic. Any change in EDT% across alpha values would be unambiguously attributable to the steering vector.
+
+| α | EDT% (temp 0) | EDT% (temp 0.7) |
+|-------|--------------|----------------|
+| -3.0 | 58.0% | 59.3% |
+| -1.5 | 58.0% | 54.3% |
+| -0.5 | 58.0% | 56.8% |
+| 0.0 | 58.0% | 53.1% |
+| +0.5 | 56.8% | 53.1% |
+| +1.5 | 56.8% | 58.0% |
+| +3.0 | 58.0% | 54.3% |
+
+**Result: No effect — now definitively.** At temp 0, EDT% is virtually constant at 56.8–58.0% (~1.2pp span) across the full alpha range. The variation that appeared in the temp-0.7 sweep (53.1–59.3%, ~6pp span) was indeed sampling noise. Under greedy decoding, the steering vector produces no discernible shift in EDT/CDT preference at any alpha value.
+
+This eliminates the "sampling noise masked a real effect" hypothesis. The contrastive direction is confirmed as a content-readout feature, not a causal mechanism.
+
+### Updated summary across all sweeps
+
+| Layer | Direction norm | α range | Temp | EDT% range | Monotonic? | Causal? |
+|-------|---------------|---------|------|-----------|------------|---------|
+| 40 | 17.52 | -3 to +3 | 0.7 | 53.1–59.3% | No | No |
+| 0 | 0.36 | -3 to +3 | 0.7 | 51.9–59.3% | No | No |
+| 40 | 17.52 | -3 to +3 | 0.0 | 56.8–58.0% | No | No |
+
+The temp-0 sweep narrows the fluctuation band from ~6pp to ~1.2pp, confirming that all prior variation was generation noise. The mean-difference direction does not causally control EDT/CDT preference under any tested combination of layer, alpha, or temperature.
+
 ### Interpretation
 
 The probe identified a direction that **represents** the EDT/CDT distinction (91-100% classification accuracy) but does not **cause** it. This is the "readout vs mechanism" distinction (Li et al. 2023): the model encodes enough information in its activations to distinguish EDT from CDT completions, but the direction along which this information is encoded is not the same direction that determines the model's output choice.
@@ -517,6 +547,178 @@ Activation steering failed at every layer tested — the mean-difference directi
 ### Reference
 
 Fierro & Roger (2025). "Steering Language Models with Weight Arithmetic." ICLR 2026. [arxiv.org/abs/2511.05408](https://arxiv.org/abs/2511.05408). LoRA rank 32, alpha 16, all modules, ~1 epoch, 500-900 examples per side. Tested on Qwen2.5-7B-Instruct.
+
+---
+
+## Contested Questions at Temperature 0: Scaffolded Replication
+
+*Date: 2026-04-13*
+
+### Motivation
+
+The scaffolded trajectory analysis (2026-04-12) identified 23 of 79 attitude questions where the model gave *mixed* EDT/CDT answers across 5 samples at temperature 0.7. These "contested" questions were the test bed for the dispositional probe — but the probe found zero predictive signal at Steps 1–4 when restricted to these questions. One explanation: the model was never genuinely deliberating. At temp 0.7, near-flat logits get resolved by the random seed, creating the *appearance* of internal conflict where there is only a weak preference plus sampling noise.
+
+To test this, all 23 mixed-answer questions were re-run through the scaffolded pipeline at temperature 0 (greedy decoding) with n=1 sample per question. If answers become unanimous, the "contested" category was an artifact of temperature sampling.
+
+### Results
+
+| QID | Orig (5 samples, temp 0.7) | Temp 0 |
+|-----|---------------------------|--------|
+| 10.5ATT | 3E/2C | EDT |
+| 106.1ATT | 1E/4C | CDT |
+| 108 | 3E/2C | CDT |
+| 109.2ATT | 2E/3C | Both* |
+| 110.3ATT | 1E/4C | CDT |
+| 112.1ATT | 3E/2C | EDT |
+| 113.1ATT | 4E/1C | EDT |
+| 113.3ATT | 4E/1C | EDT |
+| 115.1ATT | 3E/2C | Both* |
+| 21.1ATT | 1E/4C | CDT |
+| 30.1ATT | 3E/2C | EDT |
+| 41.3 | 1E/4C | CDT |
+| 48.1ATT | 2E/3C | EDT |
+| 52ATT | 4E/1C | EDT |
+| 62.1ATT | 3E/2C | EDT |
+| 66.3ATT | 3E/2C | EDT |
+| 82.1 | 1E/4C | CDT |
+| 83.1ATT | 3E/2C | EDT |
+| 85.1ATT | 4E/1C | CDT |
+| 85.2ATT | 2E/3C | CDT |
+| 85.3ATT | 2E/3C | CDT |
+| 89.1ATT | 2E/3C | CDT |
+| 95.1ATT | 2E/3C | CDT |
+
+**Temp-0 totals: EDT=10, CDT=11, Both*=2** (of 23 questions)
+
+\*Both = the model chose an answer that the dataset marks as acceptable to both EDT and CDT. These questions (109.2ATT, 115.1ATT) appeared "mixed" at temp 0.7 because sampling sometimes landed on discriminating answers, but the greedy preference is a non-discriminating option.
+
+### Key findings
+
+1. **Every question produces a single deterministic answer at temp 0.** The "contested" category was entirely an artifact of temperature sampling. The model has a definite (greedy) preference for each question — it was never internally torn. Two questions resolve to answers acceptable to both theories — at temp 0.7, sampling noise occasionally pushed them onto theory-discriminating alternatives, creating the false appearance of EDT/CDT conflict.
+
+2. **Temp-0 answers mostly track the original majority.** Questions that were 3E/2C or 4E/1C at temp 0.7 generally go EDT at temp 0, and vice versa. Two exceptions go against their majority (108: 3E/2C → CDT; 48.1ATT: 2E/3C → EDT), but 5 samples is too few for a reliable majority estimate.
+
+3. **The dispositional probe null result is fully explained.** The probe found no per-trial signal at Steps 1–4 on the 23 contested questions because there was nothing to predict — the apparent EDT/CDT variation was sampling noise, not a pre-existing dispositional state. No activation-level feature could predict which way a coin flip would go.
+
+4. **The model's EDT lean is deterministic and question-specific.** At temp 0, 12/23 go EDT and 11/23 go CDT, close to the overall ~58% EDT baseline. Each question has a fixed answer — the model is not weighing decision theories, it's pattern-matching to a preferred response that is fully determined by the prompt content.
+
+### Implications for the project
+
+This result, combined with the temp-0 steering null (also 2026-04-13), closes the loop on activation-level interventions for Qwen3-32B non-thinking mode:
+
+- **Steering null (temp 0):** The contrastive direction doesn't shift answers even when sampling noise is eliminated.
+- **Contested questions null (temp 0):** The questions that appeared to show internal deliberation were just sampling noise — the model has deterministic preferences.
+
+Together, these confirm that Qwen3-32B in non-thinking mode does not have a steerable decision-theoretic mechanism. Its EDT/CDT preferences are fixed per-question, determined by prompt content, and not modifiable by linear activation-space intervention. The "decision" is baked into the forward pass in a way that is either nonlinear, distributed, or simply a surface-level pattern match that leaves no single-direction causal handle.
+
+**Log file:** `logs/scaffolded_cot/scaffolded_qwen3-32b-4bit-local_scaffolded_20260413T092905.jsonl`
+
+### Next step: thinking-mode reasoning trace characterization
+
+With the non-thinking activation steering story closed, the next step is observational rather than causal: run all 81 attitude questions through Qwen3-32B with `enable_thinking=True` (free CoT, no scaffolding, temp 0, n=1) and characterize the reasoning traces using the existing CoT verifier pipeline. This provides the descriptive comparison between thinking and non-thinking mode reasoning on Newcomb-like questions that Oesterheld et al. identified as a gap. See `thinking_models_pivot_note.md` for full design.
+
+**Complete (2026-04-13).** EDT rate = 68.4% (up from ~58% in non-thinking mode). Thinking traces average ~8K chars. The strongest differentiator between EDT and CDT traces is EV calculation (12.5x overrepresented in EDT traces), followed by planning (4.2x), decision commits (4.9x), and backtracking/uncertainty (2.9x). Evidential reasoning appears at similar rates in both — the difference is that EDT traces follow evidential discussion with EV computations, while CDT traces follow with causal independence arguments. Full analysis in `thinking_models_pivot_note.md`.
+
+**Cross-model validation (2026-04-13).** Claude Sonnet (claude-sonnet-4-20250514) with extended thinking shows 67.5% EDT rate on the same 81 questions — converging with Qwen3's 68.4%. Sonnet's traces are shorter (~3.5K chars vs ~8.3K) with far less uncertainty/backtracking (9x less) but the same EV-calculation → EDT signature (6.5x overrepresentation in EDT traces). Copy-symmetry recognition also strongly predicts EDT in both models. DeepSeek-R1-Distill-Qwen-32B run in progress. See `thinking_models_pivot_note.md` § "Cross-Model Validation" for full comparison tables.
+
+---
+
+## Methodological Critique and Lessons Learned
+
+*Added 2026-04-13, after the temp-0 steering and contested-questions results closed the non-thinking Qwen3-32B story.*
+
+### The devil's advocate case against this being an interesting null result
+
+A skeptic could argue the null result is unsurprising and methodologically weak:
+
+1. **The contrastive direction was extracted from forced completions.** The probe was trained on activations from `prompt + full EDT completion` vs `prompt + full CDT completion`. The completions contain vocabulary giveaways ("evidence," "correlated" vs "cannot," "causally"). Even the minimal-completion control still has different answer tokens. The direction inevitably captures *what EDT/CDT text looks like after the model processes it*, not *what causes the model to produce one vs the other*. Finding that such a direction doesn't steer is not surprising — you wouldn't expect a "text-style" feature to control decision-making.
+
+2. **The contrastive dataset had limited diversity.** The 350 pairs were LLM-generated from a relatively small number of scenario prototypes, then expanded across question formats. This is a narrower distribution than the Oesterheld benchmark it was tested on.
+
+3. **The model was a weak test case.** Non-thinking Qwen3-32B shows only a ~58% EDT lean — barely above chance. Oesterheld et al. (2024) already reported that non-thinking models perform near chance on DT discrimination. Trying to steer a preference that barely exists is inherently low-powered. The absence of a steering effect may reflect "nothing to steer" rather than "steering doesn't work."
+
+4. **Layer selection was limited.** We tested layers 0, 40, and 48. Attribution patching guided this choice, but the patching itself used the layer-40 direction injected at each candidate layer — a methodological mismatch that may have missed the true causal site.
+
+5. **The temp-0 result reframes, not strengthens.** "The effect disappeared at temp 0" sounds like we had something and lost it. More accurately: there was never an effect, and the temp-0.7 variation was noise. The temp-0 experiment eliminated a confound but didn't reveal new information about steering.
+
+### What is genuinely informative despite these limitations
+
+1. **The content-vs-disposition distinction.** This is the real methodological contribution. Probes on contrastive completions find *what the text looks like in activation space*, not *what causes the model to produce it*. This trap is easy to fall into — high probe accuracy feels like you've found the mechanism. Documenting the full pipeline from 100% probe accuracy to definitive steering null, with the mechanistic explanation (content readout, not causal mechanism), is useful for the field.
+
+2. **The minimal-completion control did add something.** Layer 0 dropping from 95% to 65% while layers 24+ held at 95-100% shows the model builds a representation beyond vocabulary overlap. The direction is not *trivially* a word-pattern detector — there's genuine EDT/CDT structure in the middle-to-late layers. It's just not the structure that controls the output.
+
+3. **The disposition-vs-persistent-mode distinction.** Most successful steering results (honesty, sycophancy, persona vectors) work on *persistent dispositions* that pervade generation — the model stays in "honest mode" across many tokens. EDT/CDT is a *point decision*: the model commits at one token and everything follows. The standard activation-steering approach assumes a persistent mode to amplify. Documenting why it fails for point decisions is informative.
+
+4. **The contested-questions result is clean.** All 23 "mixed" questions becoming unanimous at temp 0 is a tight result that fully explains the dispositional probe null. This isn't methodologically suspect — it's a genuine finding about the nature of DT reasoning in this model.
+
+### What a positive result would have required
+
+A successful steering experiment would show EDT% varying monotonically with alpha — e.g., from ~40% at α=-3 to ~70% at α=+3. On a model with a strong baseline lean (say 70% EDT), negative alphas should pull toward 50% and positive alphas push toward 85%+. We never saw even a 5pp monotonic trend across any sweep. That absence is clean, but it's hard to disentangle "the direction is wrong" from "the model doesn't have enough DT preference to steer."
+
+### Framing recommendation
+
+This work is best framed as a **methodological case study** rather than a strong negative claim about DT reasoning in LLMs. The headline: "Probe accuracy does not imply causal control — a worked example with the content-vs-disposition mechanism identified." It is *not* evidence that LLMs lack steerable DT mechanisms in general, only that this specific pipeline (contrastive completion probing → mean-difference steering) fails for point decisions on a near-indifferent model.
+
+---
+
+## Redesigned Experiment: Stronger Test of DT Activation Steering
+
+*Specification drafted 2026-04-13. Not yet started.*
+
+The critique above identifies three main weaknesses: the steering vector source (forced completions), the model choice (non-thinking, near-indifferent), and the lack of thinking-mode engagement. A redesigned experiment should address all three.
+
+### 1. Model: DeepSeek-R1-Distill-Qwen-32B
+
+- Same Qwen architecture — existing extraction code transfers directly
+- Genuine thinking model (mandatory extended reasoning)
+- Venhoff et al. (2506.18167) validated reasoning-behavior steering on this model
+- Available as mlx 4-bit quant for local inference on M4 Max
+- Likely to show a stronger and more varied EDT/CDT lean than Qwen3 non-thinking, providing more signal
+
+### 2. Steering vector source: natural dispositional extraction
+
+**The key design change:** extract from the model's own natural answers, not from forced completions. This eliminates the content-vs-disposition confound entirely.
+
+**Approach A — prompt-boundary extraction (cheapest, do first):**
+- Run all 81 Oesterheld attitude questions through the model
+- For each question, extract activations at the last prompt token *before generation starts* — the model's initial state when it sees the question but hasn't committed to an answer
+- Partition questions by the model's answer: EDT-answering questions vs CDT-answering questions
+- Compute mean-difference direction between these groups
+- This is a "dispositional" direction — the model hasn't generated any text yet, so there's no completion leakage
+- **Caveat:** confounds question content with disposition (structurally different questions might cluster differently regardless of DT reasoning). Mitigate by: (a) checking whether the direction generalizes to held-out questions, (b) comparing against a question-content baseline (e.g., topic tags)
+
+**Approach B — thinking-trace extraction (richer, do second if A shows signal):**
+- Run thinking mode and cache activations at selected token positions during generation
+- Use the CoT verifier to identify key reasoning moments (predictor identification, expected value computation, decision commit point) — corresponding to Thought Anchors (Bogdan et al.)
+- Extract activations at those positions rather than everywhere (keeps storage manageable)
+- Compute contrastive directions at each reasoning stage
+- **Implementation note:** activations can be cached incrementally during generation rather than requiring a second pass — hook the target layer's forward pass and append to a buffer at selected token indices. This avoids running the model twice.
+
+### 3. Evaluation: held-out steering test
+
+- Split the 81 attitude questions into train (for direction extraction) and held-out test (for steering evaluation)
+- Apply the extracted direction as a steering vector on the held-out set
+- Use temp 0 throughout so changes are attributable to the vector
+- Success criterion: monotonic EDT% shift across alpha values on held-out questions
+- Secondary criterion: reasoning-behavior shift detectable by the CoT verifier (Venhoff-style)
+
+### 4. Practical considerations
+
+- **Compute:** Local M4 Max 36GB. DeepSeek-R1-Distill-Qwen-32B 4-bit should fit (~18GB base + extraction overhead). Thinking traces are long (thousands of tokens), so activation caching at selected layers needs careful memory management.
+- **Time estimate:** Approach A (prompt-boundary extraction + probe + steering sweep) is ~1 day. Approach B (thinking-trace extraction with cached activations) is ~2-3 days including verifier analysis.
+- **Cloud alternative:** If local memory is tight during activation caching through long thinking traces, a cloud instance with more RAM would help. The extraction code is model-agnostic — just needs the mlx runtime.
+- **Activation caching during generation:** Rather than storing full 5120-d vectors at every token, cache only at (a) every Nth token (e.g., N=50), (b) token positions where the verifier later identifies reasoning moves, or (c) sentence boundaries detected on-the-fly. Option (a) is simplest and gives uniform coverage; option (b) requires two passes but is most targeted; option (c) is a reasonable compromise.
+
+### 5. What this addresses from the critique
+
+| Weakness | How the redesign addresses it |
+|----------|-------------------------------|
+| Forced-completion direction | Natural dispositional extraction from model's own answers |
+| Limited contrastive diversity | Uses Oesterheld's hand-crafted benchmark directly |
+| Near-indifferent model | DeepSeek-R1-Distill with stronger DT preferences |
+| Non-thinking mode | Thinking model with extended reasoning |
+| Layer selection | Approach B enables extraction at reasoning-relevant positions, not just fixed layers |
+| No held-out evaluation | Train/test split on the 81 questions |
 
 ---
 

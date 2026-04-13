@@ -26,6 +26,7 @@ Hardware: Requires ~20GB unified memory (4-bit model ~18GB + generation overhead
 
 import argparse
 import json
+import re
 import sys
 import time
 from dataclasses import dataclass, field, asdict
@@ -45,10 +46,24 @@ from newcomblike_eval import load_questions, parse_answer, score_answer, Questio
 MODEL_ID = "mlx-community/Qwen3-32B-4bit"
 MODEL_LABEL = "qwen3-32b-4bit-local"
 OUTPUT_DIR = Path("logs/scaffolded_cot")
-TEMPERATURE = 0.7
+TEMPERATURE = 0.0
+ENABLE_THINKING = False     # Set via --thinking flag
 MAX_TOKENS_SHORT = 64      # No-CoT: just the letter
 MAX_TOKENS_FREE = 1024     # Free-CoT: reasoning + answer
+MAX_TOKENS_FREE_THINKING = 8192  # Free-CoT with thinking: thinking trace + answer
 MAX_TOKENS_STEP = 512      # Scaffolded: per sub-question
+
+THINK_TAG_RE = re.compile(r"<think>(.*?)</think>", re.DOTALL)
+
+
+def split_thinking(response: str) -> tuple[str | None, str]:
+    """Split a thinking-model response into (thinking_trace, visible_answer)."""
+    m = THINK_TAG_RE.search(response)
+    if m:
+        thinking = m.group(1).strip()
+        visible = response[m.end():].strip()
+        return thinking, visible
+    return None, response
 
 # Same curated set as run_cot_resampling.py
 TARGET_QIDS = [
@@ -194,7 +209,7 @@ def generate(model, tokenizer, messages: list[dict], max_tokens: int) -> str:
             messages,
             tokenize=False,
             add_generation_prompt=True,
-            enable_thinking=False,
+            enable_thinking=ENABLE_THINKING,
         )
     except TypeError:
         prompt_text = tokenizer.apply_chat_template(
@@ -245,18 +260,27 @@ def run_no_cot_trial(model, tokenizer, question: Question, sample_idx: int) -> S
 def run_free_cot_trial(model, tokenizer, question: Question, sample_idx: int) -> ScaffoldedTrial:
     """Run one free-CoT trial."""
     messages = build_free_cot_messages(question)
-    response = generate(model, tokenizer, messages, MAX_TOKENS_FREE)
+    max_tok = MAX_TOKENS_FREE_THINKING if ENABLE_THINKING else MAX_TOKENS_FREE
+    response = generate(model, tokenizer, messages, max_tok)
 
-    answer_idx, parse_error = parse_answer(response, len(question.permissible_answers))
+    if ENABLE_THINKING:
+        thinking_trace, visible = split_thinking(response)
+        answer_idx, parse_error = parse_answer(visible, len(question.permissible_answers))
+        steps = [{"id": "thinking", "response": thinking_trace or ""},
+                 {"id": "answer", "response": visible}]
+    else:
+        answer_idx, parse_error = parse_answer(response, len(question.permissible_answers))
+        steps = [{"id": "reasoning", "response": response}]
+
     is_correct, is_edt, is_cdt = score_answer(question, answer_idx)
 
     trial = ScaffoldedTrial(
         qid=question.qid,
-        condition="free_cot",
+        condition="free_cot_thinking" if ENABLE_THINKING else "free_cot",
         sample_idx=sample_idx,
         setting_file=question.setting_file,
         is_attitude=question.is_attitude,
-        steps=[{"id": "reasoning", "response": response}],
+        steps=steps,
         final_answer=chr(65 + answer_idx) if answer_idx is not None else None,
         answer_idx=answer_idx,
         is_edt_aligned=is_edt,
@@ -328,6 +352,7 @@ def open_log_file(condition: str, timestamp: str) -> Path:
         "condition": condition,
         "timestamp": timestamp,
         "temperature": TEMPERATURE,
+        "enable_thinking": ENABLE_THINKING,
     }
     with open(out_path, 'w') as f:
         f.write(json.dumps(meta) + "\n")
@@ -452,9 +477,23 @@ def main():
                         help="Run all questions — attitude + capabilities (353)")
     parser.add_argument("-n", "--samples", type=int, default=5,
                         help="Samples per question per condition (default: 5)")
+    parser.add_argument("--thinking", action="store_true",
+                        help="Enable thinking mode (Qwen3 internal reasoning)")
+    parser.add_argument("--model", type=str, default=None,
+                        help="Override model ID (e.g. mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit)")
     parser.add_argument("--dry-run", action="store_true",
                         help="Show prompts without running inference")
     args = parser.parse_args()
+
+    global MODEL_ID, MODEL_LABEL, ENABLE_THINKING
+    if args.model:
+        MODEL_ID = args.model
+        MODEL_LABEL = args.model.split("/")[-1].lower().replace("_", "-")
+        print(f"Model override: {MODEL_ID} (label: {MODEL_LABEL})")
+
+    if args.thinking or "deepseek" in MODEL_ID.lower() or "qwq" in MODEL_ID.lower():
+        ENABLE_THINKING = True
+        print("Thinking mode: ENABLED")
 
     # Load questions
     if args.all:

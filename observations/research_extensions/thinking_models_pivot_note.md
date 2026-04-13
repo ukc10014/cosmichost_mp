@@ -497,13 +497,14 @@ The "try scaffolded steering with the existing vector" suggestion from the previ
 Three rounds of activation-level experiments on Qwen3-32B-4bit (non-thinking mode) have produced consistent null results for causal intervention, while confirming the model *represents* the EDT/CDT distinction:
 
 1. **Contrastive probing (layer 40):** 100% validation accuracy classifying forced EDT vs CDT completions. The model clearly encodes the distinction. But the direction encodes *content* (what EDT text looks like) not *disposition* (what makes the model choose EDT).
-2. **Activation steering:** No causal shift in EDT/CDT answers when injecting the contrastive direction at layers 0, 40, or 48, across multiple alpha values.
+2. **Activation steering:** No causal shift in EDT/CDT answers when injecting the contrastive direction at layers 0, 40, or 48, across multiple alpha values. **Confirmed at temperature 0 (2026-04-13):** layer-40 sweep at greedy decoding shows EDT% flat at 56.8–58.0% across α = -3 to +3, eliminating sampling noise as an explanation.
 3. **Weight-space steering (LoRA subtraction):** No causal shift.
 4. **Scaffolded trajectory analysis:** The contrastive direction doesn't separate natural EDT vs CDT answers at any reasoning step. A dispositional probe finds ~74% accuracy at early steps, but this collapses to chance when controlling for question identity. On the 23 contested questions (mixed answers across samples), there is zero predictive signal at Steps 1–4 from any linear direction at layer 40.
+5. **Contested questions at temp 0 (2026-04-13):** All 23 "mixed-answer" questions produce unanimous, deterministic answers under greedy decoding (10 EDT, 11 CDT, 2 chose answers acceptable to both theories). The appearance of internal conflict was entirely an artifact of temperature 0.7 sampling noise. The model has fixed per-question preferences — it was never genuinely deliberating between EDT and CDT.
 
 ### Why this is the case: three hypotheses
 
-1. **Temperature sampling (most likely for contested questions).** At temp 0.7, the model's logit distribution over the answer token is near-uniform between EDT and CDT options on contested questions. The "decision" is resolved by the random seed, not by a deterministic internal computation. There is nothing to find because there is nothing there. *Testable:* rerun contested questions at temp 0; if answers become unanimous, this is confirmed.
+1. ~~**Temperature sampling (most likely for contested questions).** At temp 0.7, the model's logit distribution over the answer token is near-uniform between EDT and CDT options on contested questions. The "decision" is resolved by the random seed, not by a deterministic internal computation. There is nothing to find because there is nothing there. *Testable:* rerun contested questions at temp 0; if answers become unanimous, this is confirmed.~~ **Confirmed (2026-04-13).** All 23 contested questions become unanimous at temp 0. The dispositional probe null result is fully explained: there was no pre-existing dispositional state to predict — just sampling noise on near-flat logits.
 
 2. **Nonlinear or distributed mechanism.** The decision involves feature interactions (payoff structure × agent relationship → answer) that no single linear direction captures, or it is distributed across layers in a way layer-40 extraction misses. *Testable:* nonlinear probe (MLP) on concatenated step activations, or multi-layer extraction. But 115 contested trials in 5120+ dimensions makes overfitting almost certain.
 
@@ -521,13 +522,205 @@ Rather than trying to read or steer the model's *answer*, steer its *reasoning b
 
 **Why this might work when prior steering didn't:** Venhoff et al. found that steering vectors reliably shift reasoning *behaviors* in thinking models even when they don't flip final answers. The contrastive direction may be the right vector for shifting reasoning style (it encodes what EDT reasoning looks like) even though it's the wrong vector for flipping answers.
 
-**Temperature:** All prior steering experiments (including `steer_and_eval.py` sweeps) used temp 0.7. Steering comparisons should use temp 0 (greedy decoding) so output changes are attributable to the vector, not sampling noise. The existing steering null result may be worth rerunning at temp 0 as a cheap sanity check before attempting the full Venhoff-style experiment.
+**Temperature:** ~~All prior steering experiments (including `steer_and_eval.py` sweeps) used temp 0.7. Steering comparisons should use temp 0 (greedy decoding) so output changes are attributable to the vector, not sampling noise. The existing steering null result may be worth rerunning at temp 0 as a cheap sanity check before attempting the full Venhoff-style experiment.~~ **Update (2026-04-13):** The temp-0 replication has been done. Layer-40 sweep at temperature 0 shows EDT% virtually constant at 56.8–58.0% across α = -3 to +3 (vs 53.1–59.3% at temp 0.7). The ~6pp variation in the original sweep was sampling noise. The contrastive direction definitively does not causally control EDT/CDT preference. Full results in `activation_steering_results.md`.
 
 **What success looks like:** Steered traces show measurably more evidential reasoning moves. Whether the final answer also shifts is secondary — a behavioral shift is itself a publishable result and would confirm that the direction is causally involved in reasoning even if the answer determination happens downstream.
 
 **What failure looks like:** Thinking mode traces are similar with and without steering, or steering degrades coherence without shifting reasoning style. This would suggest the contrastive direction is purely representational, not functional.
 
 **Alternative:** If thinking-mode steering also fails, the remaining path is to move to DeepSeek-R1-Distill-Qwen-32B, which is the model Venhoff et al. actually validated on and shares the Qwen architecture. Existing extraction code should transfer directly.
+
+## Current Experiment: Thinking-Mode Reasoning Trace Characterization (2026-04-13)
+
+### Motivation
+
+Before attempting causal steering on a thinking model, we're collecting observational data: how does Qwen3-32B's internal reasoning differ between thinking and non-thinking mode on Newcomb-like questions? This is the descriptive groundwork that Oesterheld et al. (2024) identified as a key gap — they reported that thinking models lean more EDT, but didn't characterize *why* at the reasoning-trace level.
+
+### Design
+
+- **Model:** Qwen3-32B-4bit (same as all prior experiments), with `enable_thinking=True`
+- **Condition:** Free CoT (no scaffolding — let the model reason naturally in its thinking tokens)
+- **Temperature:** 0.0 (greedy, matching Venhoff et al. and our temp-0 steering results)
+- **Samples:** n=1 (deterministic at temp 0)
+- **Questions:** All 81 attitude questions from Oesterheld et al.
+- **Output:** Thinking trace and visible answer captured separately per trial
+
+### Why free CoT, not scaffolded
+
+The scaffolding was designed to compensate for non-thinking mode's lack of internal structure. A thinking model generates its own reasoning structure in the thinking tokens — backtracking, evaluating alternatives, identifying predictors, weighing expected values. Imposing the 5-step scaffold would mask the model's natural reasoning, confound the comparison with Oesterheld (who used free generation), and produce redundant computation (thinking tokens + scaffolded responses).
+
+### What we're looking for
+
+Run the existing CoT verifier pipeline (`run_cot_verifier.py`) on the thinking traces and compare the reasoning move distribution against the non-thinking free CoT traces from the April 11 run:
+
+- Does thinking mode produce more `evidential_reasoning` / `copy_symmetry` moves?
+- Does it produce fewer `dominance` / `causal_reasoning` moves?
+- Does it spontaneously identify predictors, compute expected values, or reason about correlation?
+- Does the EDT lean increase (as Oesterheld predicts)?
+
+### Code changes
+
+Added `--thinking` flag to `run_scaffolded_cot.py` that sets `enable_thinking=True` in the Qwen3 chat template, bumps max tokens to 8192 for thinking traces, and splits `<think>...</think>` from the visible response. Thinking trace and visible answer stored as separate steps in the trial JSONL.
+
+**Command:** `python run_scaffolded_cot.py --full --condition free_cot --thinking -n 1`
+
+**Log file:** `logs/scaffolded_cot/scaffolded_qwen3-32b-4bit-local_free_cot_20260413T121442.jsonl`
+
+### Results (2026-04-13)
+
+**EDT rate: 68.4%** (54 EDT, 32 CDT, 9 both-aligned, 2 unrecoverable parse errors out of 81 questions). This is notably higher than non-thinking mode's ~58% EDT lean, consistent with Oesterheld et al.'s prediction that thinking models lean more EDT. 14 of 16 initial parse errors were recovered (model used LaTeX `\boxed{}` or bracket formatting instead of plain `ANSWER: X`); the parse errors skewed heavily EDT (12/14 recovered as EDT).
+
+**Reasoning trace characteristics:**
+
+The thinking traces are substantial — average 7,954 chars (~2,000 tokens) per question. EDT-answering traces are significantly longer than CDT-answering traces (8,512 vs 5,756 chars on average), suggesting the model engages in more extended reasoning when arriving at EDT conclusions.
+
+**Sentence classification** (DT-adapted Thought Anchors taxonomy, keyword-based):
+
+| Tag | Avg per EDT trace | Avg per CDT trace | Ratio | Interpretation |
+|-----|------------------|------------------|-------|---------------|
+| predictor_identification | 18.6 | 11.9 | 1.57 | EDT traces spend more time on predictors |
+| ev_calculation | 12.9 | 1.0 | **12.55** | EDT traces compute expected values extensively; CDT traces almost never do |
+| plan_generation | 7.6 | 1.8 | **4.20** | EDT traces show more meta-reasoning / planning |
+| uncertainty | 7.8 | 2.7 | **2.85** | EDT traces backtrack more ("Wait...", "Let me reconsider") |
+| decision_commit | 4.2 | 0.9 | **4.85** | EDT traces have more explicit commitment statements |
+| self_checking | 0.8 | 0.0 | **26.1** | EDT traces verify their reasoning; CDT traces essentially never do |
+| causal_reasoning | 4.4 | 3.7 | 1.19 | Similar across both — both consider causal structure |
+| evidential_reasoning | 2.5 | 2.7 | 0.91 | Surprisingly similar — CDT traces also discuss evidence |
+| copy_symmetry | 2.1 | 1.6 | 1.29 | Mild EDT overrepresentation |
+| result_consolidation | 13.8 | 6.6 | 2.08 | EDT traces summarize more |
+
+**Key observations:**
+
+1. **EV calculation is the strongest differentiator.** EDT traces contain 12.9 expected value computation sentences on average vs 1.0 for CDT traces — a 12.5x ratio. The model is genuinely computing expected utilities when it arrives at EDT conclusions, not just pattern-matching. The top EV-heavy questions are payoff-calculation-heavy scenarios (friendly RPS, donation graphs, Newcomb's calculations).
+
+2. **EDT traces show more deliberative structure.** Higher rates of planning (4.2x), uncertainty/backtracking (2.9x), self-checking (26x), and decision commits (4.9x). The model is working harder — reconsidering, checking, and explicitly committing — when it reaches EDT conclusions. CDT conclusions tend to be more direct/assertive with less internal deliberation.
+
+3. **Evidential reasoning is NOT the differentiator.** Counter-intuitively, the `evidential_reasoning` tag appears at similar rates in EDT and CDT traces (2.5 vs 2.7). Both types of traces discuss evidence and correlation. The difference is what the model *does* with that discussion — EDT traces follow it with EV calculations, CDT traces follow it with causal independence arguments.
+
+4. **Causal reasoning appears in both.** The `causal_reasoning` tag is nearly balanced (4.4 vs 3.7). EDT traces consider causal arguments too — they just override them with evidential/EV reasoning.
+
+5. **Backtracking is a hallmark of EDT reasoning.** Uncertainty sentences like "Wait, but...", "Hmm", "Let me reconsider" appear 2.85x more in EDT traces. The model appears to start with a CDT-like intuition (dominance, causal independence) and then backtrack toward EDT through copy-symmetry or EV arguments. Example from 10.4ATT: "Wait, Agent 1 chooses first, but Agent 2 doesn't know what Agent 1 did... But since they're exact copies, maybe Agent 2 will mirror Agent 1's decision?"
+
+6. **Anchor density is higher in EDT traces** (0.160 vs 0.119). Per Thought Anchors (Bogdan et al.), planning, uncertainty, and decision-commit sentences are the high-leverage "anchor" points that steer reasoning. EDT traces have denser anchor points, consistent with more active deliberation.
+
+**Comparison with non-thinking mode:**
+
+| Metric | Non-thinking (scaffolded, temp 0.7) | Thinking (free CoT, temp 0) |
+|--------|-------------------------------------|-----------------------------|
+| EDT rate | ~58% | 68.4% |
+| Avg trace length | ~800 chars per step | 7,954 chars total |
+| EV calculation | Rare (prompted by scaffold) | Extensive in EDT traces |
+| Backtracking | None (single-pass generation) | Frequent in EDT traces |
+| Predictor identification | Prompted by scaffold step | Spontaneous |
+
+The thinking model spontaneously performs reasoning behaviors that the scaffolding had to prompt in non-thinking mode. The key qualitative difference: thinking-mode EDT traces show a pattern of "consider CDT argument → backtrack → compute EV → arrive at EDT conclusion" that is absent in non-thinking mode, where the model goes directly to its answer.
+
+**Tooling:** Built a DT Reasoning Explorer (`docs/thinking_trace_explorer.html`) with sentence-level classification, tag highlighting, and aggregate EDT/CDT comparison charts. Data prepared by `prepare_thinking_trace_data.py` using a keyword-based taxonomy adapted from Thought Anchors (Bogdan et al. 2025). The explorer is viewable via GitHub Pages or local server.
+
+**Log file:** `logs/scaffolded_cot/scaffolded_qwen3-32b-4bit-local_free_cot_20260413T121442.jsonl` (14 parse errors patched with `parse_recovered: true` flag)
+
+## Methodological Critique and Redesigned Experiment (2026-04-13)
+
+### Assessment of the Qwen3-32B non-thinking null result
+
+The full pipeline — contrastive probing, activation steering, weight-space steering, scaffolded trajectories, temp-0 replications — produced a well-characterized null result. However, the result is best framed as a **methodological case study** ("probe accuracy ≠ causal control, and here's why") rather than a strong negative claim about DT reasoning in LLMs. Three weaknesses limit generalizability:
+
+1. **Forced-completion direction.** The contrastive direction was extracted from activations where the model had already processed EDT or CDT answer text. It captures content (what the text looks like) not disposition (what drives the choice). The minimal-completion control mitigated vocabulary leakage but didn't eliminate the fundamental problem: the direction comes from post-answer representations, not pre-decision states.
+
+2. **Near-indifferent model.** Qwen3-32B non-thinking shows only ~58% EDT lean — barely above chance. Trying to steer a preference that barely exists is inherently low-powered. The null result may reflect "nothing to steer" rather than "steering doesn't work."
+
+3. **Non-thinking mode.** Oesterheld et al. already showed non-thinking models perform near chance on DT discrimination. Testing steering on such a model is testing the weakest case.
+
+**What IS genuinely informative:** The content-vs-disposition distinction is a real methodological contribution. The contested-questions temp-0 result (all 23 unanimous) is clean. The scaffolded trajectory analysis showing the contrastive direction fails to separate natural EDT/CDT answers at any step is a tight negative. These are useful even if the overall steering claim is narrow.
+
+Full critique with details in `activation_steering_results.md` § "Methodological Critique and Lessons Learned."
+
+### Redesigned experiment specification
+
+A stronger test would address all three weaknesses. The key changes:
+
+**Model → DeepSeek-R1-Distill-Qwen-32B.** Same Qwen architecture (extraction code transfers), genuine thinking model, Venhoff et al. validated steering on it, likely stronger DT preferences. Available as mlx 4-bit quant.
+
+**Direction extraction → natural dispositional, not forced completions.** Two approaches in sequence:
+
+- **Approach A (prompt-boundary, cheapest):** Extract activations at the last prompt token before generation starts, across all 81 Oesterheld questions. Partition by the model's own EDT vs CDT answers. Compute mean-difference direction. No completion leakage possible — the model hasn't generated anything yet. Caveat: confounds question content with disposition; mitigate with held-out evaluation.
+
+- **Approach B (thinking-trace, richer):** Cache activations at selected token positions *during* thinking-mode generation. Use the CoT verifier to identify key reasoning moments (predictor identification, EV computation, decision commit). Extract directions at those positions. Implementation: hook the target layer's forward pass and append to a buffer at selected indices during generation — no second pass needed. Memory management: cache every Nth token (e.g., N=50) or at sentence boundaries, not every token.
+
+**Evaluation → held-out steering test.** Split the 81 questions into train (direction extraction) and test (steering evaluation). Apply steering at temp 0. Success = monotonic EDT% shift across alpha values on held-out questions.
+
+**Time estimate:** Approach A is ~1 day. Approach B is ~2-3 days. The current thinking-mode trace collection (in progress) provides the observational baseline that informs both approaches.
+
+Full specification with practical details in `activation_steering_results.md` § "Redesigned Experiment: Stronger Test of DT Activation Steering."
+
+## Cross-Model Validation: Claude Sonnet Extended Thinking (2026-04-13)
+
+### Motivation
+
+The Qwen3-32B thinking-mode result (68.4% EDT) could be model-specific. To test whether the EDT lean and reasoning patterns generalize, we ran the same 81 attitude questions through Claude Sonnet (claude-sonnet-4-20250514) with extended thinking enabled, using the new `run_cloud_thinking.py` adapter.
+
+### Setup
+
+- **Model:** Claude Sonnet (claude-sonnet-4-20250514) via Anthropic API
+- **Thinking:** Extended thinking enabled, 10k token budget
+- **Temperature:** 1.0 (required by Anthropic extended thinking API)
+- **Condition:** Free CoT (same prompt as Qwen3 thinking-mode run)
+- **N:** 1 sample per question (70 completed, 11 API overload errors)
+
+### Results
+
+| | Qwen3-32B (thinking) | Claude Sonnet (ext. thinking) |
+|---|---|---|
+| EDT | 54 | 54 |
+| CDT | 32 | 26 |
+| Errors | 2 | 11 |
+| EDT rate (of completed) | 68.4% | 67.5% |
+| Mean thinking chars (EDT) | 8,317 | 3,521 |
+| Mean thinking chars (CDT) | 5,756 | 3,831 |
+
+Both models converge on ~68% EDT rate. Sonnet's traces are much shorter (~3.5k chars vs ~8.3k for Qwen3) but arrive at the same directional lean.
+
+### Reasoning pattern comparison
+
+**Tag distribution (top tags, all traces):**
+
+| Tag | Qwen3-32B | Sonnet | Ratio (Q/S) |
+|---|---|---|---|
+| predictor_identification | 1,477 | 397 | 3.7x |
+| ev_calculation | 864 | 270 | 3.2x |
+| uncertainty | 567 | 63 | 9.0x |
+| result_consolidation | 1,100 | 103 | 10.7x |
+| causal_reasoning | 386 | 177 | 2.2x |
+| plan_generation | 527 | 230 | 2.3x |
+| decision_commit | 280 | 93 | 3.0x |
+| copy_symmetry | 166 | 65 | 2.6x |
+
+**Key observations:**
+
+1. **Sonnet is far more concise.** Qwen3 produces ~2.4x more reasoning text. The biggest difference is in `uncertainty` (9x) and `result_consolidation` (10.7x) — Qwen3 "wobbles" extensively (backtracking, reconsidering, summarizing intermediate results), while Sonnet reasons more directly.
+
+2. **EV calculation still overrepresented in EDT.** For Sonnet EDT traces: 234 ev_calculation tags vs 36 for CDT traces (6.5x ratio). For Qwen3: 699 vs 33 (21.2x ratio). The same pattern holds across both models — EDT answers involve substantially more expected value computation.
+
+3. **Copy symmetry almost absent in CDT.** Sonnet CDT traces have 1 copy_symmetry tag vs 64 in EDT. Qwen3: 52 vs 113. Both models show that recognizing the "identical copy" structure strongly predicts EDT answers.
+
+4. **Decision commit correlates with EDT.** Sonnet: 85 EDT vs 8 CDT decision_commit tags. Qwen3: 229 vs 28. EDT traces are more likely to contain explicit decision commitment language, suggesting the model "feels" more confident in EDT conclusions.
+
+### Significance
+
+The convergence of two architecturally different models (Qwen-based local 4-bit vs Claude frontier) on both the EDT rate (~68%) and the reasoning signature (EV calculation → EDT, copy symmetry → EDT, uncertainty → more in EDT traces) strengthens the case that this is a genuine property of thinking-mode reasoning on decision-theoretic questions, not a model-specific artifact.
+
+### Files
+
+| Artifact | Path |
+|---|---|
+| Cloud adapter script | `run_cloud_thinking.py` |
+| Sonnet JSONL log | `logs/scaffolded_cot/scaffolded_claude-sonnet-4-20250514_free_cot_20260413T164149.jsonl` |
+| Sonnet explorer data | `docs/data/thinking_traces_claude-sonnet-4-20250514_20260413T164149.json` |
+| DT Reasoning Explorer (with model selector) | `docs/thinking_trace_explorer.html` |
+
+### Still running
+
+- **DeepSeek-R1-Distill-Qwen-32B** (local, mlx 4-bit): ~52/81 done as of annotation time. Expected to complete overnight. Will provide a third data point from a model specifically designed for chain-of-thought reasoning.
 
 ## References
 

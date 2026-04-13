@@ -1,0 +1,16 @@
+{
+  "runs": [
+    {
+      "file": "thinking_traces_qwen3-32b-4bit-local_20260413T121442.json",
+      "model": "qwen3-32b-4bit-local",
+      "timestamp": "20260413T121442",
+      "n_questions": 81
+    },
+    {
+      "file": "thinking_traces_claude-sonnet-4-20250514_20260413T164149.json",
+      "model": "claude-sonnet-4-20250514",
+      "timestamp": "20260413T164149",
+      "n_questions": 81
+    }
+  ]
+}
