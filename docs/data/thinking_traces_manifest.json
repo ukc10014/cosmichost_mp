@@ -11,6 +11,12 @@
       "model": "claude-sonnet-4-20250514",
       "timestamp": "20260413T164149",
       "n_questions": 81
+    },
+    {
+      "file": "thinking_traces_deepseek-r1-distill-qwen-32b-4bit_20260413T161108.json",
+      "model": "deepseek-r1-distill-qwen-32b-4bit",
+      "timestamp": "20260413T161108",
+      "n_questions": 81
     }
   ]
 }

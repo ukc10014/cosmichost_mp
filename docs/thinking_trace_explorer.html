@@ -194,6 +194,110 @@
     opacity: 0.6; transition: opacity 0.15s;
   }
   .legend-item:hover, .legend-item.active { opacity: 1.0; }
+
+  /* Tag Map view */
+  #tagmap-view {
+    flex: 1; overflow: auto; padding: 14px 18px; display: none;
+    flex-direction: column; gap: 12px;
+  }
+  #tagmap-picker {
+    display: flex; flex-wrap: wrap; gap: 5px; padding: 6px 0;
+    position: sticky; top: 0; background: var(--bg); z-index: 10;
+  }
+  #tagmap-picker .tag-btn {
+    font-size: 11px; padding: 4px 10px; border-radius: 4px;
+    border: 1px solid; cursor: pointer; user-select: none;
+    opacity: 0.5; transition: opacity 0.15s, transform 0.1s;
+  }
+  #tagmap-picker .tag-btn:hover { opacity: 0.8; }
+  #tagmap-picker .tag-btn.active { opacity: 1.0; transform: scale(1.05); box-shadow: 0 0 6px rgba(126,232,199,0.3); }
+
+  #tagmap-grid-wrap { overflow: auto; flex: 1; }
+  #tagmap-grid {
+    border-collapse: separate; border-spacing: 0;
+    font-size: 11px; width: 100%;
+  }
+  #tagmap-grid thead th {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--bg-raised); color: var(--text-dim);
+    padding: 6px 10px; text-align: center; border-bottom: 1px solid var(--rule);
+    font-weight: 600; font-size: 11px; white-space: nowrap;
+  }
+  #tagmap-grid thead th:first-child { text-align: left; min-width: 180px; }
+  #tagmap-grid tbody td {
+    padding: 3px 6px; border-bottom: 1px solid rgba(48,54,61,0.4);
+    text-align: center; vertical-align: middle;
+  }
+  #tagmap-grid tbody td:first-child {
+    text-align: left; font-size: 11px; color: var(--text-dim);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 220px; position: sticky; left: 0; background: var(--bg); z-index: 2;
+  }
+  .heatcell {
+    display: inline-block; width: 28px; height: 18px; border-radius: 3px;
+    cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;
+    line-height: 18px; font-size: 9px; color: transparent; text-align: center;
+  }
+  .heatcell:hover { transform: scale(1.3); box-shadow: 0 0 6px rgba(126,232,199,0.4); color: var(--text); }
+  .heatcell.empty { background: rgba(255,255,255,0.02); cursor: default; }
+  .heatcell.empty:hover { transform: none; box-shadow: none; }
+  .dt-indicator {
+    display: inline-block; font-size: 9px; font-weight: 700; margin-left: 4px;
+  }
+  .dt-indicator.edt { color: var(--edt-color); }
+  .dt-indicator.cdt { color: var(--cdt-color); }
+
+  /* Drill-down modal */
+  #drilldown-overlay {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(3px);
+    justify-content: center; align-items: center;
+  }
+  #drilldown-overlay.visible { display: flex; }
+  #drilldown-panel {
+    background: var(--bg-raised); border: 1px solid var(--rule); border-radius: 8px;
+    width: 90vw; max-width: 1200px; max-height: 85vh;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  #drilldown-header {
+    padding: 12px 16px; border-bottom: 1px solid var(--rule);
+    display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  }
+  #drilldown-header h3 { font-size: 13px; font-weight: 600; color: var(--accent); flex: 1; }
+  #drilldown-close {
+    font-size: 18px; color: var(--text-dim); cursor: pointer; border: none;
+    background: none; padding: 4px 8px; border-radius: 4px;
+  }
+  #drilldown-close:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+  #drilldown-body {
+    flex: 1; overflow-y: auto; padding: 14px 16px;
+    display: flex; gap: 16px;
+  }
+  .drilldown-col {
+    flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px;
+  }
+  .drilldown-col-header {
+    font-size: 11px; font-weight: 600; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    padding-bottom: 6px; border-bottom: 1px solid var(--rule);
+    position: sticky; top: 0; background: var(--bg-raised); z-index: 1;
+  }
+  .drilldown-sentence {
+    font-size: 12px; line-height: 1.5; padding: 5px 8px;
+    border-radius: 4px; color: var(--text-faint);
+  }
+  .drilldown-sentence.has-tag {
+    border-left: 3px solid var(--accent);
+    background: rgba(126,232,199,0.06);
+    color: var(--text);
+  }
+  .drilldown-sentence .sent-idx { font-size: 9px; color: var(--text-faint); margin-right: 5px; }
+  .drilldown-sentence .sent-tags { margin-top: 2px; display: flex; gap: 3px; flex-wrap: wrap; }
+  .drilldown-no-data { font-size: 12px; color: var(--text-faint); padding: 20px; text-align: center; }
+  .drilldown-question-text {
+    font-size: 11px; color: var(--text-faint); padding: 8px 0;
+    line-height: 1.4; border-bottom: 1px solid var(--rule); margin-bottom: 4px;
+  }
 </style>
 </head>
 <body>
@@ -203,6 +307,7 @@
   <select id="model-select" onchange="switchModel(this.value)"></select>
   <button class="mode-toggle active" id="trace-btn" onclick="setView('trace')">Traces</button>
   <button class="mode-toggle" id="agg-btn" onclick="setView('aggregate')">Aggregate</button>
+  <button class="mode-toggle" id="tagmap-btn" onclick="setView('tagmap')">Tag Map</button>
   <a id="home-link" href="index.html">Home</a>
 </div>
 
@@ -239,11 +344,31 @@
   <div id="aggregate"></div>
 </div>
 
+<div id="tagmap-view">
+  <div id="tagmap-picker"></div>
+  <div id="tagmap-grid-wrap">
+    <table id="tagmap-grid"><thead></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<div id="drilldown-overlay" onclick="if(event.target===this)closeDrilldown()">
+  <div id="drilldown-panel">
+    <div id="drilldown-header">
+      <h3 id="drilldown-title"></h3>
+      <button id="drilldown-close" onclick="closeDrilldown()">&times;</button>
+    </div>
+    <div id="drilldown-body"></div>
+  </div>
+</div>
+
 <script>
 let DATA = null;
+let ALL_DATA = {};
 let selectedQid = null;
 let highlightTag = null;
 let currentView = 'trace';
+let tagmapTag = 'ev_calculation';
+let tagmapLoaded = false;
 
 const TAG_ORDER = [
   'predictor_identification', 'copy_symmetry', 'evidential_reasoning',
@@ -264,6 +389,21 @@ const TAG_LABELS = {
   decision_commit: 'Decision',
   problem_setup: 'Setup',
   other: 'Other',
+};
+
+const TAG_COLORS = {
+  predictor_identification: '#7c4dff',
+  copy_symmetry: '#4caf50',
+  evidential_reasoning: '#26a69a',
+  causal_reasoning: '#ff8a65',
+  ev_calculation: '#42a5f5',
+  plan_generation: '#ffee58',
+  uncertainty: '#ec407a',
+  self_checking: '#26a69a',
+  result_consolidation: '#ab47bc',
+  decision_commit: '#66bb6a',
+  problem_setup: '#757575',
+  other: '#424242',
 };
 
 function escHtml(s) {
@@ -316,6 +456,20 @@ async function loadRun(url) {
   showEmpty();
 }
 
+async function loadAllModels() {
+  if (tagmapLoaded) return;
+  for (const run of MANIFEST_RUNS) {
+    if (ALL_DATA[run.model]) continue;
+    try {
+      const resp = await fetch('data/' + run.file);
+      ALL_DATA[run.model] = await resp.json();
+    } catch (e) {
+      console.warn('Failed to load', run.file, e);
+    }
+  }
+  tagmapLoaded = true;
+}
+
 function updateMetaBar() {
   if (!DATA) return;
   const m = DATA.metadata;
@@ -329,12 +483,18 @@ function setView(v) {
   currentView = v;
   document.getElementById('trace-btn').classList.toggle('active', v === 'trace');
   document.getElementById('agg-btn').classList.toggle('active', v === 'aggregate');
+  document.getElementById('tagmap-btn').classList.toggle('active', v === 'tagmap');
+
+  document.getElementById('main').style.display = v === 'trace' ? 'flex' : 'none';
   document.getElementById('aggregate').style.display = v === 'aggregate' ? 'flex' : 'none';
-  if (v === 'aggregate') {
-    document.getElementById('main').style.display = 'none';
+  document.getElementById('tagmap-view').style.display = v === 'tagmap' ? 'flex' : 'none';
+  document.getElementById('sidebar').style.display = v === 'tagmap' ? 'none' : 'flex';
+
+  if (v === 'tagmap') {
+    document.getElementById('layout').style.display = v === 'tagmap' ? 'none' : 'flex';
+    initTagMap();
   } else {
-    document.getElementById('main').style.display = 'flex';
-    document.getElementById('aggregate').style.display = 'none';
+    document.getElementById('layout').style.display = 'flex';
   }
 }
 
@@ -546,8 +706,180 @@ function renderAggregate() {
   `;
 }
 
+/* ========== TAG MAP VIEW ========== */
+
+async function initTagMap() {
+  const picker = document.getElementById('tagmap-picker');
+  if (!picker.children.length) {
+    picker.innerHTML = TAG_ORDER.filter(t => t !== 'other').map(tag => {
+      const active = tag === tagmapTag ? ' active' : '';
+      return `<span class="tag-btn sent-tag tag-${tag}${active}" onclick="selectTagmapTag('${tag}')">${TAG_LABELS[tag]}</span>`;
+    }).join('');
+  }
+  await loadAllModels();
+  renderTagMapGrid();
+}
+
+function selectTagmapTag(tag) {
+  tagmapTag = tag;
+  document.querySelectorAll('#tagmap-picker .tag-btn').forEach(el => {
+    el.classList.toggle('active', el.textContent === TAG_LABELS[tag]);
+  });
+  renderTagMapGrid();
+}
+
+function getTagCount(modelData, qid, tag) {
+  const entry = modelData.questions[qid];
+  if (!entry) return 0;
+  return (entry.trace.tag_counts[tag] || 0);
+}
+
+function getDtLabel(modelData, qid) {
+  const entry = modelData.questions[qid];
+  if (!entry) return null;
+  const t = entry.trace;
+  if (t.is_edt_aligned && t.is_cdt_aligned) return 'both';
+  if (t.is_edt_aligned) return 'edt';
+  if (t.is_cdt_aligned) return 'cdt';
+  return 'err';
+}
+
+function renderTagMapGrid() {
+  const models = Object.keys(ALL_DATA);
+  if (!models.length) return;
+
+  const allQids = new Set();
+  for (const m of models) {
+    for (const qid of Object.keys(ALL_DATA[m].questions)) {
+      allQids.add(qid);
+    }
+  }
+  const qids = [...allQids].sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
+
+  let globalMax = 1;
+  for (const m of models) {
+    for (const qid of qids) {
+      const c = getTagCount(ALL_DATA[m], qid, tagmapTag);
+      if (c > globalMax) globalMax = c;
+    }
+  }
+
+  const shortModel = (m) => {
+    return m.replace(/-4bit.*$/, '').replace('claude-sonnet-4-20250514', 'Sonnet').replace('qwen3-32b', 'Qwen3-32B').replace('deepseek-r1-distill-qwen-32b', 'DeepSeek-R1');
+  };
+
+  const thead = document.querySelector('#tagmap-grid thead');
+  thead.innerHTML = '<tr><th>Question</th>' +
+    models.map(m => `<th>${escHtml(shortModel(m))}</th>`).join('') +
+    '</tr>';
+
+  const tagColor = TAG_COLORS[tagmapTag] || '#7ee8c7';
+
+  const tbody = document.querySelector('#tagmap-grid tbody');
+  tbody.innerHTML = qids.map(qid => {
+    const anyEntry = ALL_DATA[models[0]].questions[qid] || ALL_DATA[models.find(m => ALL_DATA[m].questions[qid])]?.questions[qid];
+    const settingShort = anyEntry ?
+      anyEntry.question.setting_file.replace(/^setting\d*/, '').replace('.json','').replace(/_/g,' ').trim().substring(0, 30) : '';
+
+    const cells = models.map(m => {
+      const count = getTagCount(ALL_DATA[m], qid, tagmapTag);
+      const dt = getDtLabel(ALL_DATA[m], qid);
+      if (!ALL_DATA[m].questions[qid]) {
+        return '<td><span class="heatcell empty"></span></td>';
+      }
+      const intensity = count > 0 ? Math.max(0.15, Math.min(1.0, count / globalMax)) : 0;
+      const bg = count > 0 ? `${tagColor}` : 'transparent';
+      const dtBadge = dt ? `<span class="dt-indicator ${dt}">${dt === 'both' ? 'B' : dt.toUpperCase()}</span>` : '';
+      return `<td>
+        <span class="heatcell" style="background:${bg}; opacity:${intensity > 0 ? intensity : 1};"
+              onclick="openDrilldown('${qid}','${tagmapTag}')"
+              title="${count} ${TAG_LABELS[tagmapTag]} sentences">${count || ''}</span>${dtBadge}
+      </td>`;
+    }).join('');
+
+    return `<tr><td title="${escHtml(qid + ' ' + settingShort)}">${escHtml(qid)} <span style="color:var(--text-faint);font-size:10px;">${escHtml(settingShort)}</span></td>${cells}</tr>`;
+  }).join('');
+}
+
+/* ========== DRILL-DOWN MODAL ========== */
+
+function openDrilldown(qid, tag) {
+  const overlay = document.getElementById('drilldown-overlay');
+  const title = document.getElementById('drilldown-title');
+  const body = document.getElementById('drilldown-body');
+
+  const models = Object.keys(ALL_DATA);
+  const anyEntry = models.map(m => ALL_DATA[m].questions[qid]).find(Boolean);
+  const qText = anyEntry ? anyEntry.question.question_text : qid;
+  const settingName = anyEntry ? anyEntry.question.setting_file.replace('.json','').replace(/_/g,' ') : '';
+
+  title.textContent = `${qid} — ${TAG_LABELS[tag]} — ${settingName}`;
+
+  const shortModel = (m) => {
+    return m.replace(/-4bit.*$/, '').replace('claude-sonnet-4-20250514', 'Sonnet').replace('qwen3-32b', 'Qwen3-32B').replace('deepseek-r1-distill-qwen-32b', 'DeepSeek-R1');
+  };
+
+  const cols = models.map(m => {
+    const entry = ALL_DATA[m].questions[qid];
+    if (!entry) {
+      return `<div class="drilldown-col">
+        <div class="drilldown-col-header">${escHtml(shortModel(m))}</div>
+        <div class="drilldown-no-data">No data for this question</div>
+      </div>`;
+    }
+
+    const t = entry.trace;
+    let dtStr = 'ERR';
+    let dtCls = 'err';
+    if (t.is_edt_aligned && t.is_cdt_aligned) { dtStr = 'BOTH'; dtCls = 'edt'; }
+    else if (t.is_edt_aligned) { dtStr = 'EDT'; dtCls = 'edt'; }
+    else if (t.is_cdt_aligned) { dtStr = 'CDT'; dtCls = 'cdt'; }
+
+    const tagCount = t.tag_counts[tag] || 0;
+    const totalSent = t.n_sentences;
+
+    const sentencesHtml = t.sentences.map(s => {
+      const hasTag = s.tags.includes(tag);
+      const cls = hasTag ? 'drilldown-sentence has-tag' : 'drilldown-sentence';
+      const tagBadges = s.tags.map(tg =>
+        `<span class="sent-tag tag-${tg}" style="font-size:8px;padding:0px 4px;">${TAG_LABELS[tg] || tg}</span>`
+      ).join('');
+      return `<div class="${cls}">
+        <span class="sent-idx">${s.idx + 1}</span>${escHtml(s.text)}
+        <div class="sent-tags">${tagBadges}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="drilldown-col">
+      <div class="drilldown-col-header">
+        ${escHtml(shortModel(m))}
+        <span style="float:right; font-weight:400; text-transform:none; letter-spacing:0;">
+          <span class="dt-indicator ${dtCls}">${dtStr}</span>
+          &middot; ${tagCount}/${totalSent} tagged
+        </span>
+      </div>
+      <div class="drilldown-question-text">${escHtml(qText)}</div>
+      ${sentencesHtml}
+    </div>`;
+  }).join('');
+
+  body.innerHTML = cols;
+  overlay.classList.add('visible');
+  document.addEventListener('keydown', drilldownEscHandler);
+}
+
+function closeDrilldown() {
+  document.getElementById('drilldown-overlay').classList.remove('visible');
+  document.removeEventListener('keydown', drilldownEscHandler);
+}
+
+function drilldownEscHandler(e) {
+  if (e.key === 'Escape') closeDrilldown();
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('aggregate').style.display = 'none';
+  document.getElementById('tagmap-view').style.display = 'none';
   init();
 });
 </script>

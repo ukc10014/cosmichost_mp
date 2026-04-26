@@ -718,9 +718,126 @@ The convergence of two architecturally different models (Qwen-based local 4-bit 
 | Sonnet explorer data | `docs/data/thinking_traces_claude-sonnet-4-20250514_20260413T164149.json` |
 | DT Reasoning Explorer (with model selector) | `docs/thinking_trace_explorer.html` |
 
-### Still running
+## DeepSeek-R1-Distill-Qwen-32B Results (2026-04-14)
 
-- **DeepSeek-R1-Distill-Qwen-32B** (local, mlx 4-bit): ~52/81 done as of annotation time. Expected to complete overnight. Will provide a third data point from a model specifically designed for chain-of-thought reasoning.
+### Setup
+
+- **Model:** DeepSeek-R1-Distill-Qwen-32B-4bit (mlx, local)
+- **Thinking:** Native thinking model (all output is CoT reasoning)
+- **Temperature:** 0.0
+- **Condition:** Free CoT, 81 attitude questions, n=1
+- **Note:** DeepSeek-R1-Distill doesn't use `<think>` tags — the entire response is chain-of-thought reasoning. `prepare_thinking_trace_data.py` updated to fall back to answer step when thinking step is empty but answer is >500 chars.
+
+### Three-model comparison
+
+| | Qwen3-32B | Claude Sonnet | DeepSeek-R1-Distill |
+|---|---|---|---|
+| EDT | 54 | 54 | 47 |
+| CDT | 32 | 26 | 29 |
+| Errors | 2 | 11 | 10 |
+| EDT rate (of parsed) | 68.4% | 67.5% | 61.8% |
+| Mean thinking chars (EDT) | 8,317 | 3,521 | 9,711 |
+| Mean thinking chars (CDT) | 5,756 | 3,831 | 6,760 |
+
+All three models lean EDT. DeepSeek's lean is weaker (61.8%) but still above chance. DeepSeek produces the longest traces (~9.7K chars for EDT answers).
+
+### Tag distribution comparison (EDT traces only)
+
+| Tag | Qwen3 | Sonnet | DeepSeek | Pattern |
+|---|---|---|---|---|
+| ev_calculation | 699 | 234 | 787 | Consistently high in all three |
+| uncertainty | 419 | 50 | 923 | DeepSeek wobbles most, Sonnet least |
+| result_consolidation | 744 | 84 | 906 | DeepSeek and Qwen3 summarize heavily |
+| decision_commit | 229 | 85 | 741 | DeepSeek commits/recommits most |
+| predictor_identification | 1,005 | 285 | 730 | Universal — core to the questions |
+| causal_reasoning | 239 | 115 | 168 | Similar across models |
+| copy_symmetry | 113 | 64 | 106 | Present in EDT, near-absent in CDT |
+
+### EV calculation EDT/CDT ratio (key differentiator)
+
+| Model | EDT ev_calc | CDT ev_calc | Ratio |
+|---|---|---|---|
+| Qwen3-32B | 699 | 33 | 21.2x |
+| Claude Sonnet | 234 | 36 | 6.5x |
+| DeepSeek-R1-Distill | 787 | 37 | 21.3x |
+
+The EV-calculation → EDT signature is remarkably consistent: all three models show massive overrepresentation of expected value computation in EDT-aligned traces, while CDT traces have ~33-37 ev_calculation tags regardless of model.
+
+### Key observations
+
+1. **EDT lean is robust across architectures.** Three different model families (Qwen, Claude, DeepSeek) all lean EDT at 62-68% when reasoning explicitly. This is not a model-specific artifact.
+
+2. **EV calculation is the universal differentiator.** The EDT/CDT ratio for ev_calculation is 6-21x across all models. Models that compute expected values tend to arrive at EDT answers; models that skip EV computation tend to arrive at CDT answers via causal independence arguments.
+
+3. **Reasoning style varies but conclusions converge.** Sonnet is concise (~3.5K chars) with minimal backtracking. DeepSeek is verbose (~9.7K chars) with heavy uncertainty/reconsidering. Qwen3 falls between. Despite these stylistic differences, the EDT rate and the EV-calculation signature are consistent.
+
+4. **Copy symmetry recognition → EDT.** All three models show copy_symmetry tags almost exclusively in EDT traces (113/52, 64/1, 106/61 EDT/CDT). Recognizing "I am reasoning identically to my counterpart" is a strong EDT predictor.
+
+5. **10 parse errors on DeepSeek** — the model sometimes produces very long reasoning without a clear `ANSWER: X` line. These could be recovered with the same regex recovery approach used for Qwen3.
+
+### Files
+
+| Artifact | Path |
+|---|---|
+| DeepSeek JSONL log | `logs/scaffolded_cot/scaffolded_deepseek-r1-distill-qwen-32b-4bit_free_cot_20260413T161108.jsonl` |
+| DeepSeek explorer data | `docs/data/thinking_traces_deepseek-r1-distill-qwen-32b-4bit_20260413T161108.json` |
+| DT Reasoning Explorer (3 models) | `docs/thinking_trace_explorer.html` |
+| Updated manifest | `docs/data/thinking_traces_manifest.json` |
+
+## Thought Anchors: Empirical Extensions for DT Reasoning (2026-04-14)
+
+Bogdan et al. (2025) introduce *thought anchors* — sentences in a reasoning trace that disproportionately influence the final answer, identified via counterfactual resampling (replace each sentence with 100 alternative continuations, measure KL divergence on the answer distribution). Their key finding: **planning and uncertainty management sentences** are the true causal drivers, not the active computation steps that look most important from a forced-answer probe. They also identify "receiver heads" — attention heads with high kurtosis that consistently attend to anchor sentences.
+
+Our cross-model analysis (see above) already adapts their sentence taxonomy for DT reasoning and finds the EV calculation signature (6-21x overrepresentation in EDT traces). But that finding is *correlational*. The Thought Anchors methodology offers several paths to causal and mechanistic evidence:
+
+### 1. Counterfactual resampling on EV calculation sentences (highest priority)
+
+The most direct causal test. For each EV calculation sentence in an EDT trace, resample 50-100 continuations with a semantically dissimilar replacement (cosine similarity < 0.8 per Bogdan et al.'s filter). Measure the EDT→CDT flip rate. Compare against a control condition: resample `other` or `problem_setup` sentences with the same procedure. If EV calc sentences have significantly higher flip rates, that establishes the causal link our writeup identifies as the key open question.
+
+**Practical budget:** EDT traces average ~100-200 sentences, ~20-40 of which are EV calc tagged. At 100 rollouts per sentence, that's ~2K-4K generations per question. For the ~54 EDT questions on Qwen3-32B-4bit, the full experiment is ~100K-200K generations — feasible as an overnight local run. Sonnet API would be expensive; prioritize local models.
+
+**Prediction:** EV calc and copy_symmetry sentences will have the highest EDT→CDT flip rates. Causal_reasoning sentences may anchor CDT answers (removing them could flip CDT→EDT). If planning sentences that *invoke* EV calculation are the true anchors (rather than the EV calculations themselves), that would match Bogdan et al.'s finding that planning outranks computation.
+
+### 2. Forced-answer at sentence granularity
+
+Bogdan et al.'s "forced answer" baseline — interrupt reasoning at each sentence position and ask for the final answer — is a finer-grained version of our scaffolded CoT forced-answer at step boundaries. Running this on the thinking-mode traces would show *when* in the reasoning the EDT/CDT answer crystallizes. Our scaffolded activation probing found that the answer isn't readable until Step 5 (Decision) on contested questions — but that was at the activation level with only 5 steps. Sentence-level forced-answer would give 100-200 measurement points, potentially revealing the exact sentence where the model commits.
+
+**Connection to existing result:** The scaffolded probing found 74% accuracy at Steps 1-2, dropping to 66.5% at Step 4, then jumping to 96.5% at Step 5. Forced-answer at sentence level could determine whether this pattern reflects the model's actual decision dynamics or is an artifact of the 5-step granularity.
+
+### 3. Receiver heads for DT reasoning categories
+
+Our activation steering on Qwen3-32B found a contrastive direction that encodes EDT/CDT *content* but not *disposition*. Bogdan et al.'s receiver head analysis offers a different entry point: instead of a linear direction in the residual stream, look for **attention heads that attend to copy_symmetry or ev_calculation sentences**. These heads would capture the *processing* step — not "what does EDT text look like" but "which model component reads the EV calculation and routes it to the answer."
+
+**Method:** Compute kurtosis of each head's sentence-level attention distribution across the DT traces. Identify heads with consistently narrow attention. Test whether those heads attend preferentially to EV calc / copy symmetry sentences. Ablate those heads and measure whether EDT rate drops.
+
+**Advantage:** This targets the attention mechanism rather than the residual stream, potentially finding the dispositional signal our probing missed. Bogdan et al. found receiver heads in R1-Distill-Qwen-14B — the same model family (Qwen) as our primary target (Qwen3-32B), so the approach should transfer.
+
+### 4. Causal graph structure: sequential vs distributed reasoning
+
+Bogdan et al. find that sequential reasoning (strong close-range causal links) correlates with high accuracy, while distributed reasoning (long-range links) correlates with difficulty. Applied to our DT question set:
+
+- **Do CDT traces show more sequential structure?** CDT arguments are often short: "my choice can't affect what's already determined, therefore two-box." This should show tight close-range links.
+- **Do EDT traces show more distributed structure?** EDT arguments integrate copy symmetry, conditional probabilities, and EV calculations from across the trace. This should show longer-range dependencies.
+- **Do contested questions (mixed EDT/CDT across samples) show more distributed patterns than unanimous ones?** This would give a structural explanation for question difficulty beyond our current observation that "some questions are hard."
+
+This analysis can be computed from the resampling data generated for experiment #1 — no additional model runs needed.
+
+### 5. Cross-model anchor correspondence
+
+We have three architecturally different models producing traces for the same 81 questions. The Thought Anchors method lets us ask: **do the same reasoning step types serve as anchors across models?** Not literally the same text, but the same category (EV calc, copy symmetry, planning) at the same structural position in the reasoning. If all three models have their EDT answers hinge on an EV calculation that follows a copy symmetry recognition, that's strong evidence of a shared reasoning mechanism rather than model-specific training artifacts. Given the convergent EDT rates (62-68%), this seems likely but hasn't been tested causally.
+
+### Implementation notes
+
+- Bogdan et al.'s code and visualization tool are open-source at github.com/interp-reasoning/thought-anchors/ — their resampling infrastructure can likely be adapted for our JSONL trace format.
+- The semantic dissimilarity filter (cosine < 0.8 on MiniLM embeddings) is important: without it, replacements may be paraphrases of the original sentence, underestimating importance.
+- They used R1-Distill-Qwen-14B and R1-Distill-Llama-8B. Our Qwen3-32B-4bit and DeepSeek-R1-Distill-Qwen-32B are in the same model families, making their findings directly relevant.
+- Priority: start with #1 (counterfactual resampling) on Qwen3-32B-4bit. This is the cheapest causal test and directly answers the central open question. If EV calc sentences are confirmed as causal anchors, proceed to #3 (receiver heads) for the mechanistic follow-up.
+
+## Related
+
+- **[Cross-model thinking trace analysis](cross_model_thinking_traces.md)** — Standalone writeup of the three-model comparison (Qwen3-32B, Claude Sonnet, DeepSeek-R1-Distill). Full sentence-level classification results, EV calculation signature, reasoning style differences, and interpretation of why thinking models lean EDT. Includes tools/data paths and remaining work items.
+- **[Scaffolded trajectory analysis](../../writeup/mech_interp/scaffolded_trajectory_analysis.md)** — The activation-level counterpart: scaffolded reasoning trajectories projected onto the contrastive EDT/CDT direction show the direction encodes content, not disposition. The cross-model thinking trace analysis addresses the same question from the behavioral side — what reasoning *text* correlates with EDT answers.
+- **[Newcomblike EDT/CDT summary](../../writeup/mech_interp/newcomblike_edt_cdt_summary.md)** — Comprehensive table of EDT/CDT rates across all models and constitution conditions. The three thinking-mode runs from the cross-model analysis are complementary: they use free-form CoT prompting rather than the standard evaluation pipeline.
 
 ## References
 

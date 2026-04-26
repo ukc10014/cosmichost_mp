@@ -202,6 +202,11 @@ def process_trial(trial: dict) -> dict:
     thinking_text = thinking_step["response"] if thinking_step else ""
     visible_answer = answer_step["response"] if answer_step else ""
 
+    # Fallback: if thinking step is empty but answer contains CoT (e.g. DeepSeek-R1-Distill),
+    # treat the answer as the thinking trace
+    if not thinking_text and visible_answer and len(visible_answer) > 500:
+        thinking_text = visible_answer
+
     sentences = segment_sentences(thinking_text) if thinking_text else []
 
     classified = []
