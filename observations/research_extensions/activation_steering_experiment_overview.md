@@ -137,6 +137,10 @@ The asymmetry reflects the natural language of each reasoning style — EDT comp
 
 ## File Map
 
+**Relevant external methodology:**
+- Heimersheim & Nanda (2024), "How to use and interpret activation patching" — https://arxiv.org/html/2404.15255v1. Key points: denoising (sufficiency) and noising (necessity) patch directions are not symmetric; logit difference is the recommended metric; results depend on prompt choice and corruption type; patching finds sufficient but not necessarily minimal circuits due to backup structures.
+- Marks & Tegmark (2023), "The Geometry of Truth" — https://arxiv.org/abs/2310.06824. LLMs linearly encode truth vs. falsehood; difference-in-mean probes are causally relevant and transfer across datasets. Direct methodological template for the EDT/CDT probe — their cross-dataset transfer test is the key validation step we haven't run yet.
+
 | File | Purpose |
 |------|---------|
 | `activation_steering/datasets/base_scenarios.json` | 95 base scenarios with structural tags, confound flags, and contrastive completions |
